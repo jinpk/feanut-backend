@@ -18,6 +18,14 @@ async function bootstrap() {
     .setTitle('Feanut API')
     .setDescription('The feanut API description')
     .setVersion('0.0.1')
+    .addTag('User', '회원 API')
+    .addTag('School', '학교 API')
+    .addTag('Friend', '친구 API')
+    .addTag('Vote', '투표 API')
+    .addTag('Letter', '편지 API')
+    .addTag('Notification', '알림 API')
+    .addTag('Subscription', '구독 API')
+    .addTag('Coin', '코인 API')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
