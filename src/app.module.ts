@@ -5,11 +5,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SchoolsModule } from './schools/schools.module';
-import { SubsciptionsModule } from './subsciptions/subsciptions.module';
 import { CoinsModule } from './coins/coins.module';
 import { VotesModule } from './votes/votes.module';
 import { FriendsModule } from './friends/friends.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -27,11 +27,11 @@ import configuration from './config/configuration';
     UsersModule,
     AuthModule,
     SchoolsModule,
-    SubsciptionsModule,
     CoinsModule,
     VotesModule,
     FriendsModule,
     NotificationsModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
 })
