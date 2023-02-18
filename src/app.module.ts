@@ -11,12 +11,14 @@ import { FriendsModule } from './friends/friends.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import configuration from './config/configuration';
+import { validationSchema } from './config/config.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+      validationSchema,
     }),
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
