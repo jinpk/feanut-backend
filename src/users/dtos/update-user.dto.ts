@@ -9,7 +9,7 @@ export class PatchUserDto {
   name: string;
 
   @ApiProperty({
-    title: 'Profile Image Id',
+    title: 'fileId',
     description: 'enable empty string',
     required: false,
   })
