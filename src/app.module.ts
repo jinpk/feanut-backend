@@ -15,6 +15,7 @@ import { validationSchema } from './config/config.validation';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
     FriendsModule,
     NotificationsModule,
     SubscriptionsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [

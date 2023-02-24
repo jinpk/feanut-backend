@@ -6,10 +6,9 @@ import { AWS_S3_UPLOAD_BUCKET } from '../common.constant';
 
 @Injectable()
 export class AWSS3Service {
-  constructor(
-    private configService: ConfigService,
-    private s3Client: S3Client,
-  ) {
+  private s3Client: S3Client;
+
+  constructor(private configService: ConfigService) {
     this.s3Client = new S3Client({
       region: configService.get('awsRegion'),
       credentials: {

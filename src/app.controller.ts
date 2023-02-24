@@ -75,6 +75,7 @@ export class AppController {
 
   @Get()
   @Public()
+  @ApiOperation({ summary: 'Health Check' })
   getHello(): string {
     return 'Feanut API';
   }
