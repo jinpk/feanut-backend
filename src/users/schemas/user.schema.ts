@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Gender } from '../enums';
+import { USER_MODULE_NAME } from '../users.constant';
 
 export type UserDocument = HydratedDocument<User>;
 
 // 회원
-@Schema({ collection: 'users' })
+@Schema({ collection: USER_MODULE_NAME, timestamps: true })
 export class User {
   // pk
   id: string;
