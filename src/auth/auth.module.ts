@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchmea } from './schemas/auth.schema';
 import { AuthEventListener } from './auth.listener';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { AuthEventListener } from './auth.listener';
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchmea }]),
     UsersModule,
   ],
-  providers: [AuthService, AuthEventListener],
+  providers: [AuthService, AuthEventListener, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

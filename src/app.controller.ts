@@ -3,7 +3,6 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  NotAcceptableException,
   Post,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
@@ -12,6 +11,7 @@ import {
   AUTH_MODULE_NAME,
 } from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
+import { Public } from './auth/decorators';
 import {
   AuthDto,
   EmailLoginDto,
@@ -24,8 +24,9 @@ import {
 export class AppController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: '이메일 로그인' })
   @Post('signin/email')
+  @Public()
+  @ApiOperation({ summary: '이메일 로그인' })
   async signInEmail(@Body() body: EmailLoginDto): Promise<AuthDto> {
     const enableLogin = await this.authService.checkEmailLoginCoolTime(
       body.email,
@@ -44,8 +45,9 @@ export class AppController {
     };
   }
 
-  @ApiOperation({ summary: '휴대폰번호 로그인' })
   @Post('signin/phonenumber')
+  @Public()
+  @ApiOperation({ summary: '휴대폰번호 로그인' })
   async signInPhone(@Body() body: PhoneNumberLoginDto): Promise<AuthDto> {
     const enableLogin = await this.authService.checkPhoneLoginCoolTime(
       body.phoneNumber,
@@ -64,13 +66,15 @@ export class AppController {
     };
   }
 
-  @ApiOperation({ summary: '로그인' })
   @Post('signin')
+  @Public()
+  @ApiOperation({ summary: '로그인' })
   async signIn(@Body() body: LoginDto): Promise<TokenDto> {
     return await this.authService.login(body);
   }
 
   @Get()
+  @Public()
   getHello(): string {
     return 'Feanut API';
   }

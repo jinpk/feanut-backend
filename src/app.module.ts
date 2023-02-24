@@ -13,6 +13,8 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import configuration from './config/configuration';
 import { validationSchema } from './config/config.validation';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt.guard';
 
 @Module({
   imports: [
@@ -38,5 +40,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     SubscriptionsModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
