@@ -29,6 +29,7 @@ async function bootstrap() {
       .addTag('Notification', '알림 API')
       .addTag('Subscription', '구독 API')
       .addTag('Coin', '코인 API')
+      .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('docs', app, document);

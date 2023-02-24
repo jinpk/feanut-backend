@@ -8,7 +8,11 @@ export class PatchUserDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ title: 'Profile Image Id', required: false })
+  @ApiProperty({
+    title: 'Profile Image Id',
+    description: 'enable empty string',
+    required: false,
+  })
   @IsOptional()
   @IsNotEmpty()
   profileImageId: string;

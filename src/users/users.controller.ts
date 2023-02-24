@@ -1,6 +1,14 @@
-import { Body, Controller, Patch, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Patch,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
@@ -20,9 +28,16 @@ export class UsersController {
     description: '수정하고싶은 field만 담아서 요청',
   })
   @ApiParam({ name: 'id', description: 'userId' })
+  @ApiOkResponse({ description: 'Patch Successed.' })
   async patchUser(
     @Req() req,
-    @Query('id') id: string,
+    @Param('id') id: string,
     @Body() body: PatchUserDto,
-  ) {}
+  ) {
+    if (req.user.id !== id) {
+      throw new UnauthorizedException();
+    }
+
+    await this.usersService.patchUser(id, body);
+  }
 }
