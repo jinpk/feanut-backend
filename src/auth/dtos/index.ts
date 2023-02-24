@@ -1,15 +1,26 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/users/dtos';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
 
-export class LoginDto extends PickType(CreateUserDto, [
-  'username',
-  'password',
-]) {}
+export class EmailLoginDto {
+  @ApiProperty({ title: '이메일' })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+}
+
+export class PhoneNumberLoginDto {
+  @ApiProperty({ title: '휴대폰번호' })
+  @IsNotEmpty()
+  @IsPhoneNumber()
+  phoneNumber: string;
+}
+
+export class AuthDto {
+  @ApiProperty({ title: 'Code validation authId (3m)' })
+  authId: string;
+}
 
 export class TokenDto {
-  @ApiProperty({ description: 'Access Token (30m)' })
+  @ApiProperty({ title: 'Access Token (30m)' })
   accessToken: string;
-
-  @ApiProperty({ description: 'Refresh Token (14d)' })
-  refreshToken: string;
 }

@@ -1,23 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsNumberString,
-  Length,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
 import { Gender } from '../enums';
 
 export class UserDto {
   @ApiProperty({ description: '이름' })
   @IsNotEmpty()
   name: string;
-
-  @ApiProperty({ description: 'ID' })
-  @IsNotEmpty()
-  username: string;
 
   @ApiProperty({ description: '성별', enum: Gender })
   @IsEnum(Gender)

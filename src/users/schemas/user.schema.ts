@@ -4,6 +4,7 @@ import { Gender } from '../enums';
 
 export type UserDocument = HydratedDocument<User>;
 
+// 회원
 @Schema({ collection: 'users' })
 export class User {
   // 로그인 이메일

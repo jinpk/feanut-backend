@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from 'src/users/users.module';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Auth, AuthSchmea } from './schemas/auth.schema';
 
 @Module({
   imports: [
@@ -13,9 +14,10 @@ import { ConfigService } from '@nestjs/config';
         secret: configService.get('jwtSecret'),
       }),
     }),
+    MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchmea }]),
     UsersModule,
   ],
-  providers: [AuthService, LocalStrategy],
+  providers: [AuthService],
   exports: [AuthService],
 })
 export class AuthModule {}
