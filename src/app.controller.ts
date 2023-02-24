@@ -3,6 +3,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  NotAcceptableException,
   Post,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
@@ -11,7 +12,13 @@ import {
   AUTH_MODULE_NAME,
 } from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
-import { AuthDto, EmailLoginDto, PhoneNumberLoginDto } from './auth/dtos';
+import {
+  AuthDto,
+  EmailLoginDto,
+  LoginDto,
+  PhoneNumberLoginDto,
+  TokenDto,
+} from './auth/dtos';
 
 @Controller()
 export class AppController {
@@ -40,7 +47,7 @@ export class AppController {
   @ApiOperation({ summary: '휴대폰번호 로그인' })
   @Post('signin/phonenumber')
   async signInPhone(@Body() body: PhoneNumberLoginDto): Promise<AuthDto> {
-    const enableLogin = await this.authService.checkEmailLoginCoolTime(
+    const enableLogin = await this.authService.checkPhoneLoginCoolTime(
       body.phoneNumber,
     );
     if (!enableLogin) {
@@ -55,6 +62,12 @@ export class AppController {
     return {
       authId,
     };
+  }
+
+  @ApiOperation({ summary: '로그인' })
+  @Post('signin')
+  async signIn(@Body() body: LoginDto): Promise<TokenDto> {
+    return await this.authService.login(body);
   }
 
   @Get()

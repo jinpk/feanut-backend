@@ -1,5 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsPhoneNumber } from 'class-validator';
+import {
+  IsEmail,
+  IsMobilePhone,
+  IsNotEmpty,
+  IsPhoneNumber,
+  Length,
+} from 'class-validator';
+
+export class LoginDto {
+  @ApiProperty({ title: '인증번호' })
+  @IsNotEmpty()
+  @Length(6, 6)
+  code: string;
+
+  @ApiProperty({ title: 'Code validation authId' })
+  @IsNotEmpty()
+  authId: string;
+}
 
 export class EmailLoginDto {
   @ApiProperty({ title: '이메일' })
@@ -11,7 +28,7 @@ export class EmailLoginDto {
 export class PhoneNumberLoginDto {
   @ApiProperty({ title: '휴대폰번호' })
   @IsNotEmpty()
-  @IsPhoneNumber()
+  @IsMobilePhone()
   phoneNumber: string;
 }
 

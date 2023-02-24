@@ -19,6 +19,14 @@ export class Auth {
   @Prop({ required: true })
   code: string;
 
+  // logged state
+  @Prop({})
+  logged: boolean;
+
+  // loggedAt
+  @Prop({})
+  loggedAt: Date;
+
   // 인증토큰 생성시간
   // 인증 만료 (3분)
   @Prop()

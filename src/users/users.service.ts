@@ -21,4 +21,14 @@ export class UsersService {
 
     return user.toObject();
   }
+
+  async createAccountWithPhoneNumber(phoneNumber: string): Promise<string> {
+    const user = await new this.userModel({ phoneNumber }).save();
+    return user._id.toHexString();
+  }
+
+  async createAccountWithEmail(email: string): Promise<string> {
+    const user = await new this.userModel({ email }).save();
+    return user._id.toHexString();
+  }
 }

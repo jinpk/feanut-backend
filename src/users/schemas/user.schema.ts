@@ -7,6 +7,9 @@ export type UserDocument = HydratedDocument<User>;
 // 회원
 @Schema({ collection: 'users' })
 export class User {
+  // pk
+  id: string;
+
   // 로그인 이메일
   // unique with isDeleted is false
   @Prop({ lowercase: true })
@@ -18,16 +21,16 @@ export class User {
   phoneNumber: string;
 
   // 이름
-  @Prop({ required: true })
+  @Prop({})
   name: string;
 
   // 생일
   // format: YYYYMMDD
-  @Prop({ required: true })
+  @Prop({})
   birth: string;
 
   // 성별
-  @Prop({ required: true, enum: Gender })
+  @Prop({ enum: Gender })
   gender: string;
 
   // 프로필 이미지 ID
