@@ -1,10 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { SCHOOL_MODULE_NAME } from '../schools.constant';
 
 export type SchoolDocument = HydratedDocument<School>;
 
 // 대학교
-@Schema({ collection: 'users' })
+@Schema({ collection: SCHOOL_MODULE_NAME })
 export class School {
   // pk
   id: string;
