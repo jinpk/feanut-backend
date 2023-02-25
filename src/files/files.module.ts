@@ -11,5 +11,6 @@ import { File, FileSchmea } from './schemas/files.schema';
   ],
   controllers: [FilesController],
   providers: [AWSS3Service, FilesService],
+  exports: [FilesService],
 })
 export class FilesModule {}

@@ -4,6 +4,6 @@ export default () => ({
   jwtSecret: process.env.JWT_SECRET,
   env: process.env.NODE_ENV || 'local', // production | development
   awsRegion: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });

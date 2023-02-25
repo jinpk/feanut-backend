@@ -27,6 +27,10 @@ export class File {
   @Prop({ required: true, enum: FileType })
   type: string;
 
+  // File successfuly uploaded state
+  @Prop({})
+  isUploaded: boolean;
+
   // 생성시간
   @Prop()
   createdAt?: Date;

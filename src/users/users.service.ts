@@ -1,12 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { PatchUserDto } from './dtos';
+import { UserPatchedEvent } from './events';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   // @Services
 
@@ -35,6 +40,11 @@ export class UsersService {
     }
 
     await user.save();
+
+    this.eventEmitter.emit(
+      UserPatchedEvent.name,
+      new UserPatchedEvent(id, dto),
+    );
   }
 
   // @Repositories

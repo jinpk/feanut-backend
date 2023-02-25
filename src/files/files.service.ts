@@ -12,11 +12,28 @@ export class FilesService {
     private awsS3Service: AWSS3Service,
   ) {}
 
+  async updateUploadedState(fileId: string) {
+    await this.fileModel.findByIdAndUpdate(fileId, {
+      $set: { isUploaded: true },
+    });
+  }
+
   async createFileWithPreSignedUrl(
     userId: string,
     dto: CreateFileDto,
   ): Promise<CreateFileResponseDto> {
-    let objectKey: string;
+    let ext: string;
+
+    switch (dto.mimetype) {
+      case 'image/png':
+        ext = 'png';
+        break;
+      case 'image/jpeg':
+        ext = 'jpeg';
+        break;
+    }
+
+    const objectKey = `uploads/${dto.type}-${userId}-${Date.now()}.${ext}`;
 
     const preSignedUrl = await this.awsS3Service.genPreSignedUploadUrl(
       objectKey,
