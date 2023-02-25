@@ -29,7 +29,7 @@ export class AWSS3Service {
     });
 
     const signedUrl = await getSignedUrl(this.s3Client, command, {
-      expiresIn: 3600,
+      expiresIn: 60 * 3,
     });
 
     return signedUrl;
