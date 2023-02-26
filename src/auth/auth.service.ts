@@ -9,7 +9,7 @@ import { UsersService } from 'src/users/users.service';
 import { Auth, AuthDocument } from './schemas/auth.schema';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EmailLoginEvent, PhoneNumberLoginEvent } from './events';
+import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
 import { LoginDto, TokenDto } from './dtos';
 
@@ -76,14 +76,6 @@ export class AuthService {
     return true;
   }
 
-  async checkPhoneLoginCoolTime(phoneNumber: string): Promise<boolean> {
-    if (await this.findAuthIn3MByField({ phoneNumber })) {
-      return false;
-    }
-
-    return true;
-  }
-
   async findAuthIn3MByField(
     filter: FilterQuery<AuthDocument>,
   ): Promise<AuthDocument | null> {
@@ -103,19 +95,6 @@ export class AuthService {
     this.eventEmitter.emit(
       EmailLoginEvent.name,
       new EmailLoginEvent(doc.email, doc.code),
-    );
-    return doc._id.toHexString();
-  }
-
-  async phoneNumberLogin(phoneNumber: string): Promise<string> {
-    const doc = await new this.authModel({
-      phoneNumber: phoneNumber,
-      code: this.genAuthCode(),
-    }).save();
-
-    this.eventEmitter.emit(
-      PhoneNumberLoginEvent.name,
-      new PhoneNumberLoginEvent(doc.phoneNumber, doc.code),
     );
     return doc._id.toHexString();
   }

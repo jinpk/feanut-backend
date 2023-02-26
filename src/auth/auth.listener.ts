@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EmailLoginEvent, PhoneNumberLoginEvent } from './events';
+import { EmailLoginEvent } from './events';
 
 @Injectable()
 export class AuthEventListener {
@@ -14,11 +14,4 @@ export class AuthEventListener {
     );
   }
 
-  // 휴대폰번호로 코드 전송
-  @OnEvent(PhoneNumberLoginEvent.name)
-  handlePhoneNumberLoginEvent(payload: PhoneNumberLoginEvent) {
-    this.logger.log(
-      `${PhoneNumberLoginEvent.name} detected: ${JSON.stringify(payload)}`,
-    );
-  }
 }

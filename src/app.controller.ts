@@ -16,7 +16,6 @@ import {
   AuthDto,
   EmailLoginDto,
   LoginDto,
-  PhoneNumberLoginDto,
   TokenDto,
 } from './auth/dtos';
 
@@ -39,27 +38,6 @@ export class AppController {
     }
 
     const authId = await this.authService.emailLogin(body.email);
-
-    return {
-      authId,
-    };
-  }
-
-  @Post('signin/phonenumber')
-  @Public()
-  @ApiOperation({ summary: '휴대폰번호 로그인' })
-  async signInPhone(@Body() body: PhoneNumberLoginDto): Promise<AuthDto> {
-    const enableLogin = await this.authService.checkPhoneLoginCoolTime(
-      body.phoneNumber,
-    );
-    if (!enableLogin) {
-      throw new ForbiddenException({
-        domain: AUTH_MODULE_NAME,
-        code: AUTH_ERROR_SIGNIN_COOL_TIME,
-      });
-    }
-
-    const authId = await this.authService.phoneNumberLogin(body.phoneNumber);
 
     return {
       authId,

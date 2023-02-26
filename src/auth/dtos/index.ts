@@ -25,13 +25,6 @@ export class EmailLoginDto {
   email: string;
 }
 
-export class PhoneNumberLoginDto {
-  @ApiProperty({ title: '휴대폰번호' })
-  @IsNotEmpty()
-  @IsMobilePhone()
-  phoneNumber: string;
-}
-
 export class AuthDto {
   @ApiProperty({ title: 'Code validation authId (3m)' })
   authId: string;
