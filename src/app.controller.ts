@@ -28,7 +28,6 @@ export class AppController {
   @Public()
   @ApiOperation({ summary: '카카오 로그인' })
   async signInKakao(@Body() body: KakaoLoginDto): Promise<TokenDto> {
-    
   }
 
 
