@@ -2,20 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { ProfilesService } from 'src/profiles/profiles.service';
-import { VoteDto } from './dtos';
-import { Vote, VoteDocument } from './schemas/vote.schema';
+import { CoinDto } from './dtos';
+import { Coin, CoinDocument } from './schemas/coin.schema';
+import { BuyCoin, BuyCoinDocument } from './schemas/buycoin.schema';
+import { UseCoin, UseCoinDocument } from './schemas/usecoin.schema';
 
 @Injectable()
-export class VotesService {
+export class CoinsService {
   constructor(
-    @InjectModel(Vote.name) private voteModel: Model<VoteDocument>,
+    @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
     private profilesService: ProfilesService,
   ) {}
 
   async findActiveUserOne(
-    filter: FilterQuery<VoteDocument>,
-  ): Promise<Vote | null> {
-    const user = await this.voteModel.findOne({
+    filter: FilterQuery<CoinDocument>,
+  ): Promise<Coin | null> {
+    const user = await this.coinModel.findOne({
       ...filter,
       isDeleted: false,
     });
