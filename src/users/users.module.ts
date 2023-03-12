@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchmea } from './schemas/user.schema';
+import { User, UserSchema } from './schemas/user.schema';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { FilesModule } from 'src/files/files.module';
-import { UsersEventListener } from './users.listener';
+import { ProfilesModule } from 'src/profiles/profiles.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchmea }]),
-    FilesModule,
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    ProfilesModule,
   ],
-  providers: [UsersService, UsersEventListener],
+  providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService],
 })

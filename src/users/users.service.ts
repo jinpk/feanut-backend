@@ -1,53 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { PatchUserDto } from './dtos';
-import { UserPatchedEvent } from './events';
+import { ProfilesService } from 'src/profiles/profiles.service';
+import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private eventEmitter: EventEmitter2,
+    private profilesService: ProfilesService,
   ) {}
-
-  // @Services
-
-  async patchUser(id: string, dto: PatchUserDto) {
-    const user = await this.userModel.findById(id);
-    if (!user || user.isDeleted) {
-      throw new NotFoundException();
-    }
-
-    if (dto.birth) {
-      user.birth = dto.birth;
-    }
-
-    if (dto.gender) {
-      user.gender = dto.gender;
-    }
-
-    if (dto.name) {
-      user.name = dto.name;
-    }
-
-    if (typeof dto.profileImageId === 'string') {
-      user.profileImageId = dto.profileImageId
-        ? new Types.ObjectId(dto.profileImageId)
-        : null;
-    }
-
-    await user.save();
-
-    this.eventEmitter.emit(
-      UserPatchedEvent.name,
-      new UserPatchedEvent(id, dto),
-    );
-  }
-
-  // @Repositories
 
   async findActiveUserOne(
     filter: FilterQuery<UserDocument>,
@@ -64,13 +27,35 @@ export class UsersService {
     return user.toObject();
   }
 
-  async createAccountWithPhoneNumber(phoneNumber: string): Promise<string> {
-    const user = await new this.userModel({ phoneNumber }).save();
+  async findActiveUserById(id: string): Promise<User | null> {
+    const user = await this.userModel.findById(id);
+    if (!user || user.isDeleted) {
+      return null;
+    }
+
+    return user.toObject();
+  }
+
+  async createUserWithEmail(email: string): Promise<string> {
+    const user = await new this.userModel({ email }).save();
+
+    // 프로필 생성
+    try {
+      const profileId = await this.profilesService.createEmptyProfile();
+      user.profileId = new Types.ObjectId(profileId);
+      await user.save();
+    } catch (error) {
+      user.delete();
+    }
+
     return user._id.toHexString();
   }
 
-  async createAccountWithEmail(email: string): Promise<string> {
-    const user = await new this.userModel({ email }).save();
-    return user._id.toHexString();
+  async _userToDto(user: UserDocument | User): Promise<UserDto> {
+    const dto = new UserDto();
+    dto.id = user.id;
+    dto.profileId = user.profileId.toHexString();
+    dto.email = user.email;
+    return dto;
   }
 }

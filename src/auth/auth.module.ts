@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Auth, AuthSchmea } from './schemas/auth.schema';
+import { Auth, AuthSchema } from './schemas/auth.schema';
 import { AuthEventListener } from './auth.listener';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -16,7 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         secret: configService.get('jwtSecret'),
       }),
     }),
-    MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchmea }]),
+    MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
     UsersModule,
   ],
   providers: [AuthService, AuthEventListener, JwtStrategy],
