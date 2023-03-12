@@ -15,6 +15,7 @@ import { Public } from './auth/decorators';
 import {
   AuthDto,
   EmailLoginDto,
+  KakaoLoginDto,
   LoginDto,
   TokenDto,
 } from './auth/dtos';
@@ -22,6 +23,14 @@ import {
 @Controller()
 export class AppController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('signin/kakao')
+  @Public()
+  @ApiOperation({ summary: '카카오 로그인' })
+  async signInKakao(@Body() body: KakaoLoginDto): Promise<TokenDto> {
+    
+  }
+
 
   @Post('signin/email')
   @Public()

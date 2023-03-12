@@ -20,7 +20,10 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
+
+  async kakaoLogin(accessToken: string): Promise<TokenDto> {
+  }
 
   async login(dto: LoginDto): Promise<TokenDto> {
     // 유효한 인증인지 확인
