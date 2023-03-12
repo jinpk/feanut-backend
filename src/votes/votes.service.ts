@@ -2,20 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { ProfilesService } from 'src/profiles/profiles.service';
-import { UserDto } from './dtos';
-import { User, UserDocument } from './schemas/user.schema';
+import { VoteDto } from './dtos';
+import { Vote, VoteDocument } from './schemas/vote.schema';
 
 @Injectable()
-export class UsersService {
+export class VotesService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Vote.name) private voteModel: Model<VoteDocument>,
     private profilesService: ProfilesService,
   ) {}
 
   async findActiveUserOne(
-    filter: FilterQuery<UserDocument>,
+    filter: FilterQuery<VoteDocument>,
   ): Promise<User | null> {
-    const user = await this.userModel.findOne({
+    const user = await this.voteModel.findOne({
       ...filter,
       isDeleted: false,
     });
@@ -28,7 +28,7 @@ export class UsersService {
   }
 
   async findActiveUserById(id: string): Promise<User | null> {
-    const user = await this.userModel.findById(id);
+    const user = await this.voteModel.findById(id);
     if (!user || user.isDeleted) {
       return null;
     }
@@ -37,7 +37,7 @@ export class UsersService {
   }
 
   async createUserWithEmail(email: string): Promise<string> {
-    const user = await new this.userModel({ email }).save();
+    const user = await new this.voteModel({ email }).save();
 
     // 프로필 생성
     try {
@@ -51,11 +51,11 @@ export class UsersService {
     return user._id.toHexString();
   }
 
-  async _userToDto(user: UserDocument | User): Promise<UserDto> {
-    const dto = new UserDto();
-    dto.id = user.id;
-    dto.profileId = user.profileId.toHexString();
-    dto.email = user.email;
+  async _userToDto(vote: VoteDocument | Vote): Promise<VoteDto> {
+    const dto = new VoteDto();
+    dto.id = vote.id;
+    dto.profileId = vote.profileId.toHexString();
+    dto.email = vote.email;
     return dto;
   }
 }

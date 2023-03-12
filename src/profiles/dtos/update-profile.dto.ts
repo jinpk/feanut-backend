@@ -2,20 +2,20 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, Length } from 'class-validator';
 import { Gender } from '../enums';
 
-export class PatchUserDto {
+export class UpdateProfileDto {
   @ApiProperty({ title: '이름', required: false })
   @IsOptional()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({
+  /*@ApiProperty({
     title: 'fileId',
     description: 'enable empty string',
     required: false,
   })
   @IsOptional()
   @IsNotEmpty()
-  profileImageId: string;
+  profileImageId: string;*/
 
   @ApiProperty({
     title: '생일',

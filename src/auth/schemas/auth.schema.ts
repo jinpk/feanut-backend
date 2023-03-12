@@ -11,10 +11,6 @@ export class Auth {
   @Prop({ lowercase: true })
   email: string;
 
-  // 로그인 휴대폰번호
-  @Prop({})
-  phoneNumber: string;
-
   // verification code (6 digit)
   @Prop({ required: true })
   code: string;
@@ -33,4 +29,4 @@ export class Auth {
   createdAt?: Date;
 }
 
-export const AuthSchmea = SchemaFactory.createForClass(Auth);
+export const AuthSchema = SchemaFactory.createForClass(Auth);

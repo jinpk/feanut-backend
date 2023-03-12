@@ -1,19 +1,6 @@
-import {
-  Body,
-  Controller,
-  Param,
-  Patch,
-  Req,
-  UnauthorizedException,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
-import { PatchUserDto } from './dtos';
+import { Controller, Get, NotFoundException, Req } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserDto } from './dtos';
 import { UsersService } from './users.service';
 
 @ApiTags('User')
@@ -22,22 +9,16 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Patch(':id')
+  @Get('me')
   @ApiOperation({
-    summary: 'PATCH User',
-    description: '수정하고싶은 field만 담아서 요청',
+    summary: '로그인 정보 조회',
   })
-  @ApiParam({ name: 'id', description: 'userId' })
-  @ApiOkResponse({ description: 'Patch Successed.' })
-  async patchUser(
-    @Req() req,
-    @Param('id') id: string,
-    @Body() body: PatchUserDto,
-  ) {
-    if (req.user.id !== id) {
-      throw new UnauthorizedException();
+  async getMe(@Req() req): Promise<UserDto> {
+    const user = await this.usersService.findActiveUserById(req.user.id);
+    if (!user) {
+      throw new NotFoundException('');
     }
 
-    await this.usersService.patchUser(id, body);
+    return await this.usersService._userToDto(user);
   }
 }

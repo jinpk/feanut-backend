@@ -16,9 +16,9 @@ import { LoginDto, TokenDto } from './dtos';
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private usersService: UsersService,
     private jwtService: JwtService,
-    @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private eventEmitter: EventEmitter2,
   ) { }
 
@@ -41,20 +41,14 @@ export class AuthService {
       throw new BadRequestException();
     }
 
-    const user = await this.usersService.findActiveUserOne(
-      auth.email ? { email: auth.email } : { phoneNumber: auth.phoneNumber },
-    );
-
-    let sub: string;
+    const user = await this.usersService.findActiveUserOne({
+      email: auth.email,
+    });
 
     // 자동 회원가입
-    if (!user) {
-      sub = auth.email
-        ? await this.usersService.createAccountWithEmail(auth.email)
-        : await this.usersService.createAccountWithEmail(auth.phoneNumber);
-    } else {
-      sub = user.id;
-    }
+    const sub = user
+      ? user.id
+      : await this.usersService.createUserWithEmail(auth.email);
 
     // 로그인 data logging
     auth.logged = true;

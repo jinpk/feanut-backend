@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { ProfileService } from '../enums';
+import { Gender } from '../enums';
 import { PROFILE_MODULE_NAME } from '../profiles.constant';
 
 export type ProfileDocument = HydratedDocument<Profile>;
@@ -11,29 +11,26 @@ export class Profile {
   // pk
   id: string;
 
-  // SNS Profile 유형
-  @Prop({ required: true, enum: ProfileService })
-  service: string;
-
-  // SNS UID
-  @Prop({ required: true, unique: true })
-  serviceUserId: string;
-
-  // Service Sepecific code
-  @Prop({ required: false })
-  serviceCode: string;
-
-  // sns에서 받아온 사용자 이름
-  @Prop({ required: true })
-  nickname: string;
-
-  // sns에서 받아온 프로필 썸네일 URL
+  // 이름
   @Prop({})
-  profileThumbnailUrl;
+  name: string;
+
+  // 생일
+  // format: YYYYMMDD
+  @Prop({})
+  birth?: string;
+
+  // 성별
+  @Prop({ enum: Gender })
+  gender?: string;
+
+  // kakaoUserId
+  @Prop({ unique: true })
+  kakaoUserId: string;
 
   // 생성시간
   @Prop()
   createdAt?: Date;
 }
 
-export const ProfileSchmea = SchemaFactory.createForClass(Profile);
+export const ProfileSchema = SchemaFactory.createForClass(Profile);
