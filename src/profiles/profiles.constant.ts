@@ -1,1 +1,1 @@
-export const PROFILE_MODULE_NAME = "profiles"
+export const PROFILE_MODULE_NAME = 'profiles';

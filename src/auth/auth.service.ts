@@ -20,9 +20,10 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async kakaoLogin(accessToken: string): Promise<TokenDto> {
+    return { accessToken: '' };
   }
 
   async login(dto: LoginDto): Promise<TokenDto> {

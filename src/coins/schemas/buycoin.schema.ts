@@ -24,7 +24,7 @@ export class BuyCoin {
 
   // 생성시간
   @Prop({
-      default: now()
+    default: now(),
   })
   createdAt?: Date;
 }

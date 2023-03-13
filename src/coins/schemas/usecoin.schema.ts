@@ -24,7 +24,7 @@ export class UseCoin {
 
   // 생성시간
   @Prop({
-      default: now()
+    default: now(),
   })
   createdAt?: Date;
 }

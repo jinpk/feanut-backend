@@ -13,5 +13,4 @@ export class AuthEventListener {
       `${EmailLoginEvent.name} detected: ${JSON.stringify(payload)}`,
     );
   }
-
 }

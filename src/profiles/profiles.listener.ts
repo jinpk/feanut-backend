@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FilesService } from 'src/files/files.service';
-import { UserPatchedEvent } from './events';
 
 @Injectable()
 export class UsersEventListener {
@@ -9,6 +8,7 @@ export class UsersEventListener {
 
   constructor(private filesService: FilesService) {}
 
+  /*
   @OnEvent(UserPatchedEvent.name)
   handleEmailLoginEvent(payload: UserPatchedEvent) {
     this.logger.log(
@@ -19,5 +19,5 @@ export class UsersEventListener {
     if (payload.dto.profileImageId) {
       this.filesService.updateUploadedState(payload.dto.profileImageId);
     }
-  }
+  }*/
 }

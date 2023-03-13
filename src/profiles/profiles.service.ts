@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { InsertKakaoProfileDto } from './dtos/kakao.dto';
-import { ProfileService } from './enums';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 
 @Injectable()
@@ -32,13 +31,13 @@ export class ProfilesService {
       nickname: dto.nickname,
       profileThumbnailUrl: dto.profileThumbnailUrl,
       serviceUserId: dto.id.toString(),
-      service: ProfileService.Kakao,
       serviceCode: dto.uuid,
     }).save();
 
     return doc._id.toHexString();
   }
 
+  /*
   async patchUser(id: string, dto: PatchUserDto) {
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
@@ -69,5 +68,5 @@ export class ProfilesService {
       UserPatchedEvent.name,
       new UserPatchedEvent(id, dto),
     );
-  }
+  }*/
 }

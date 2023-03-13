@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsNotEmpty,
-  Length,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, Length } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({ title: '인증번호' })
@@ -17,7 +13,10 @@ export class LoginDto {
 }
 
 export class KakaoLoginDto {
-  @ApiProperty({ title: 'Kakao Access Token',description: "frontend에서 accessToken까지 발급" })
+  @ApiProperty({
+    title: 'Kakao Access Token',
+    description: 'frontend에서 accessToken까지 발급',
+  })
   @IsNotEmpty()
   accessToken: string;
 }

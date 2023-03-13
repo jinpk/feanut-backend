@@ -1,6 +1,6 @@
 import {
   Body,
-  Injectable,
+  Controller,
   Param,
   Patch,
   Req,
@@ -9,7 +9,7 @@ import {
 import { ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { UpdateProfileDto } from './dtos';
 
-@Injectable()
+@Controller()
 export class ProfilesController {
   @Patch(':id')
   @ApiOperation({
