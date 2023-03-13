@@ -2,8 +2,8 @@ import { HttpStatus } from '@nestjs/common';
 
 export class WrappedError {
   constructor(
-    private _module: string,
-    private _code: number,
+    private _module?: string,
+    private _code?: number,
     private _message?: string,
     private _status?: number,
   ) {}
