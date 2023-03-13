@@ -19,6 +19,7 @@ import {
   LoginDto,
   TokenDto,
 } from './auth/dtos';
+import { WrappedError } from './common/errors';
 
 @Controller()
 export class AppController {
@@ -39,10 +40,10 @@ export class AppController {
       body.email,
     );
     if (!enableLogin) {
-      throw new ForbiddenException({
-        domain: AUTH_MODULE_NAME,
-        code: AUTH_ERROR_SIGNIN_COOL_TIME,
-      });
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_SIGNIN_COOL_TIME,
+      ).reject();
     }
 
     const authId = await this.authService.emailLogin(body.email);

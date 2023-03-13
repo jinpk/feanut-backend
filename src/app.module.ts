@@ -11,9 +11,10 @@ import { FriendsModule } from './friends/friends.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { validationSchema } from './config/config.validation';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { FilesModule } from './files/files.module';
+import { ExceptionsFilter } from './common/filters/exceptions.filter';
 
 @Module({
   imports: [
@@ -42,6 +43,10 @@ import { FilesModule } from './files/files.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionsFilter,
     },
   ],
 })
