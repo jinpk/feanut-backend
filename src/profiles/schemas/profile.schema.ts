@@ -21,7 +21,7 @@ export class Profile {
   birth?: string;
 
   // 성별
-  @Prop({ enum: Gender })
+  @Prop({ enum: Gender, required: false })
   gender?: string;
 
   // kakaoUserId
