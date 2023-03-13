@@ -1,2 +1,3 @@
-export const FRIEND_MODULE_NAME = 'friends';
-export const FRIEND_SCHEMA_DETAIL_NAME = FRIEND_MODULE_NAME + '_detail';
+export const MODULE_NAME = 'friends';
+
+export const SCHEMA_NAME = 'profile_friends';

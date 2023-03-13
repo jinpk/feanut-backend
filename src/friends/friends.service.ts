@@ -1,18 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
-import { FriendDetail } from './schemas/friend-detail.schema';
 import { Friend, FriendDocument } from './schemas/friend.schema';
+import {
+  ProfileFriends,
+  ProfileFriendsDocument,
+} from './schemas/profile-friends.schema';
 
 @Injectable()
 export class FriendsService {
   constructor(
-    @InjectModel(Friend.name) private friendModel: Model<FriendDocument>,
+    @InjectModel(ProfileFriends.name)
+    private profileFriendsModel: Model<ProfileFriendsDocument>,
+    @InjectModel(Friend.name)
+    private friendModel: Model<FriendDocument>,
   ) {}
 
   // 친구 문서 생성
-  async initFriendDocById(friendId: string, profileId) {
-    const doc = await new this.friendModel({
+  async initProfileFriendsById(profileId: string) {
+    const doc = await new this.profileFriendsModel({
       profile: new Types.ObjectId(profileId),
       friends: [],
     }).save();
@@ -20,20 +26,23 @@ export class FriendsService {
   }
 
   // 친구추가
-  async addFriendToList(friendId: string, profileId: string) {
-    const doc = await this.friendModel.findById(friendId);
-    const friendDetail = new FriendDetail();
-    //friendDetail.profile = new Types.ObjectId(profileId);
+  async addFriendToList(profileId: string, friendProfileId: string) {
+    const doc = await this.profileFriendsModel.findOne({
+      profile: new Types.ObjectId(profileId),
+    });
 
-    /*doc.friends.push({
-      //profile: new Types.ObjectId(profileId),
-    });*/
+    doc.friends.push(
+      new this.friendModel({
+        profile: new Types.ObjectId(friendProfileId),
+      }),
+    );
+
     await doc.save();
   }
 
   // 친구숨김
   async hideFriend(profileId: string, friendProfileId: string) {
-    const doc = await this.friendModel.findById(profileId);
+    const doc = await this.profileFriendsModel.findById(profileId);
     const index = doc.friends.findIndex(
       (x) => x.profile.id === friendProfileId,
     );
@@ -46,7 +55,7 @@ export class FriendsService {
 
   // 친구숨김해제
   async unHideFriend(profileId: string, friendProfileId: string) {
-    const doc = await this.friendModel.findOne({ profile: profileId });
+    const doc = await this.profileFriendsModel.findOne({ profile: profileId });
     const index = doc.friends.findIndex(
       (x) => x.profile.id === friendProfileId,
     );
@@ -58,20 +67,16 @@ export class FriendsService {
   }
 
   // 전체 친구 목록 조회 - 숨김처리하지않은
-  async listFriend(
-    profileId: string,
-    page?: number,
-    limit?: number,
-  ): Promise<FriendDetail[]> {
+  async listFriend(profileId: string): Promise<Friend[]> {
     const filter: FilterQuery<Friend> = {
       profile: new Types.ObjectId(profileId),
     };
 
-    const friendFilter: FilterQuery<FriendDetail> = {
+    const friendFilter: FilterQuery<Friend> = {
       hidden: { $ne: true },
     };
 
-    const doc = await this.friendModel.aggregate<FriendDetail>([
+    const doc = await this.profileFriendsModel.aggregate<Friend>([
       { $match: filter },
       {
         $unwind: { path: '$friends' },
@@ -83,20 +88,16 @@ export class FriendsService {
   }
 
   // 숨김 친구 목록 조회 - 숨김처리하지않은
-  async listHiddenFriend(
-    profileId: string,
-    page?: number,
-    limit?: number,
-  ): Promise<FriendDetail[]> {
+  async listHiddenFriend(profileId: string): Promise<Friend[]> {
     const filter: FilterQuery<Friend> = {
       profile: new Types.ObjectId(profileId),
     };
 
-    const friendFilter: FilterQuery<FriendDetail> = {
+    const friendFilter: FilterQuery<Friend> = {
       hidden: true,
     };
 
-    const doc = await this.friendModel.aggregate<FriendDetail>([
+    const doc = await this.profileFriendsModel.aggregate<Friend>([
       { $match: filter },
       {
         $unwind: { path: '$friends' },

@@ -1,18 +1,29 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { InsertKakaoProfileDto } from './dtos/kakao.dto';
+import { ProfileCreatedEvent } from './events';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createEmptyProfile() {
     const doc = await new this.profileModel({}).save();
-    return doc._id.toHexString();
+
+    const id = doc._id.toHexString();
+
+    this.eventEmitter.emit(
+      ProfileCreatedEvent.name,
+      new ProfileCreatedEvent(id),
+    );
+
+    return id;
   }
 
   async hasKakaoProfileById(kakaoUserId: bigint): Promise<boolean> {

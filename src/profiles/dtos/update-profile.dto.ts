@@ -8,14 +8,14 @@ export class UpdateProfileDto {
   @IsNotEmpty()
   name: string;
 
-  /*@ApiProperty({
+  @ApiProperty({
     title: 'fileId',
     description: 'enable empty string',
     required: false,
   })
   @IsOptional()
   @IsNotEmpty()
-  profileImageId: string;*/
+  profileImageId: string;
 
   @ApiProperty({
     title: '생일',

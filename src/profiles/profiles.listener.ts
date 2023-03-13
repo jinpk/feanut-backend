@@ -1,23 +1,36 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FilesService } from 'src/files/files.service';
+import { FriendsService } from 'src/friends/friends.service';
+import { ProfileCreatedEvent, ProfileUpdatedEvent } from './events';
 
 @Injectable()
-export class UsersEventListener {
-  private readonly logger = new Logger(UsersEventListener.name);
+export class ProfilesEventListener {
+  private readonly logger = new Logger(ProfilesEventListener.name);
 
-  constructor(private filesService: FilesService) {}
+  constructor(
+    private filesService: FilesService,
+    private friendsService: FriendsService,
+  ) {}
 
-  /*
-  @OnEvent(UserPatchedEvent.name)
-  handleEmailLoginEvent(payload: UserPatchedEvent) {
+  @OnEvent(ProfileCreatedEvent.name)
+  handleProfileCreatedEvent(payload: ProfileCreatedEvent) {
     this.logger.log(
-      `${UserPatchedEvent.name} detected: ${JSON.stringify(payload)}`,
+      `${ProfileCreatedEvent.name} detected: ${JSON.stringify(payload)}`,
+    );
+
+    this.friendsService.initProfileFriendsById(payload.profileId);
+  }
+
+  @OnEvent(ProfileUpdatedEvent.name)
+  handleProfileUpdatedEvent(payload: ProfileUpdatedEvent) {
+    this.logger.log(
+      `${ProfileUpdatedEvent.name} detected: ${JSON.stringify(payload)}`,
     );
 
     // profileImageId 변경시 files state update
     if (payload.dto.profileImageId) {
       this.filesService.updateUploadedState(payload.dto.profileImageId);
     }
-  }*/
+  }
 }

@@ -6,10 +6,16 @@ import {
   Req,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateProfileDto } from './dtos';
 
-@Controller()
+@ApiTags('Profile')
+@Controller('profiles')
 export class ProfilesController {
   @Patch(':id')
   @ApiOperation({
