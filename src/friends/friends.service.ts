@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
-import { Friend, FriendDocument } from './schemas/friend.schema';
+import { Friend } from './schemas/friend.schema';
 import {
   ProfileFriends,
   ProfileFriendsDocument,
@@ -12,14 +12,12 @@ export class FriendsService {
   constructor(
     @InjectModel(ProfileFriends.name)
     private profileFriendsModel: Model<ProfileFriendsDocument>,
-    @InjectModel(Friend.name)
-    private friendModel: Model<FriendDocument>,
   ) {}
 
   // 친구 문서 생성
   async initProfileFriendsById(profileId: string) {
     const doc = await new this.profileFriendsModel({
-      profile: new Types.ObjectId(profileId),
+      profileId: new Types.ObjectId(profileId),
       friends: [],
     }).save();
     await doc._id.toHexString();
@@ -31,11 +29,9 @@ export class FriendsService {
       profile: new Types.ObjectId(profileId),
     });
 
-    doc.friends.push(
-      new this.friendModel({
-        profile: new Types.ObjectId(friendProfileId),
-      }),
-    );
+    doc.friends.push({
+      profileId: new Types.ObjectId(friendProfileId),
+    });
 
     await doc.save();
   }
@@ -43,8 +39,8 @@ export class FriendsService {
   // 친구숨김
   async hideFriend(profileId: string, friendProfileId: string) {
     const doc = await this.profileFriendsModel.findById(profileId);
-    const index = doc.friends.findIndex(
-      (x) => x.profile.id === friendProfileId,
+    const index = doc.friends.findIndex((x) =>
+      x.profileId.equals(friendProfileId),
     );
     if (index < 0) {
       throw new Error("friend doesn't exist.");
@@ -57,7 +53,7 @@ export class FriendsService {
   async unHideFriend(profileId: string, friendProfileId: string) {
     const doc = await this.profileFriendsModel.findOne({ profile: profileId });
     const index = doc.friends.findIndex(
-      (x) => x.profile.id === friendProfileId,
+      (x) => (x) => x.profile.id === friendProfileId,
     );
     if (index < 0) {
       throw new Error("friend doesn't exist.");
@@ -69,7 +65,7 @@ export class FriendsService {
   // 전체 친구 목록 조회 - 숨김처리하지않은
   async listFriend(profileId: string): Promise<Friend[]> {
     const filter: FilterQuery<Friend> = {
-      profile: new Types.ObjectId(profileId),
+      profileId: new Types.ObjectId(profileId),
     };
 
     const friendFilter: FilterQuery<Friend> = {
@@ -90,7 +86,7 @@ export class FriendsService {
   // 숨김 친구 목록 조회 - 숨김처리하지않은
   async listHiddenFriend(profileId: string): Promise<Friend[]> {
     const filter: FilterQuery<Friend> = {
-      profile: new Types.ObjectId(profileId),
+      profileId: new Types.ObjectId(profileId),
     };
 
     const friendFilter: FilterQuery<Friend> = {

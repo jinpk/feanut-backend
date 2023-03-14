@@ -12,7 +12,7 @@ export class ProfileFriends {
   id: string;
 
   @Prop({ type: Types.ObjectId, ref: Profile.name })
-  profile: Profile;
+  profileId: Types.ObjectId;
 
   // 친구리스트
   @Prop({

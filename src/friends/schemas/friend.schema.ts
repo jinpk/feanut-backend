@@ -8,7 +8,7 @@ export type FriendDocument = HydratedDocument<Friend>;
 export class Friend {
   // 친구
   @Prop({ type: Types.ObjectId, ref: Profile.name })
-  profile: Profile;
+  profileId: Types.ObjectId;
 
   // 숨김여부
   @Prop({})
