@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FilesService } from 'src/files/files.service';
-import { FriendsService } from 'src/friends/friends.service';
+import { FriendsService } from 'src/friends/friends.interface';
 import { ProfileCreatedEvent, ProfileUpdatedEvent } from './events';
 
 @Injectable()
