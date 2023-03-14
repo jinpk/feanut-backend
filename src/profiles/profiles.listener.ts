@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FilesService } from 'src/files/files.service';
 import { FriendsService } from 'src/friends/friends.service';
-import { ProfileCreatedEvent, ProfileUpdatedEvent } from './events';
+import { ProfileCreatedEvent } from './events';
 
 @Injectable()
 export class ProfilesEventListener {
@@ -23,18 +23,6 @@ export class ProfilesEventListener {
       await this.friendsService.initProfileFriendsById(payload.profileId);
     } catch (error) {
       this.logger.error(error);
-    }
-  }
-
-  @OnEvent(ProfileUpdatedEvent.name)
-  handleProfileUpdatedEvent(payload: ProfileUpdatedEvent) {
-    this.logger.log(
-      `${ProfileUpdatedEvent.name} detected: ${JSON.stringify(payload)}`,
-    );
-
-    // profileImageId 변경시 files state update
-    if (payload.dto.profileImageId) {
-      this.filesService.updateUploadedState(payload.dto.profileImageId);
     }
   }
 }
