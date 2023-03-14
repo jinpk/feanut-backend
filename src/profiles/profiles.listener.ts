@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FilesService } from 'src/files/files.service';
-import { FriendsService } from 'src/friends/friends.interface';
+import { FriendsService } from 'src/friends/friends.service';
 import { ProfileCreatedEvent, ProfileUpdatedEvent } from './events';
 
 @Injectable()
@@ -14,12 +14,16 @@ export class ProfilesEventListener {
   ) {}
 
   @OnEvent(ProfileCreatedEvent.name)
-  handleProfileCreatedEvent(payload: ProfileCreatedEvent) {
+  async handleProfileCreatedEvent(payload: ProfileCreatedEvent) {
     this.logger.log(
       `${ProfileCreatedEvent.name} detected: ${JSON.stringify(payload)}`,
     );
 
-    this.friendsService.initProfileFriendsById(payload.profileId);
+    try {
+      await this.friendsService.initProfileFriendsById(payload.profileId);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   @OnEvent(ProfileUpdatedEvent.name)

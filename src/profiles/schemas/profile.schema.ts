@@ -1,12 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { Gender } from '../enums';
-import { PROFILE_MODULE_NAME } from '../profiles.constant';
+import { SCHEMA_NAME } from '../profiles.constant';
 
 export type ProfileDocument = HydratedDocument<Profile>;
 
-// Profile
-@Schema({ collection: PROFILE_MODULE_NAME, timestamps: true })
+@Schema({ collection: SCHEMA_NAME, timestamps: true })
 export class Profile {
   // pk
   id: string;
@@ -17,16 +16,20 @@ export class Profile {
 
   // 생일
   // format: YYYYMMDD
-  @Prop({})
+  @Prop({ maxlength: 8 })
   birth?: string;
 
   // 성별
   @Prop({ enum: Gender, required: false })
-  gender?: string;
+  gender?: Gender;
 
-  // kakaoUserId
-  @Prop({ unique: true })
+  // 카카오 사용자 ID
+  @Prop({})
   kakaoUserId: string;
+
+  // 프로필 삭제 여부
+  @Prop({})
+  isDeleted?: boolean;
 
   // 생성시간
   @Prop()

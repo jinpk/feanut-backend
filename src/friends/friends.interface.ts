@@ -1,6 +1,6 @@
 import { Friend } from './schemas/friend.schema';
 
-export interface FriendsService {
+export interface FriendsServiceInterface {
   // 친구 문서 생성
   initProfileFriendsById(profileId: string): Promise<void>;
 

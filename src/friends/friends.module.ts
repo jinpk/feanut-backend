@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { FriendsController } from './friends.controller';
-import { FriendsServiceImpl } from './friends.service';
+import { FriendsService } from './friends.service';
 import {
   ProfileFriends,
   ProfileFriendsSchema,
@@ -14,7 +14,7 @@ import {
     ]),
   ],
   controllers: [FriendsController],
-  providers: [FriendsServiceImpl],
-  exports: [FriendsServiceImpl],
+  providers: [FriendsService],
+  exports: [FriendsService],
 })
 export class FriendsModule {}

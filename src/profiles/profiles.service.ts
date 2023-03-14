@@ -13,9 +13,12 @@ export class ProfilesService {
     private eventEmitter: EventEmitter2,
   ) {}
 
+  async deleteProfile(profileId: string) {
+    await this.profileModel.findByIdAndDelete(profileId);
+  }
+
   async createEmptyProfile() {
     const doc = await new this.profileModel({}).save();
-
     const id = doc._id.toHexString();
 
     this.eventEmitter.emit(
@@ -26,15 +29,28 @@ export class ProfilesService {
     return id;
   }
 
-  async hasKakaoProfileById(kakaoUserId: bigint): Promise<boolean> {
+  async hasByKakaoUserId(kakaoUserId: string): Promise<boolean> {
     const doc = await this.profileModel.findOne({
-      serviceUserId: kakaoUserId.toString(),
+      kakaoUserId,
     });
-    if (doc) {
-      return true;
+
+    if (!doc) {
+      return false;
     }
 
     return false;
+  }
+
+  async createProfileWithKakaoUserId(kakaoUserId: string): Promise<string> {
+    const doc = await new this.profileModel({ kakaoUserId }).save();
+    const id = doc._id.toHexString();
+
+    this.eventEmitter.emit(
+      ProfileCreatedEvent.name,
+      new ProfileCreatedEvent(id),
+    );
+
+    return id;
   }
 
   async insertKakaoProfile(dto: InsertKakaoProfileDto): Promise<string> {

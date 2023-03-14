@@ -6,10 +6,10 @@ import {
   ProfileFriends,
   ProfileFriendsDocument,
 } from './schemas/profile-friends.schema';
-import { FriendsService } from './friends.interface';
+import { FriendsServiceInterface } from './friends.interface';
 
 @Injectable()
-export class FriendsServiceImpl implements FriendsService {
+export class FriendsService implements FriendsServiceInterface {
   constructor(
     @InjectModel(ProfileFriends.name)
     private profileFriendsModel: Model<ProfileFriendsDocument>,
