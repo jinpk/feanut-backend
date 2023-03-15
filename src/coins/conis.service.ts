@@ -14,7 +14,7 @@ export class CoinsService {
     private profilesService: ProfilesService,
   ) {}
 
-  async findActiveUserOne(
+  async findCoinOne(
     filter: FilterQuery<CoinDocument>,
   ): Promise<Coin | null> {
     const user = await this.coinModel.findOne({

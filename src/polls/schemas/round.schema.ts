@@ -1,19 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { Emotion } from '../enums';
-import { VOTE_MODULE_NAME } from '../votes.constant';
+import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
 
-export type VoteDocument = HydratedDocument<Vote>;
+export type RoundDocument = HydratedDocument<Round>;
 
-// Vote
-@Schema({ collection: VOTE_MODULE_NAME, timestamps: true })
-export class Vote {
+// Round
+@Schema({ collection: ROUND_MODULE_NAME, timestamps: true })
+export class Round {
   // pk
   id: string;
 
   // profileId
   @Prop({})
-  progileId: string;
+  profileId: string;
 
   // 생일
   // format: YYYYMMDD
@@ -33,4 +33,4 @@ export class Vote {
   createdAt?: Date;
 }
 
-export const VoteSchema = SchemaFactory.createForClass(Vote);
+export const RoundSchema = SchemaFactory.createForClass(Round);
