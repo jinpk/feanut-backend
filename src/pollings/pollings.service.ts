@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePollingDto } from './dtos/create-polling.dto';
+import { PollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 
 @Injectable()
 export class PollingsService {
-  create(createPollingDto: CreatePollingDto) {
+  create(PollingDto: PollingDto) {
     return 'This action adds a new polling';
   }
 

@@ -1,15 +1,19 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PollingsService } from './pollings.service';
-import { CreatePollingDto } from './dtos/create-polling.dto';
+import { PollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Polling')
 @Controller('pollings')
 export class PollingsController {
-  constructor(private readonly pollingsService: PollingsService) {}
+  constructor(
+    private readonly pollingsService: PollingsService,
+  ) {}
 
   @Post()
-  create(@Body() createPollingDto: CreatePollingDto) {
-    return this.pollingsService.create(createPollingDto);
+  create(@Body() PollingDto: PollingDto) {
+    return this.pollingsService.create(PollingDto);
   }
 
   @Get()

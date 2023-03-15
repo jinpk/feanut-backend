@@ -23,6 +23,7 @@ import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
 import { UpdatePollDto } from './dtos/update-poll.dto';
 
+@ApiTags('Poll')
 @Controller('polls')
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}

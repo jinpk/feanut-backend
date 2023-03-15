@@ -1,0 +1,1 @@
+export const POLLING_MODULE_NAME = 'pollings'
