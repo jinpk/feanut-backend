@@ -5,12 +5,14 @@ import { Model } from 'mongoose';
 import { Gender } from './enums';
 import { ProfileCreatedEvent } from './events';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
     private eventEmitter: EventEmitter2,
+    private filesService: FilesService,
   ) {}
 
   async createEmptyProfile() {

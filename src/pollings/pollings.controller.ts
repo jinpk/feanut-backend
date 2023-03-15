@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PollingsService } from './pollings.service';
-import { CreatePollingDto } from './dto/create-polling.dto';
-import { UpdatePollingDto } from './dto/update-polling.dto';
+import { CreatePollingDto } from './dtos/create-polling.dto';
+import { UpdatePollingDto } from './dtos/update-polling.dto';
 
 @Controller('pollings')
 export class PollingsController {

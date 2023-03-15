@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePollingDto } from './dto/create-polling.dto';
-import { UpdatePollingDto } from './dto/update-polling.dto';
+import { CreatePollingDto } from './dtos/create-polling.dto';
+import { UpdatePollingDto } from './dtos/update-polling.dto';
 
 @Injectable()
 export class PollingsService {

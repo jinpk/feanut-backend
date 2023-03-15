@@ -20,8 +20,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger'
 import { PollsService } from './polls.service';
-import { PollDto } from './dto/poll.dto';
-import { UpdatePollDto } from './dto/update-poll.dto';
+import { PollDto } from './dtos/poll.dto';
+import { UpdatePollDto } from './dtos/update-poll.dto';
 
 @Controller('polls')
 export class PollsController {

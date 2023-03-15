@@ -8,9 +8,9 @@ import {
   ProjectionFields,
   Types,
 } from 'mongoose';
-import { PollDto } from './dto/poll.dto';
+import { PollDto } from './dtos/poll.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
-import { UpdatePollDto } from './dto/update-poll.dto';
+import { UpdatePollDto } from './dtos/update-poll.dto';
 import { ProfilesService } from 'src/profiles/profiles.service';
 
 @Injectable()
