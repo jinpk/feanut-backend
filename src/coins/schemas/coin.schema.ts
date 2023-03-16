@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, now } from 'mongoose';
 import { COIN_MODULE_NAME } from '../coins.constant';
 
 export type CoinDocument = HydratedDocument<Coin>;
@@ -23,7 +23,9 @@ export class Coin {
   accumLogs: number[];
 
   // 생성시간
-  @Prop()
+  @Prop({
+    default: now(),
+  })
   createdAt?: Date;
 }
 

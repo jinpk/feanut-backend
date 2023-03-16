@@ -1,9 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, Length } from 'class-validator';
+import { CoinDto } from './coin.dto';
 
 export class UpdateCoinDto {
-  @ApiProperty({ title: '이름', required: false })
-  @IsOptional()
-  @IsNotEmpty()
-  name: string;
+  @ApiProperty()
+  profileId: string;
+
+  @ApiProperty()
+  amount: number;
 }

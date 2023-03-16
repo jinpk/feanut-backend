@@ -12,6 +12,9 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({ origin: '*' });
+  app.useGlobalPipes(new ValidationPipe());
+
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port');
   const env = configService.get<string>('env');
