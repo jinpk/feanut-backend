@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { FilesService } from 'src/files/files.service';
 import { FriendsService } from 'src/friends/friends.service';
 import { ProfileCreatedEvent } from './events';
 
@@ -8,10 +7,7 @@ import { ProfileCreatedEvent } from './events';
 export class ProfilesEventListener {
   private readonly logger = new Logger(ProfilesEventListener.name);
 
-  constructor(
-    private filesService: FilesService,
-    private friendsService: FriendsService,
-  ) {}
+  constructor(private friendsService: FriendsService) {}
 
   @OnEvent(ProfileCreatedEvent.name)
   async handleProfileCreatedEvent(payload: ProfileCreatedEvent) {

@@ -1,17 +1,5 @@
-import {
-  Body,
-  Controller,
-  Param,
-  Patch,
-  Req,
-  UnauthorizedException,
-} from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Controller } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Profile')
 @Controller('profiles')
