@@ -13,11 +13,6 @@ export class ProfilesService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async createEmptyProfile() {
-    throw new Error('Method not implemented.');
-    return '';
-  }
-
   async hasByKakaoUserId(kakaoUserId: string): Promise<boolean> {
     const doc = await this.profileModel.findOne({
       kakaoUserId,

@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { ProfilesService } from 'src/profiles/profiles.service';
+import { FilterQuery, Model } from 'mongoose';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private profilesService: ProfilesService,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findActiveUserOne(
     filter: FilterQuery<UserDocument>,
@@ -38,16 +34,6 @@ export class UsersService {
 
   async createUserWithEmail(email: string): Promise<string> {
     const user = await new this.userModel({ email }).save();
-
-    // 프로필 생성
-    try {
-      const profileId = await this.profilesService.createEmptyProfile();
-      user.profileId = new Types.ObjectId(profileId);
-      await user.save();
-    } catch (error) {
-      user.delete();
-    }
-
     return user._id.toHexString();
   }
 
