@@ -16,6 +16,7 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { FilesModule } from './files/files.module';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ExceptionsFilter } from './common/filters/exceptions.filter';
     FilesModule,
     PollingsModule,
     PollsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

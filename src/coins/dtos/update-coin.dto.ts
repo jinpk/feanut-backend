@@ -4,8 +4,5 @@ import { CoinDto } from './coin.dto';
 
 export class UpdateCoinDto {
   @ApiProperty()
-  profileId: string;
-
-  @ApiProperty()
   amount: number;
 }
