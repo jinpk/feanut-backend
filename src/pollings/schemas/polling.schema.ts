@@ -11,22 +11,33 @@ export class Polling {
   // pk
   id: string;
 
-  // profileId
+  // userId
   @Prop({})
-  profileId: string;
+  userId: string;
 
-  // 생일
-  // format: YYYYMMDD
+  // roundId
   @Prop({})
-  birth?: string;
+  roundId: string;
 
-  // 성별
-  @Prop({ enum: Emotion })
-  emotion?: string;
+  // pollIds
+  @Prop({})
+  pollIds: string[];
 
-  // kakaoUserId
-  @Prop({ unique: true })
-  kakaoUserId: string;
+  // friendList
+  @Prop({})
+  friendIds: string[];
+
+  // selectedId
+  @Prop({})
+  selectedProfileId: string;
+
+  // selectedAt
+  @Prop({})
+  selectedAt: Date;
+
+  // isDeleted
+  @Prop({default: false})
+  isDeleted: boolean;
 
   // 생성시간
   @Prop()

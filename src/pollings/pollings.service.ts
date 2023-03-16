@@ -1,26 +1,46 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  now,
+  FilterQuery,
+  Model,
+  PipelineStage,
+  ProjectionFields,
+  Types,
+} from 'mongoose';
+import { PagingResDto } from 'src/common/dtos';
+import { ProfilesService } from 'src/profiles/profiles.service';
+import { Coin, CoinDocument } from '../coins/schemas/coin.schema';
+import { Polling, PollingDocument } from './schemas/polling.schema';
 import { PollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
+import { GetPollingDto } from './dtos/get-polling.dto';
 
 @Injectable()
 export class PollingsService {
-  create(PollingDto: PollingDto) {
-    return 'This action adds a new polling';
+  constructor(
+    @InjectModel(Polling.name) private coinModel: Model<PollingDocument>,
+    @InjectModel(Coin.name) private buycoinModel: Model<CoinDocument>,
+    private profilesService: ProfilesService,
+  ) {}
+
+  async createPolling(user_id: string, body: PollingDto){
+
   }
 
-  findAll() {
-    return `This action returns all pollings`;
+  async findRefreshedPollingById(query: GetPollingDto) {
+
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} polling`;
+  async findListPolling(query: GetPollingDto) {
+
   }
 
-  update(id: number, updatePollingDto: UpdatePollingDto) {
-    return `This action updates a #${id} polling`;
+  async findListPollingByProfile(query: GetPollingDto) {
+    
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} polling`;
+  async findListPollingById(query: GetPollingDto) {
+
   }
 }

@@ -10,6 +10,7 @@ import {
 } from 'mongoose';
 import { PollDto } from './dtos/poll.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
+import { Round, RoundDocument } from './schemas/round.schema';
 import { UpdatePollDto } from './dtos/update-poll.dto';
 import { ProfilesService } from 'src/profiles/profiles.service';
 
@@ -17,6 +18,7 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 export class PollsService {
   constructor(
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
+    @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
     private profilesService: ProfilesService,
   ) {}
 

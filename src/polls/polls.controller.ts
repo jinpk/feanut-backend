@@ -22,34 +22,20 @@ import {
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
 import { UpdatePollDto } from './dtos/update-poll.dto';
+import { GetListRoundDto, GetListPollDto } from './dtos/get-poll.dto';
+import { Round } from './schemas/round.schema';
+import { ApiOkResponsePaginated } from 'src/common/decorators';
 
 @ApiTags('Poll')
 @Controller('polls')
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
 
-  @Post()
-  create(@Body() createPollDto: PollDto) {
-    return this.pollsService.create(createPollDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.pollsService.findAll();
-  }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.pollsService.findOne();
-  // }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePollDto: UpdatePollDto) {
-    return this.pollsService.update(+id, updatePollDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pollsService.remove(+id);
-  }
+  @Get('rounds')
+  @ApiOperation({
+    summary: '(ADMIN) 라운드 목록 조회',
+    description: 'userId 미입력 시 전체조회',
+  })
+  @ApiOkResponsePaginated(Round)
+  async getListRound(@Query() query: GetListRoundDto) {}
 }
