@@ -25,7 +25,7 @@ import { PollingsService } from './pollings.service';
 import { PollingDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import { GetPollingDto } from './dtos/get-polling.dto';
+import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -34,37 +34,51 @@ export class PollingsController {
     private readonly pollingsService: PollingsService,
   ) {}
 
-  @Get('list')
+  @Get('')
   @ApiOperation({
       summary: '(ADMIN) 투표 리스트 조회',
       description: 'userId 미입력 시 전체조회',
   })
   @ApiOkResponsePaginated(Polling)
-  async getPollingList(@Query() query: GetPollingDto) {
+  async getPollingList(@Query() query: GetListPollingDto) {
     return await this.pollingsService.findListPolling(query);
   }
 
-  @Get('recieve/me')
+  @Get('recieve')
   @ApiOperation({
       summary: '나의 수신 리스트 조회',
   })
   @ApiOkResponsePaginated(Polling)
-  async getMyPollingList(@Query() query: GetPollingDto) {
+  async getMyPollingList(@Query() query: GetListPollingDto) {
     return await this.pollingsService.findListPollingByProfile(query);
   }
 
-  @Get('recieve/')
+  @Get('recieve/:pollingId')
   @ApiOperation({
       summary: '수신 상세내역 조회',
   })
-  @ApiOkResponsePaginated(Polling)
-  async getMyPollingDetail(@Query() query: GetPollingDto) {
-    return await this.pollingsService.findListPollingById(query);
+  @ApiOkResponse({
+    status: 200,
+    type: Polling,
+  })
+  async getMyPollingDetail(
+    @Param('pollingId') pollingId,
+    @Query() query: GetPollingDto) {
+      return await this.pollingsService.findListPollingById(query);
+  }
+
+  @Post('receive/:pollingId/open')
+  @ApiResponse({
+      status: 200,
+      type: String,
+  })
+  async postPollingOpen(@Param('pollingId') pollingId, @Request() req) {
+      return await this.pollingsService.createPollingOpen(req.user.id, pollingId);
   }
 
   @Post('')
   @ApiOperation({
-    summary: 'poll생성',
+    summary: 'polling 생성',
     description: '건너뛰기 선택 시 selectedProfileId는 empty string',
   })
   @ApiBody({
@@ -78,11 +92,11 @@ export class PollingsController {
       return await this.pollingsService.createPolling(req.user.id, body);
   }
 
-  @Get('refresh/:pollingId')
-  @ApiOperation({
-      summary: '수신 상세내역 조회',
-  })
-  async getRefreshedPolling(@Query() query: GetPollingDto) {
-    return await this.pollingsService.findRefreshedPollingById(query);
-  }
+  // @Get('refresh/:pollingId')
+  // @ApiOperation({
+  //     summary: '수신 상세내역 조회',
+  // })
+  // async getRefreshedPolling(@Query() query: GetPollingDto) {
+  //   return await this.pollingsService.findRefreshedPollingById(query);
+  // }
 }

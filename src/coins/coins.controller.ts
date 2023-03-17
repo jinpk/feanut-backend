@@ -66,18 +66,6 @@ export class CoinsController {
         return await this.coinsService.createBuyCoin(req.user.id, body);
     }
 
-    @Post('usecoin')
-    @ApiBody({
-        type: UseCoinDto,
-    })
-    @ApiResponse({
-        status: 200,
-        type: String,
-    })
-    async postUseCoin(@Body() body, @Request() req) {
-        return await this.coinsService.createUseCoin(req.user.id, body);
-    }
-
     @Patch(':coinId')
     @ApiBody({
         type: UpdateCoinDto

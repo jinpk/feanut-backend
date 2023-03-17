@@ -14,7 +14,7 @@ import { Coin, CoinDocument } from '../coins/schemas/coin.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { PollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import { GetPollingDto } from './dtos/get-polling.dto';
+import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
 
 @Injectable()
 export class PollingsService {
@@ -28,19 +28,23 @@ export class PollingsService {
 
   }
 
-  async findRefreshedPollingById(query: GetPollingDto) {
+  async findRefreshedPollingById(query: GetListPollingDto) {
 
   }
 
-  async findListPolling(query: GetPollingDto) {
+  async findListPolling(query: GetListPollingDto) {
 
   }
 
-  async findListPollingByProfile(query: GetPollingDto) {
+  async findListPollingByProfile(query: GetListPollingDto) {
     
   }
 
   async findListPollingById(query: GetPollingDto) {
 
+  }
+
+  async createPollingOpen(user_id, polling_id: string) {
+    
   }
 }
