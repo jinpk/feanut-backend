@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, now } from 'mongoose';
 import { Emotion } from '../enums';
 import { POLL_MODULE_NAME } from '../../polls/polls.constant';
 
@@ -11,25 +11,22 @@ export class Poll {
   // pk
   id: string;
 
-  // profileId
+  // emotion
   @Prop({})
-  profileId: string;
+  emotion: Emotion;
 
-  // 생일
-  // format: YYYYMMDD
+  // emoji
+  @Prop({ default: 0 })
+  emoji: number;
+
+  // 본문
   @Prop({})
-  birth?: string;
-
-  // 성별
-  @Prop({ enum: Emotion })
-  emotion?: string;
-
-  // kakaoUserId
-  @Prop({ unique: true })
-  kakaoUserId: string;
+  contentText: string;  
 
   // 생성시간
-  @Prop()
+  @Prop({
+    default: now(),
+  })
   createdAt?: Date;
 }
 

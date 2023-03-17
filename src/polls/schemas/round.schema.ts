@@ -11,22 +11,19 @@ export class Round {
   // pk
   id: string;
 
-  // profileId
+  @Prop({default: false})
+  enabled: boolean;
+
   @Prop({})
-  profileId: string;
+  pollIds: string[];
 
-  // 생일
-  // format: YYYYMMDD
+  // round 활성화 시작 시간
   @Prop({})
-  birth?: string;
+  startedAt?: Date;
 
-  // 성별
-  @Prop({ enum: Emotion })
-  emotion?: string;
-
-  // kakaoUserId
-  @Prop({ unique: true })
-  kakaoUserId: string;
+  // round 활성화 끝 시간
+  @Prop({})
+  endedAt?: Date;
 
   // 생성시간
   @Prop()

@@ -8,11 +8,15 @@ import {
   ProjectionFields,
   Types,
 } from 'mongoose';
+import { PagingResDto } from 'src/common/dtos';
+import { ProfilesService } from 'src/profiles/profiles.service';
 import { PollDto } from './dtos/poll.dto';
+import { RoundDto } from './dtos/round.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
 import { Round, RoundDocument } from './schemas/round.schema';
 import { UpdatePollDto } from './dtos/update-poll.dto';
-import { ProfilesService } from 'src/profiles/profiles.service';
+import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto'
+// import { UtilsService } from 'src/common/providers';
 
 @Injectable()
 export class PollsService {
@@ -22,34 +26,55 @@ export class PollsService {
     private profilesService: ProfilesService,
   ) {}
 
-  create(createPollDto: PollDto) {
-    return 'This action adds a new poll';
+  async findListRound(query:GetListRoundDto): Promise<PagingResDto<RoundDto>> {
+    var filter: FilterQuery<RoundDocument> = {}
+
+    const projection: ProjectionFields<RoundDto> = {
+      _id: 1,
+      userId: 1,
+      useType: 1,
+      createdAt: 1,
+    };
+
+    const cursor = await this.roundModel.aggregate([
+      { $match: filter },
+      { $project: projection },
+      { $sort: { createdAt: -1 } },
+      // this.utilsService.getCommonMongooseFacet(query),
+    ]);
+
+    const metdata = cursor[0].metadata;
+    const data = cursor[0].data;
+
+    return {
+      total: metdata[0]?.total || 0,
+      data: data,
+    };
   }
 
-  findAll() {
-    return `This action returns all polls`;
-  }
+  async findListPoll(query:GetListPollDto): Promise<PagingResDto<PollDto>> {
+    var filter: FilterQuery<PollDocument> = {}
 
-  async findOne(
-    filter: FilterQuery<PollDocument>,
-  ): Promise<Poll | null> {
-    const user = await this.pollModel.findOne({
-      ...filter,
-      isDeleted: false,
-    });
+    const projection: ProjectionFields<PollDto> = {
+      _id: 1,
+      userId: 1,
+      useType: 1,
+      createdAt: 1,
+    };
 
-    if (!user) {
-      return null;
-    }
+    const cursor = await this.pollModel.aggregate([
+      { $match: filter },
+      { $project: projection },
+      { $sort: { createdAt: -1 } },
+      // this.utilsService.getCommonMongooseFacet(query),
+    ]);
 
-    return user.toObject();
-  }
+    const metdata = cursor[0].metadata;
+    const data = cursor[0].data;
 
-  update(id: number, updatePollDto: UpdatePollDto) {
-    return `This action updates a #${id} poll`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} poll`;
+    return {
+      total: metdata[0]?.total || 0,
+      data: data,
+    };
   }
 }
