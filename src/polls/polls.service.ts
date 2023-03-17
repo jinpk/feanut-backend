@@ -36,28 +36,45 @@ export class PollsService {
     return result._id.toString()
   }
 
-  async updatePoll(poll_id: string, body) {
+  async updatePoll(poll_id: string, poll: Poll, body) {
     const result = await this.pollModel.findByIdAndUpdate( poll_id, { 
       $set: {body, updatedAt: now()}
     });
     return result._id.toString()
   }
 
-  async updateRound(round_id: string, body: UpdateRoundDto) {
+  async updateRound(round_id: string, round: Round, body: UpdateRoundDto) {
     const result = await this.roundModel.findByIdAndUpdate( round_id, { 
       $set: {body, updatedAt: now()}
     });
     return result._id.toString()
   }
 
-  async updatePollIds(round_id: string, body: UpdatePollIdsDto) {
-    const round = await this.roundModel.findOne({round_id})
+  async updatePollIds(round_id: string, round: Round, body: UpdatePollIdsDto) {
     const newIds = round.pollIds.concat(body.pollIds)
-    
+
     const result = await this.roundModel.findByIdAndUpdate( round_id, { 
       $set: {pollIds: newIds, updatedAt: now()}
     });
     return result._id.toString()
+  }
+
+  async existPoll(poll_id: string): Promise<[boolean, Poll]> {
+    const poll = await this.pollModel.findOne({poll_id})
+
+    if (!poll) {
+      return [false, poll]
+    }
+    return [true, poll]
+  }
+
+  async existRound(round_id: string): Promise<[boolean, Round]> {
+    const round = await this.roundModel.findOne({round_id})
+
+    if (!round) {
+      return [false, round]
+    }
+    return [true, round]
   }
 
   async findListRound(query:GetListRoundDto): Promise<PagingResDto<RoundDto>> {

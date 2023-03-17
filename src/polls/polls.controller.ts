@@ -77,7 +77,11 @@ export class PollsController {
     type: String,
   })
   async putPollIds(@Param('roundId') roundId, @Body() body) {
-    return await this.pollsService.updatePollIds(roundId, body)
+    const [exist, round] = await this.pollsService.existRound(roundId)
+    if (!exist) {
+      throw new NotFoundException('not found round')
+    }
+    return await this.pollsService.updatePollIds(roundId, round, body)
   }
 
   @Put('rounds/:roundId')
@@ -92,7 +96,32 @@ export class PollsController {
     type: String,
   })
   async putRound(@Param('roundId') roundId, @Body() body) {
-    return await this.pollsService.updateRound(roundId, body)
+    const [exist, round] = await this.pollsService.existRound(roundId)
+    if (!exist) {
+      throw new NotFoundException('not found round')
+    }
+
+    return await this.pollsService.updateRound(roundId, round, body)
+  }
+
+  @Put(':pollId')
+  @ApiOperation({
+    summary: '(ADMIN) Poll 수정',
+  })
+  @ApiBody({
+    type: UpdateRoundDto,
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async putPoll(@Param('pollId') pollId, @Body() body) {
+    const [exist, poll] = await this.pollsService.existPoll(pollId)
+    if (!exist) {
+      throw new NotFoundException('not found poll')
+    }
+
+    return await this.pollsService.updatePoll(pollId, poll, body)
   }
 
   @Get('rounds')
