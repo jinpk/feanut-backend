@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger'
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
+import { RoundDto } from './dtos/round.dto';
 import { UpdatePollDto, UpdateRoundDto, UpdatePollIdsDto } from './dtos/update-poll.dto';
 import { GetListRoundDto, GetListPollDto } from './dtos/get-poll.dto';
 import { Round } from './schemas/round.schema';
@@ -31,6 +32,68 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 @Controller('polls')
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
+
+  @Post('rounds')
+  @ApiOperation({
+    summary: '(ADMIN) New 라운드 등록',
+  })
+  @ApiBody({
+    type: RoundDto,
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async postRound(@Body() body) {
+    return await this.pollsService.createRound(body);
+  }
+
+  @Post('')
+  @ApiOperation({
+    summary: '(ADMIN) New Poll 등록',
+    description: 'emoji 컬럼: 특정 emoji를 등록하려면 emoji index 입력. default: 0인 경우 emotion에 따라 랜덤',
+  })
+  @ApiBody({
+    type: PollDto,
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async postPoll(@Body() body) {
+    return await this.pollsService.createPoll(body);
+  }
+
+  @Put('rounds/:roundId/pollIds')
+  @ApiOperation({
+    summary: '(ADMIN) 라운드 PollIds 수정',
+    description: 'delete=false 이면 해당 pollId를 추가. delete=true 이면 해당 pollId를 삭제.',
+  })
+  @ApiBody({
+    type: UpdatePollIdsDto,
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async putPollIds(@Param('roundId') roundId, @Body() body) {
+    return await this.pollsService.updatePollIds(roundId, body)
+  }
+
+  @Put('rounds/:roundId')
+  @ApiOperation({
+    summary: '(ADMIN) 라운드 수정',
+  })
+  @ApiBody({
+    type: UpdateRoundDto,
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async putRound(@Param('roundId') roundId, @Body() body) {
+    return await this.pollsService.updateRound(roundId, body)
+  }
 
   @Get('rounds')
   @ApiOperation({
@@ -50,19 +113,6 @@ export class PollsController {
     return await this.pollsService.findListPoll(query);
   }
 
-  @Get('')
-  @ApiOperation({
-    summary: '(ADMIN) 등록된 투표 상세 조회',
-    description: 'userId 미입력 시 전체조회',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: Poll,
-  })
-  async getPollDetail(@Query() query: GetListPollDto) {
-
-  }
-
   @Get('rounds/:roundId')
   @ApiOperation({
     summary: '(ADMIN) 등록된 라운드 상세 조회',
@@ -72,38 +122,21 @@ export class PollsController {
     status: 200,
     type: Poll,
   })
-  async getRoundDetail(@Query() query: GetListPollDto) {
-
+  async getRoundDetail(@Param('roundId') roundId) {
+    return await this.pollsService.findRoundOne()
   }
 
-  @Put('rounds/:roundId/pollIds')
+  @Get(':/pollId')
   @ApiOperation({
-    summary: '라운드 PollIds 수정',
-    description: 'delete=false 이면 해당 pollId를 추가. delete=true 이면 해당 pollId를 삭제.',
-  })
-  @ApiBody({
-    type: UpdatePollIdsDto,
+    summary: '(ADMIN) 등록된 투표 상세 조회',
+    description: 'userId 미입력 시 전체조회',
   })
   @ApiOkResponse({
     status: 200,
-    type: String,
+    type: Poll,
   })
-  async putPollIds(@Param('roundId') roundId, @Body() body) {
-
+  async getPollDetail(@Param('pollId') pollId) {
+    return await this.pollsService.findPollOne()
   }
 
-  @Put('rounds/:roundId')
-  @ApiOperation({
-    summary: '라운드 수정',
-  })
-  @ApiBody({
-    type: UpdateRoundDto,
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: String,
-  })
-  async putRound(@Param('roundId') roundId, @Body() body) {
-
-  }
 }

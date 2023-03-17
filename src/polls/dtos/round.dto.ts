@@ -14,7 +14,4 @@ export class RoundDto {
 
   @ApiProperty({})
   endedAt?: Date;
-
-  @ApiProperty({})
-  createdAt?: Date;
 }
