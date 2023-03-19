@@ -30,6 +30,7 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 
 @ApiTags('Poll')
 @Controller('polls')
+@ApiBearerAuth()
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
 
@@ -44,7 +45,10 @@ export class PollsController {
     status: 200,
     type: String,
   })
-  async postRound(@Body() body) {
+  async postRound(@Body() body, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin')
+    }
     return await this.pollsService.createRound(body);
   }
 
@@ -60,7 +64,10 @@ export class PollsController {
     status: 200,
     type: String,
   })
-  async postPoll(@Body() body) {
+  async postPoll(@Body() body, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin')
+    }
     return await this.pollsService.createPoll(body);
   }
 
@@ -76,12 +83,18 @@ export class PollsController {
     status: 200,
     type: String,
   })
-  async putPollIds(@Param('roundId') roundId, @Body() body) {
-    const [exist, round] = await this.pollsService.existRound(roundId)
-    if (!exist) {
-      throw new NotFoundException('not found round')
-    }
-    return await this.pollsService.updatePollIds(roundId, round, body)
+  async putPollIds(
+    @Param('roundId') roundId,
+    @Body() body,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      const [exist, round] = await this.pollsService.existRound(roundId)
+      if (!exist) {
+        throw new NotFoundException('not found round')
+      }
+      return await this.pollsService.updatePollIds(roundId, round, body)
   }
 
   @Put('rounds/:roundId')
@@ -95,13 +108,20 @@ export class PollsController {
     status: 200,
     type: String,
   })
-  async putRound(@Param('roundId') roundId, @Body() body) {
-    const [exist, round] = await this.pollsService.existRound(roundId)
-    if (!exist) {
-      throw new NotFoundException('not found round')
-    }
+  async putRound(
+    @Param('roundId') roundId,
+    @Body() body,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
 
-    return await this.pollsService.updateRound(roundId, round, body)
+      const [exist, round] = await this.pollsService.existRound(roundId)
+      if (!exist) {
+        throw new NotFoundException('not found round')
+      }
+
+      return await this.pollsService.updateRound(roundId, round, body)
   }
 
   @Put(':pollId')
@@ -115,13 +135,19 @@ export class PollsController {
     status: 200,
     type: String,
   })
-  async putPoll(@Param('pollId') pollId, @Body() body) {
-    const [exist, poll] = await this.pollsService.existPoll(pollId)
-    if (!exist) {
-      throw new NotFoundException('not found poll')
-    }
+  async putPoll(
+    @Param('pollId') pollId,
+    @Body() body,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      const [exist, poll] = await this.pollsService.existPoll(pollId)
+      if (!exist) {
+        throw new NotFoundException('not found poll')
+      }
 
-    return await this.pollsService.updatePoll(pollId, poll, body)
+      return await this.pollsService.updatePoll(pollId, poll, body)
   }
 
   @Get('rounds')
@@ -129,8 +155,13 @@ export class PollsController {
     summary: '(ADMIN) 라운드 목록 조회',
   })
   @ApiOkResponsePaginated(Round)
-  async getListRound(@Query() query: GetListRoundDto) {
-    return await this.pollsService.findListRound(query);
+  async getListRound(
+    @Query() query: GetListRoundDto,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      return await this.pollsService.findListRound(query);
   }
 
   @Get('')
@@ -138,8 +169,13 @@ export class PollsController {
     summary: '(ADMIN) 등록된 투표 목록 조회',
   })
   @ApiOkResponsePaginated(Poll)
-  async getListPoll(@Query() query: GetListPollDto) {
-    return await this.pollsService.findListPoll(query);
+  async getListPoll(
+    @Query() query: GetListPollDto,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      return await this.pollsService.findListPoll(query);
   }
 
   @Get('rounds/:roundId')
@@ -151,8 +187,13 @@ export class PollsController {
     status: 200,
     type: Poll,
   })
-  async getRoundDetail(@Param('roundId') roundId) {
-    return await this.pollsService.findRoundById(roundId)
+  async getRoundDetail(
+    @Param('roundId') roundId,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      return await this.pollsService.findRoundById(roundId)
   }
 
   @Get(':/pollId')
@@ -164,7 +205,12 @@ export class PollsController {
     status: 200,
     type: Poll,
   })
-  async getPollDetail(@Param('pollId') pollId) {
-    return await this.pollsService.findPollById(pollId)
+  async getPollDetail(
+    @Param('pollId') pollId,
+    @Request() req) {
+      if (!req.user.isAdmin) {
+        throw new UnauthorizedException('Not an Admin')
+      }
+      return await this.pollsService.findPollById(pollId)
   }
 }

@@ -1,3 +1,4 @@
+import * as Joi from 'joi';
 import configuration from './config/configuration';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { FilesModule } from './files/files.module';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { AdminModule } from './admin/admin.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { AdminModule } from './admin/admin.module';
     PollingsModule,
     PollsModule,
     AdminModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [
@@ -52,6 +55,7 @@ import { AdminModule } from './admin/admin.module';
       provide: APP_FILTER,
       useClass: ExceptionsFilter,
     },
+    ConfigService
   ],
 })
 export class AppModule {}

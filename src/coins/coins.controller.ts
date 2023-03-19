@@ -52,8 +52,13 @@ export class CoinsController {
         description: 'userId 미입력 시 전체조회',
     })
     @ApiOkResponsePaginated(UseCoin)
-    async getUsecoinList(@Query() query: GetUseCoinDto) {
-      return await this.coinsService.findListUsecoin(query);
+    async getUsecoinList(
+        @Query() query: GetUseCoinDto,
+        @Request() req) {
+            if (!req.user.isAdmin) {
+                throw new UnauthorizedException('Not an Admin')
+            }
+            return await this.coinsService.findListUsecoin(query);
     }
   
     @Get('buycoins/list')
@@ -75,6 +80,9 @@ export class CoinsController {
         type: String,
     })
     async postBuyCoin(@Query() body, @Request() req) {
+        if (!req.user.isAdmin) {
+            throw new UnauthorizedException('Not an Admin')
+        }
         return await this.coinsService.createBuyCoin(req.user.id, body);
     }
 

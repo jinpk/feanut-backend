@@ -19,6 +19,9 @@ export class User {
   @Prop({ type: Types.ObjectId, default: null })
   profileId: Types.ObjectId;
 
+  @Prop({})
+  fcmToken?: string;
+
   // 삭제여부
   @Prop({ default: false })
   isDeleted: boolean;

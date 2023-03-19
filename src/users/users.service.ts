@@ -37,10 +37,22 @@ export class UsersService {
     return user._id.toHexString();
   }
 
+  async getActiveFCMUsers(): Promise<string[]> {
+    const docs = await this.userModel
+      .find()
+      .and([
+        { fcmToken: { $ne: '' } },
+        { fcmToken: { $ne: null } },
+        { deleted: false },
+      ]);
+
+    return docs.map((doc) => doc.fcmToken);
+  }
+
   async _userToDto(user: UserDocument | User): Promise<UserDto> {
     const dto = new UserDto();
     dto.id = user.id;
-    dto.profileId = user.profileId.toHexString();
+    dto.profileId = user.profileId.toHexString()
     dto.email = user.email;
     return dto;
   }

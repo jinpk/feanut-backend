@@ -1,31 +1,46 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { NOTIFICATION_MODULE_NAME } from '../notifications.constant';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsDate, IsDateString, IsNotEmpty } from 'class-validator';
+import { HydratedDocument } from 'mongoose';
+import { NotificationContexts } from '../enums';
 
-export type UserDocument = HydratedDocument<User>;
+export type NotificationDocument = HydratedDocument<Notification>;
 
-// 회원
-@Schema({ collection: NOTIFICATION_MODULE_NAME, timestamps: true })
-export class User {
-  // pk
-  id: string;
+// 관리자 등록 알람
+@Schema({ timestamps: true })
+export class Notification {
+  @Prop({ enum: NotificationContexts, default: NotificationContexts.All })
+  @ApiProperty({ description: '알림종류', enum: NotificationContexts })
+  context: NotificationContexts;
 
-  // 로그인 이메일
-  // unique with isDeleted is false
-  @Prop({ lowercase: true })
-  email: string;
-
-  // profileId
-  @Prop({ type: Types.ObjectId, default: null })
-  profileId: Types.ObjectId;
-
-  // 삭제여부
-  @Prop({ default: false })
-  isDeleted: boolean;
-
-  // 가입시간
   @Prop()
+  @ApiProperty({ description: '발송시간' })
+  @IsDateString()
+  @IsNotEmpty()
+  sendAt: Date;
+
+  @Prop({ default: false })
+  @ApiProperty({ description: 'PUSH 발송여부' })
+  sent: boolean;
+
+  @Prop({})
+  @ApiProperty({ description: 'Image Path', required: false })
+  imagePath: string;
+
+  @Prop({})
+  @ApiProperty({ description: '알림제목' })
+  title: string;
+
+  @Prop({})
+  @ApiProperty({ description: '알림내용' })
+  message: string;
+
+  @Prop({ default: false })
+  deleted: boolean;
+  @Prop({ default: null })
+  deletedAt?: Date;
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const NotificationSchema = SchemaFactory.createForClass(Notification);

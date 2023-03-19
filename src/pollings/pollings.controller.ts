@@ -30,6 +30,7 @@ import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
 
 @ApiTags('Polling')
 @Controller('pollings')
+@ApiBearerAuth()
 export class PollingsController {
   constructor(
     private readonly pollingsService: PollingsService,
