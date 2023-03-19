@@ -82,8 +82,10 @@ export class PollsService {
 
     const projection: ProjectionFields<RoundDto> = {
       _id: 1,
-      userId: 1,
-      useType: 1,
+      enabled: 1,
+      pollIds: 1,
+      startedAt: 1,
+      endedAt: 1,
       createdAt: 1,
     };
 
@@ -108,8 +110,9 @@ export class PollsService {
 
     const projection: ProjectionFields<PollDto> = {
       _id: 1,
-      userId: 1,
-      useType: 1,
+      emotion: 1,
+      emoji: 1,
+      contentText: 1,
       createdAt: 1,
     };
 
@@ -129,11 +132,13 @@ export class PollsService {
     };
   }
 
-  async findRoundOne() {
-
+  async findRoundById(round_id: string) {
+    const result = await this.roundModel.findById(round_id);
+    return result
   }
 
-  async findPollOne() {
-
+  async findPollById(poll_id) {
+    const result = await this.pollModel.findById(poll_id);
+    return result
   }
 }

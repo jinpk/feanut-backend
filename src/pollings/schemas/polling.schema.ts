@@ -35,9 +35,9 @@ export class Polling {
   @Prop({})
   selectedAt: Date;
 
-  // isDeleted
+  // isOpened
   @Prop({default: false})
-  isDeleted: boolean;
+  isOpened: boolean;
 
   // 생성시간
   @Prop()

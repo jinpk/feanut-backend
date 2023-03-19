@@ -152,7 +152,7 @@ export class PollsController {
     type: Poll,
   })
   async getRoundDetail(@Param('roundId') roundId) {
-    return await this.pollsService.findRoundOne()
+    return await this.pollsService.findRoundById(roundId)
   }
 
   @Get(':/pollId')
@@ -165,7 +165,6 @@ export class PollsController {
     type: Poll,
   })
   async getPollDetail(@Param('pollId') pollId) {
-    return await this.pollsService.findPollOne()
+    return await this.pollsService.findPollById(pollId)
   }
-
 }

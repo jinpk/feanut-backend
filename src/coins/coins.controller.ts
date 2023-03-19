@@ -25,6 +25,7 @@ import { CoinsService } from './conis.service';
 import { CoinDto, BuyCoinDto, UseCoinDto } from './dtos/coin.dto';
 import { UpdateCoinDto } from './dtos/update-coin.dto';
 import { GetBuyCoinDto, GetUseCoinDto } from './dtos/get-coin.dto';
+import { Coin } from './schemas/coin.schema';
 import { BuyCoin } from './schemas/buycoin.schema';
 import { UseCoin } from './schemas/usecoin.schema';
 
@@ -33,6 +34,17 @@ import { UseCoin } from './schemas/usecoin.schema';
 @ApiBearerAuth()
 export class CoinsController {
     constructor(private readonly coinsService: CoinsService) {}
+
+    @Get('me')
+    @ApiOperation({
+        summary: '사용자 feanut(coin) 조회',
+    })
+    @ApiOkResponse({
+        type: Coin
+    })
+    async getUsecoin(@Request() req) {
+      return await this.coinsService.findUserCoin(req.user.id);
+    }
 
     @Get('usecoins/list')
     @ApiOperation({

@@ -27,19 +27,12 @@ export class CoinsService {
     private profilesService: ProfilesService,
   ) {}
 
-  async findCoinOne(
-    filter: FilterQuery<CoinDocument>,
-  ): Promise<Coin | null> {
-    const user = await this.coinModel.findOne({
-      ...filter,
-      isDeleted: false,
-    });
+  async findUserCoin(user_id: string): Promise<Coin> {
+    const result = await this.coinModel.findOne(
+      {userId: user_id}
+    );
 
-    if (!user) {
-      return null;
-    }
-
-    return user.toObject();
+    return result
   }
 
   async findListUsecoin(query:GetUseCoinDto): Promise<PagingResDto<UseCoinDto>> {
@@ -96,12 +89,30 @@ export class CoinsService {
 
   async createBuyCoin(user_id: string, body:BuyCoinDto) {
     const result = await new this.buycoinModel(body).save()
+
+    await this.updateCoinAccum(body.userId, body.amount)
     return result._id.toString()
   }
 
-  async createUseCoin(user_id: string, body:UseCoinDto) {
-    const result = await new this.usecoinModel(body).save()
+  async createUseCoin(params:UseCoinDto) {
+    const result = await new this.usecoinModel(params).save()
+
+    await this.updateCoinAccum(params.userId, (-1)*params.amount)
     return result._id.toString()
+  }
+
+  async updateCoinAccum(user_id: string, amount: number) {
+    const usercoin = await this.coinModel.findOne({userId: user_id});
+    usercoin.accumLogs.push(amount);
+
+    var total = 0;
+    for (const cont of usercoin.accumLogs) {
+      total += cont;
+    }
+
+    usercoin.total = total;
+
+    return usercoin.save()
   }
 
   async updateCoin(coin_id, user_id: string, body: UpdateCoinDto) {

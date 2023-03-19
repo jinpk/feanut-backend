@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { USERROUND_NAME } from '../../pollings/pollings.constant';
 
-export type UserroundDocument = HydratedDocument<UserRound>;
+export type UserRoundDocument = HydratedDocument<UserRound>;
 
 // UserRound
 @Schema({ collection: USERROUND_NAME, timestamps: true })

@@ -22,10 +22,11 @@ import {
 } from '@nestjs/swagger'
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { PollingsService } from './pollings.service';
-import { PollingDto } from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
+import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -50,7 +51,7 @@ export class PollingsController {
   })
   @ApiOkResponsePaginated(Polling)
   async getMyPollingList(@Query() query: GetListPollingDto) {
-    return await this.pollingsService.findListPollingByProfile(query);
+    return await this.pollingsService.findListPollingByProfileId(query);
   }
 
   @Get('recieve/:pollingId')
@@ -61,19 +62,26 @@ export class PollingsController {
     status: 200,
     type: Polling,
   })
-  async getMyPollingDetail(
-    @Param('pollingId') pollingId,
-    @Query() query: GetPollingDto) {
-      return await this.pollingsService.findListPollingById(query);
+  async getMyPollingDetail(@Param('pollingId') pollingId) {
+      return await this.pollingsService.findPollingById(pollingId);
   }
 
   @Post('receive/:pollingId/open')
+  @ApiOperation({
+    summary: '수신투표 열람. 피넛 소모',
+})
+  @ApiBody({
+    type: PollingOpenDto,
+  })
   @ApiResponse({
       status: 200,
       type: String,
   })
-  async postPollingOpen(@Param('pollingId') pollingId, @Request() req) {
-      return await this.pollingsService.createPollingOpen(req.user.id, pollingId);
+  async postPollingOpen(
+    @Param('pollingId') pollingId,
+    @Body() body: PollingOpenDto,
+    @Request() req) {
+      return await this.pollingsService.updatePollingOpen(req.user.id, pollingId, body);
   }
 
   @Post('')
@@ -91,12 +99,4 @@ export class PollingsController {
   async postPolling(@Body() body, @Request() req) {
       return await this.pollingsService.createPolling(req.user.id, body);
   }
-
-  // @Get('refresh/:pollingId')
-  // @ApiOperation({
-  //     summary: '수신 상세내역 조회',
-  // })
-  // async getRefreshedPolling(@Query() query: GetPollingDto) {
-  //   return await this.pollingsService.findRefreshedPollingById(query);
-  // }
 }

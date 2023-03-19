@@ -4,7 +4,7 @@ export class RoundDto {
   id: string;
 
   @ApiProperty({})
-  enbaled: boolean;
+  enabled: boolean;
 
   @ApiProperty({})
   pollIds: string[];

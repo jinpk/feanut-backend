@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { Emotion } from '../enums';
+import { HydratedDocument, now } from 'mongoose';
 import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
 
 export type RoundDocument = HydratedDocument<Round>;
@@ -26,7 +25,9 @@ export class Round {
   endedAt?: Date;
 
   // 생성시간
-  @Prop()
+  @Prop({
+    default: now(),
+  })
   createdAt?: Date;
 }
 
