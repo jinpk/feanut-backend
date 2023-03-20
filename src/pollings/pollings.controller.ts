@@ -24,9 +24,11 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { PollingsService } from './pollings.service';
 import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema'
+import { UserRound } from './schemas/userround.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
+import { UserRoundDto } from './dtos/userround.dto';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -85,20 +87,60 @@ export class PollingsController {
       return await this.pollingsService.updatePollingOpen(req.user.id, pollingId, body);
   }
 
-  @Post('')
+  @Post('userround')
   @ApiOperation({
-    summary: 'polling 생성',
-    description: '건너뛰기 선택 시 selectedProfileId는 empty string',
-  })
-  @ApiBody({
-      type: PollingDto,
+    summary: 'New userRound 생성',
+    description: '생성 전 GET userRound먼저 조회. 조건에 따라 userRound 생성'
   })
   @ApiResponse({
       status: 200,
-      type: String,
+      type: UserRoundDto,
   })
-  async postPolling(@Body() body, @Request() req) {
-      return await this.pollingsService.createPolling(req.user.id, body);
+  async postUserRound(@Request() req) {
+    return await this.pollingsService.createUserRound(req.user.id);
+  }
+
+  // @Post('')
+  // @ApiOperation({
+  //   summary: 'polling 생성',
+  //   description: '건너뛰기 선택 시 selectedProfileId는 empty string',
+  // })
+  // @ApiBody({
+  //     type: PollingDto,
+  // })
+  // @ApiResponse({
+  //     status: 200,
+  //     type: String,
+  // })
+  // async postPolling(@Body() body, @Request() req) {
+  //     return await this.pollingsService.createPolling(req.user.id, body);
+  // }
+  @Post('userround/open')
+  @ApiOperation({
+    summary: 'userRound 결제 후 생성',
+  })
+  @ApiBody({
+    type: UserRoundDto,
+  })
+  @ApiResponse({
+      status: 200,
+      type: UserRoundDto,
+  })
+  async postPayUserRound(@Request() req) {
+    return await this.pollingsService.createPayUserRound(req.user.id);
+  }
+
+  @Get('userRound')
+  @ApiOperation({
+      summary: '사용자 round조회',
+      description: '생성 전 GET userRound 조회. todayCount=0|1|2|3 반환.'
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: UserRound,
+  })
+  async getUserRound(@Request() req) {
+      return await this.pollingsService.findUserRound(req.user.id);
   }
 
   @Put(':pollingId')

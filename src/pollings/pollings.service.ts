@@ -202,7 +202,15 @@ export class PollingsService {
   }
 
   // userRound
-  async getUserRound(user_id: string) {
+  async createUserRound(user_id: string) {
+
+  }
+
+  async createPayUserRound(user_id: string) {
+
+  }
+
+  async findUserRound(user_id: string) {
     await this.userroundModel.findOne({})
   }
 

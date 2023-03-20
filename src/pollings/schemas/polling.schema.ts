@@ -23,10 +23,6 @@ export class Polling {
   @Prop({})
   pollId: string;
 
-  // pollIds
-  @Prop({})
-  pollIds: string[];
-
   // friendList
   @Prop({})
   friendIds: Types.ObjectId[];

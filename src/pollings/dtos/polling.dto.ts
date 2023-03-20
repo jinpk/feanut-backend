@@ -21,10 +21,6 @@ export class PollingDto {
   @ApiProperty({})
   roundId: string;
 
-  // pollIds
-  @ApiProperty({})
-  pollIds: string[];
-
   // pollId
   @ApiProperty({})
   pollId: string;
