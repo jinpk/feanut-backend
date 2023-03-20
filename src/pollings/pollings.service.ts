@@ -15,7 +15,7 @@ import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
 import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
+import { GetListPollingDto, GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
@@ -113,7 +113,7 @@ export class PollingsService {
     };
   }
 
-  async findListPollingByProfileId(query: GetListPollingDto): Promise<PagingResDto<PollingDto>> {
+  async findListPollingByProfileId(query: GetListReceivePollingDto): Promise<PagingResDto<PollingDto>> {
     var filter: FilterQuery<PollingDocument> = {
       selectedProfileId: query.profileId,
     }

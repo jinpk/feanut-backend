@@ -157,7 +157,7 @@ export class PollsService {
     const cursor = await this.pollModel.aggregate([
       { $match: filter },
       { $project: projection },
-      { $sort: { createdAt: -1 } },
+      { $sort: { isOpenedCount: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 

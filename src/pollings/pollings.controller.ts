@@ -25,7 +25,7 @@ import { PollingsService } from './pollings.service';
 import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
+import { GetListPollingDto, GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
 
 @ApiTags('Polling')
@@ -39,7 +39,7 @@ export class PollingsController {
   @Get('')
   @ApiOperation({
       summary: '(ADMIN) 투표 리스트 조회',
-      description: 'userId 미입력 시 전체조회',
+      description: 'profiledId 미입력 시 전체조회',
   })
   @ApiOkResponsePaginated(Polling)
   async getPollingList(@Query() query: GetListPollingDto) {
@@ -51,7 +51,7 @@ export class PollingsController {
       summary: '나의 수신 리스트 조회',
   })
   @ApiOkResponsePaginated(Polling)
-  async getMyPollingList(@Query() query: GetListPollingDto) {
+  async getMyPollingList(@Query() query: GetListReceivePollingDto) {
     return await this.pollingsService.findListPollingByProfileId(query);
   }
 
@@ -119,6 +119,4 @@ export class PollingsController {
     @Request() req) {
       return await this.pollingsService.updateRefreshedPollingById(req.user.id, pollingId, body);
   }
-
-
 }
