@@ -2,11 +2,14 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  UseGuards,
+  UnauthorizedException,
+  Request,
   Get,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import {
   AUTH_ERROR_SIGNIN_COOL_TIME,
   AUTH_MODULE_NAME,
@@ -20,7 +23,9 @@ import {
   LoginDto,
   TokenDto,
 } from './auth/dtos';
+import { AdminLoginDto } from './admin/dtos/admin.dto';
 import { WrappedError } from './common/errors';
+// import { LocalAuthAdminGuard } from '../src/auth/guards/local.guard';
 
 @Controller()
 export class AppController {
@@ -53,6 +58,22 @@ export class AppController {
       authId,
     };
   }
+
+  // @Post('admin/signin')
+  // @Public()
+  // @UseGuards(LocalAuthAdminGuard)
+  // @ApiOperation({
+  //   summary: '관리자 로그인',
+  // })
+  // @ApiBody({
+  //   type: AdminLoginDto,
+  // })
+  // @ApiOkResponse({
+  //   type: TokenDto,
+  // })
+  // async adminLogin(@Request() req) {
+  //   return this.authService.adminLogin(req.user);
+  // }
 
   @Post('signin')
   @Public()

@@ -24,7 +24,6 @@ async function bootstrap() {
       .setTitle('Feanut API')
       .setDescription('The feanut API description')
       .setVersion('0.0.1')
-      .addTag('Admin', '관리자 API')
       .addTag('User', '회원 API')
       .addTag('Profile', '프로필 API')
       .addTag('Friend', '친구 API')

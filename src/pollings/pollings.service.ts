@@ -21,6 +21,7 @@ import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendsService } from 'src/friends/friends.service';
 import { UtilsService } from 'src/common/providers';
+import { UseType } from 'src/coins/enums/usetype.enum';
 
 @Injectable()
 export class PollingsService {
@@ -61,8 +62,8 @@ export class PollingsService {
         var usecoin: UseCoinDto = new UseCoinDto()
         usecoin = {
           userId: user_id,
-          useType: 'refresh',
-          amount: 5,
+          useType: UseType.Refresh,
+          amount: UseType.Refresh,
         }
         await this.coinService.createUseCoin(usecoin)
         await this.coinService.updateCoinAccum(user_id, -5)
@@ -158,7 +159,7 @@ export class PollingsService {
 
   async updateSelectedProfile(polling_id, profile_id: string) {
     const result = await this.pollingModel.findByIdAndUpdate( polling_id, { 
-      $set: {selectedProfileId: profile_id, updatedAt: now()}
+      $set: {selectedProfileId: new Types.ObjectId(profile_id), updatedAt: now()}
     });
     return result._id.toString()
   }
@@ -185,16 +186,16 @@ export class PollingsService {
     }
 
     // polling isOpened 상태 업데이트
-    const result = await this.pollingModel.findByIdAndUpdate(
+    const result = await this.pollingModel.findOneAndUpdate(
       { _id: new Types.ObjectId(polling_id),
         selectedProfileId: user.profileId,
-      }, { 
+      }, {
       $set: {isOpened: true, updatedAt: now()}
     });
 
     // poll isOpenedCount 업데이트
     await this.pollModel.findByIdAndUpdate(result.pollId, { 
-      $set: {isOpenedCount: 1, updatedAt: now()}
+      $inc: {isOpened: 1},
     });
 
     return result._id.toString()
@@ -202,6 +203,8 @@ export class PollingsService {
 
   // userRound
   async getUserRound(user_id: string) {
-
+    await this.userroundModel.findOne({})
   }
+
+  async updateComplete() {}
 }

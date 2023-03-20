@@ -14,6 +14,7 @@ export class UsersController {
     summary: '로그인 정보 조회',
   })
   async getMe(@Req() req): Promise<UserDto> {
+    console.log(req)
     const user = await this.usersService.findActiveUserById(req.user.id);
     if (!user) {
       throw new NotFoundException('');

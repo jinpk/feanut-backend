@@ -2,6 +2,16 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
+export class Opened {
+  // isOpened
+  @ApiProperty({default: false})
+  isOpened: boolean;
+
+  // useCoinId
+  @ApiProperty({default: null})
+  useCoinId: string;
+}
+
 export class PollingDto {
   // userId
   @ApiProperty({})
@@ -35,8 +45,8 @@ export class PollingDto {
   selectedAt: Date;
 
   // isOpened
-  @ApiProperty({default: false})
-  isOpened: boolean;
+  @ApiProperty({})
+  opened: Opened;
 
   // 생성시간
   @ApiProperty()

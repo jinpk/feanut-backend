@@ -12,6 +12,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
 import { LoginDto, TokenDto } from './dtos';
+import { AdminLoginDto } from 'src/admin/dtos/admin.dto';
 
 @Injectable()
 export class AuthService {
@@ -56,15 +57,29 @@ export class AuthService {
     auth.loggedAt = new Date();
     await auth.save();
 
+    const isAdmin = false;
+    const payload = {sub, isAdmin}
+    console.log(sub)
     return {
       accessToken: this.genToken(
-        {
-          sub,
-        },
+        payload,
         '30d',
       ),
     };
   }
+
+  // async adminLogin(dto: AdminLoginDto): Promise<TokenDto> {
+  //   const sub = await this.adminService.validateAdmin(dto.username, dto.password);
+  //   const isAdmin = true;
+  //   const payload = {sub, isAdmin}
+  //   console.log(sub)
+  //   return {
+  //     accessToken: this.genToken(
+  //       payload,
+  //       '30d',
+  //     ),
+  //   };
+  // }
 
   async checkEmailLoginCoolTime(email: string): Promise<boolean> {
     if (await this.findAuthIn3MByField({ email })) {

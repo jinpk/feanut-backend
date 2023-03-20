@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 import { USER_MODULE_NAME } from '../users.constant';
 
 export type UserDocument = HydratedDocument<User>;
@@ -20,6 +21,7 @@ export class User {
   profileId: Types.ObjectId;
 
   @Prop({})
+  @ApiProperty({ description: 'Firebase Messaging Token' })
   fcmToken?: string;
 
   // 삭제여부

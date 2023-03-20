@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { Emotion } from '../../polls/enums';
+import { HydratedDocument, Types } from 'mongoose';
+import { Opened } from '../dtos/polling.dto';
 import { POLLING_MODULE_NAME } from '../../pollings/pollings.constant';
 
 export type PollingDocument = HydratedDocument<Polling>;
@@ -29,10 +29,10 @@ export class Polling {
 
   // friendList
   @Prop({})
-  friendIds: string[];
+  friendIds: Types.ObjectId[];
 
   // selectedId
-  @Prop({})
+  @Prop({ type: Types.ObjectId, default: null })
   selectedProfileId: string;
 
   @Prop({})
@@ -43,8 +43,8 @@ export class Polling {
   selectedAt: Date;
 
   // isOpened
-  @Prop({default: false})
-  isOpened: boolean;
+  @Prop({default: Opened})
+  opened: Opened;
 
   // 생성시간
   @Prop()
