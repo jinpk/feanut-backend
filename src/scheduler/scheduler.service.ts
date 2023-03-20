@@ -16,7 +16,7 @@ export class SchedulerService {
 
   @Cron('0 * * * * *')
   handleEveryMinute() {
-    this.logger.log('scheduling evenry minute!');
+    this.logger.log('scheduling every minute!');
 
     this.notificationService
       .getPendingPushNotifications()

@@ -86,7 +86,7 @@ export class CoinsController {
         return await this.coinsService.createBuyCoin(req.user.id, body);
     }
 
-    @Patch(':coinId')
+    @Put(':coinId')
     @ApiBody({
         type: UpdateCoinDto
     })
