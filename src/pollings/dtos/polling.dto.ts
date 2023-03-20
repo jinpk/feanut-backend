@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
@@ -43,7 +43,9 @@ export class PollingDto {
   createdAt?: Date;
 }
 
-export class PollingOpenDto extends UseCoinDto {
+export class PollingOpenDto extends OmitType(UseCoinDto, [
+  'userId'
+]) {
   @ApiProperty({
       description: 'profileId',
       required: true,
@@ -51,7 +53,9 @@ export class PollingOpenDto extends UseCoinDto {
   profileId: string;
 }
 
-export class PollingRefreshDto extends UseCoinDto {
+export class PollingRefreshDto extends OmitType(UseCoinDto, [
+  'userId'
+]) {
   @ApiProperty({
       description: 'profileId',
       required: true,
