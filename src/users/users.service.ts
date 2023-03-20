@@ -24,6 +24,7 @@ export class UsersService {
   }
 
   async findActiveUserById(id: string): Promise<User | null> {
+    console.log(id)
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
       return null;

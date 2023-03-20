@@ -22,7 +22,7 @@ import {
 } from '@nestjs/swagger'
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { PollingsService } from './pollings.service';
-import { PollingDto, PollingOpenDto } from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
@@ -100,4 +100,25 @@ export class PollingsController {
   async postPolling(@Body() body, @Request() req) {
       return await this.pollingsService.createPolling(req.user.id, body);
   }
+
+  @Put(':pollingId')
+  @ApiOperation({
+    summary: 'polling 친구 새로고침',
+    description: 'refreshCount < 2이면 pass. 아니면 amount를 0 이상의 숫자인지 확인하여 feanut소모.'
+  })
+  @ApiBody({
+      type: PollingRefreshDto,
+  })
+  @ApiResponse({
+      status: 200,
+      type: Polling,
+  })
+  async putRefreshPolling(
+    @Param('pollingId') pollingId: string,
+    @Body() body,
+    @Request() req) {
+      return await this.pollingsService.updateRefreshedPollingById(req.user.id, pollingId, body);
+  }
+
+
 }

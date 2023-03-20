@@ -19,6 +19,10 @@ export class Polling {
   @Prop({})
   roundId: string;
 
+  // pollId
+  @Prop({})
+  pollId: string;
+
   // pollIds
   @Prop({})
   pollIds: string[];
@@ -30,6 +34,9 @@ export class Polling {
   // selectedId
   @Prop({})
   selectedProfileId: string;
+
+  @Prop({})
+  refreshCount: number;
 
   // selectedAt
   @Prop({})

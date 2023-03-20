@@ -3,20 +3,58 @@ import { now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class PollingDto {
-  @ApiProperty({ description: 'userId' })
+  // userId
+  @ApiProperty({})
   userId: string;
 
-  @ApiProperty({ description: 'total feanuts count' })
-  total: number;
+  // roundId
+  @ApiProperty({})
+  roundId: string;
 
-  @ApiProperty({ description: 'feanuts accum logs' })
-  accumLogs: number[];
+  // pollIds
+  @ApiProperty({})
+  pollIds: string[];
+
+  // pollId
+  @ApiProperty({})
+  pollId: string;
+
+  // friendList
+  @ApiProperty({})
+  friendIds: string[];
+
+  // selectedId
+  @ApiProperty({})
+  selectedProfileId: string;
+
+  @ApiProperty({})
+  refreshCount: number;
+  
+  // selectedAt
+  @ApiProperty({})
+  selectedAt: Date;
+
+  // isOpened
+  @ApiProperty({default: false})
+  isOpened: boolean;
+
+  // 생성시간
+  @ApiProperty()
+  createdAt?: Date;
 }
 
 export class PollingOpenDto extends UseCoinDto {
-    @ApiProperty({
-        description: 'profileId',
-        required: true,
-    })
-    profileId: string;
-  }
+  @ApiProperty({
+      description: 'profileId',
+      required: true,
+  })
+  profileId: string;
+}
+
+export class PollingRefreshDto extends UseCoinDto {
+  @ApiProperty({
+      description: 'profileId',
+      required: true,
+  })
+  profileId: string;
+}

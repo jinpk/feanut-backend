@@ -13,7 +13,7 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 import { Coin, CoinDocument } from '../coins/schemas/coin.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingOpenDto } from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetPollingDto } from './dtos/get-polling.dto';
 import { UseCoinDto } from '../coins/dtos/coin.dto';
@@ -37,12 +37,36 @@ export class PollingsService {
     return result._id.toString()
   }
 
-  async findRefreshedPollingById(user_id: string, query: GetPollingDto) {
+  async updateRefreshedPollingById(
+    user_id, polling_id: string,
+    body: PollingRefreshDto):
+    Promise<Polling | String> {
     //userId 사용하여 get profileId
     const user = await this.userService.findActiveUserById(user_id);
     
     // polling 가져오기.
-    const polling = await this.pollingModel.findById(query.pollingId);
+    const polling = await this.pollingModel.findById(polling_id);
+
+    // 3번째 친구 새로고침인지 확인
+    if (polling.refreshCount < 2) {
+    } else if (body.amount != 0) {
+      const usercoin = await this.coinService.findUserCoin(user_id);
+
+      if (usercoin.total < 5) {
+        return "Lack of total feanut amount"
+      } else {
+        var usecoin: UseCoinDto = new UseCoinDto()
+        usecoin = {
+          userId: user_id,
+          useType: 'refresh',
+          amount: 5,
+        }
+        await this.coinService.createUseCoin(usecoin)
+        await this.coinService.updateCoinAccum(user_id, -5)
+      }
+    } else {
+      return "Exceed your free refresh count"
+    }
     // 친구목록 불러오기/셔플
     const friendList = await this.friendService.listFriend(user.profileId.toString());
     const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4)
@@ -54,6 +78,8 @@ export class PollingsService {
     polling.friendIds = newIds;
 
     polling.save()
+
+    return polling
   }
 
   async findListPolling(query: GetListPollingDto): Promise<PagingResDto<PollingDto>> {
@@ -152,6 +178,7 @@ export class PollingsService {
         amount: body.amount,
       }
       await this.coinService.createUseCoin(usecoin)
+      await this.coinService.updateCoinAccum(user_id, -1*body.amount)
     }
 
     // polling isOpened 상태 업데이트
