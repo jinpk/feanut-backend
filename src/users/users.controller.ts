@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserDto } from './dtos';
+import { UserDto, FeanutCardDto } from './dtos';
 import { UsersService } from './users.service';
 
 @ApiTags('User')
@@ -21,5 +21,19 @@ export class UsersController {
     }
 
     return await this.usersService._userToDto(user);
+  }
+
+  @Get('feanutcard')
+  @ApiOperation({
+    summary: '나의 피넛 카드 조회',
+  })
+  async getMyFeanutCard(@Req() req): Promise<FeanutCardDto> {
+    console.log(req)
+    const user = await this.usersService.findActiveUserById(req.user.id);
+    if (!user) {
+      throw new NotFoundException('');
+    }
+
+    return await this.usersService.findMyFeanutCard(user.profileId);
   }
 }
