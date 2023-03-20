@@ -109,7 +109,7 @@ export class PollsController {
     type: String,
   })
   async putRound(
-    @Param('roundId') roundId,
+    @Param('roundId') roundId: string,
     @Body() body,
     @Request() req) {
       if (!req.user.isAdmin) {
@@ -129,14 +129,14 @@ export class PollsController {
     summary: '(ADMIN) Poll 수정',
   })
   @ApiBody({
-    type: UpdateRoundDto,
+    type: UpdatePollDto,
   })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
   async putPoll(
-    @Param('pollId') pollId,
+    @Param('pollId') pollId: string,
     @Body() body,
     @Request() req) {
       if (!req.user.isAdmin) {
@@ -188,7 +188,7 @@ export class PollsController {
     type: Poll,
   })
   async getRoundDetail(
-    @Param('roundId') roundId,
+    @Param('roundId') roundId: string,
     @Request() req) {
       if (!req.user.isAdmin) {
         throw new UnauthorizedException('Not an Admin')
@@ -206,7 +206,7 @@ export class PollsController {
     type: Poll,
   })
   async getPollDetail(
-    @Param('pollId') pollId,
+    @Param('pollId') pollId: string,
     @Request() req) {
       if (!req.user.isAdmin) {
         throw new UnauthorizedException('Not an Admin')

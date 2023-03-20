@@ -63,7 +63,7 @@ export class PollingsController {
     status: 200,
     type: Polling,
   })
-  async getMyPollingDetail(@Param('pollingId') pollingId) {
+  async getMyPollingDetail(@Param('pollingId') pollingId: string) {
       return await this.pollingsService.findPollingById(pollingId);
   }
 
@@ -79,7 +79,7 @@ export class PollingsController {
       type: String,
   })
   async postPollingOpen(
-    @Param('pollingId') pollingId,
+    @Param('pollingId') pollingId: string,
     @Body() body: PollingOpenDto,
     @Request() req) {
       return await this.pollingsService.updatePollingOpen(req.user.id, pollingId, body);
