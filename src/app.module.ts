@@ -55,7 +55,6 @@ import { SchedulerModule } from './scheduler/scheduler.module';
       provide: APP_FILTER,
       useClass: ExceptionsFilter,
     },
-    ConfigService
   ],
 })
 export class AppModule {}

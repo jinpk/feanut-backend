@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Get,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import {
@@ -65,5 +66,12 @@ export class AppController {
   @ApiOperation({ summary: 'Health Check' })
   getHello(): string {
     return 'Feanut API';
+  }
+
+  @Get('link')
+  @Public()
+  @ApiOperation({ summary: 'Firebase Dynamic Link Proxy' })
+  link(@Query('action') action, @Query('payload') payload) {
+    return 'Success';
   }
 }

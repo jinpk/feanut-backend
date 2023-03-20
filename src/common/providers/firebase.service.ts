@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DynamicLinkQuery, PushParams } from '../interfaces';
 import * as admin from 'firebase-admin';
-import configuration from '../../config/configuration';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import {
   ANDROID_PACKAGE_NAME,
