@@ -16,7 +16,7 @@ import { BuyCoin, BuyCoinDocument } from './schemas/buycoin.schema';
 import { UseCoin, UseCoinDocument } from './schemas/usecoin.schema';
 import { GetUseCoinDto, GetBuyCoinDto } from './dtos/get-coin.dto';
 import { UpdateCoinDto } from './dtos/update-coin.dto';
-// import { UtilsService } from 'src/common/providers';
+import { UtilsService } from 'src/common/providers';
 
 @Injectable()
 export class CoinsService {
@@ -25,6 +25,7 @@ export class CoinsService {
     @InjectModel(Coin.name) private buycoinModel: Model<UseCoinDocument>,
     @InjectModel(Coin.name) private usecoinModel: Model<BuyCoinDocument>,
     private profilesService: ProfilesService,
+    private utilsService: UtilsService,
   ) {}
 
   async findUserCoin(user_id: string): Promise<Coin> {
@@ -49,7 +50,7 @@ export class CoinsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
@@ -75,7 +76,7 @@ export class CoinsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;

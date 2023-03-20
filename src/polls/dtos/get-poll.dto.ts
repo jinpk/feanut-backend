@@ -16,3 +16,5 @@ export class GetListRoundDto extends PagingReqDto{
   })
   userId: string;
 }
+
+export class GetListPublicPollDto extends PagingReqDto{}

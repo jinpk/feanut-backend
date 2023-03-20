@@ -10,7 +10,7 @@ import {
 } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
-import { Coin, CoinDocument } from '../coins/schemas/coin.schema';
+import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
 import { PollingDto, PollingOpenDto, PollingRefreshDto } from './dtos/polling.dto';
@@ -20,16 +20,19 @@ import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendsService } from 'src/friends/friends.service';
+import { UtilsService } from 'src/common/providers';
 
 @Injectable()
 export class PollingsService {
   constructor(
     @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
     @InjectModel(UserRound.name) private userroundModel: Model<UserRoundDocument>,
+    @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     private profilesService: ProfilesService,
     private userService: UsersService,
     private coinService: CoinsService,
     private friendService: FriendsService,
+    private utilsService: UtilsService,
   ) {}
 
   async createPolling(user_id: string, body: PollingDto){
@@ -98,7 +101,7 @@ export class PollingsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
@@ -129,7 +132,7 @@ export class PollingsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
@@ -187,6 +190,11 @@ export class PollingsService {
         selectedProfileId: user.profileId,
       }, { 
       $set: {isOpened: true, updatedAt: now()}
+    });
+
+    // poll isOpenedCount 업데이트
+    await this.pollModel.findByIdAndUpdate(result.pollId, { 
+      $set: {isOpenedCount: 1, updatedAt: now()}
     });
 
     return result._id.toString()

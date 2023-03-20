@@ -16,7 +16,7 @@ import { Poll, PollDocument } from './schemas/poll.schema';
 import { Round, RoundDocument } from './schemas/round.schema';
 import { UpdatePollDto, UpdateRoundDto, UpdatePollIdsDto } from './dtos/update-poll.dto';
 import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto'
-// import { UtilsService } from 'src/common/providers';
+import { UtilsService } from 'src/common/providers';
 
 @Injectable()
 export class PollsService {
@@ -24,6 +24,7 @@ export class PollsService {
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
     private profilesService: ProfilesService,
+    private utilsService: UtilsService,
   ) {}
 
   async createPoll(body: PollDto): Promise<string> {
@@ -93,7 +94,7 @@ export class PollsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
@@ -120,7 +121,7 @@ export class PollsService {
       { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
-      // this.utilsService.getCommonMongooseFacet(query),
+      this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
@@ -140,5 +141,32 @@ export class PollsService {
   async findPollById(poll_id) {
     const result = await this.pollModel.findById(poll_id);
     return result
+  }
+
+  async findListPublicPoll(query): Promise<PagingResDto<PollDto>> {
+    var filter: FilterQuery<PollDocument> = {}
+
+    const projection: ProjectionFields<PollDto> = {
+      _id: 1,
+      emotion: 1,
+      emoji: 1,
+      contentText: 1,
+      createdAt: 1,
+    };
+
+    const cursor = await this.pollModel.aggregate([
+      { $match: filter },
+      { $project: projection },
+      { $sort: { createdAt: -1 } },
+      this.utilsService.getCommonMongooseFacet(query),
+    ]);
+
+    const metdata = cursor[0].metadata;
+    const data = cursor[0].data;
+
+    return {
+      total: metdata[0]?.total || 0,
+      data: data,
+    };
   }
 }

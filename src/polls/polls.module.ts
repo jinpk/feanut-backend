@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Round, RoundSchema } from './schemas/round.schema';
 import { Poll, PollSchema } from './schemas/poll.schema';
 import { PollsService } from './polls.service';
-import { PollsController } from './polls.controller';
+import { PollsController, PublicPollsController } from './polls.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 
 @Module({
@@ -13,7 +13,7 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
     ProfilesModule,
   ],
   providers: [PollsService],
-  controllers: [PollsController],
+  controllers: [PollsController, PublicPollsController],
   exports: [PollsService],
 })
 export class PollsModule {}

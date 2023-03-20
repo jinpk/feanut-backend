@@ -9,4 +9,7 @@ export class PollDto {
 
   @ApiProperty({ description: 'contentText' })
   contentText: string;
+
+  @ApiProperty({})
+  isOpenedCount: number;
 }

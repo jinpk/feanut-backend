@@ -19,11 +19,12 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger'
+import { Public } from '../auth/decorators';
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
 import { RoundDto } from './dtos/round.dto';
 import { UpdatePollDto, UpdateRoundDto, UpdatePollIdsDto } from './dtos/update-poll.dto';
-import { GetListRoundDto, GetListPollDto } from './dtos/get-poll.dto';
+import { GetListRoundDto, GetListPollDto, GetListPublicPollDto } from './dtos/get-poll.dto';
 import { Round } from './schemas/round.schema';
 import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
@@ -212,5 +213,22 @@ export class PollsController {
         throw new UnauthorizedException('Not an Admin')
       }
       return await this.pollsService.findPollById(pollId)
+  }
+}
+
+@ApiTags('Poll')
+@Controller('publicpolls')
+export class PublicPollsController {
+  constructor(private readonly pollsService: PollsService) {}
+
+  @Get('')
+  @Public()
+  @ApiOperation({
+    summary: '(PUBLIC) 상위 투표 리스트 조회',
+  })
+  @ApiOkResponsePaginated(Poll)
+  async getListPublicPoll(@Query() query: GetListPublicPollDto,
+  ) {
+      return await this.pollsService.findListPublicPoll(query);
   }
 }

@@ -23,6 +23,10 @@ export class Poll {
   @Prop({})
   contentText: string;  
 
+  // openedCount
+  @Prop({default: 0})
+  isOpenedCount: number;
+
   // 생성시간
   @Prop({
     default: now(),
