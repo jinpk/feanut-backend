@@ -196,7 +196,7 @@ export class PollsController {
       return await this.pollsService.findRoundById(roundId)
   }
 
-  @Get(':/pollId')
+  @Get(':pollId')
   @ApiOperation({
     summary: '(ADMIN) 등록된 투표 상세 조회',
     description: 'userId 미입력 시 전체조회',
