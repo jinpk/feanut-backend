@@ -25,11 +25,29 @@ export class AuthService {
   ) {}
 
   async adminLogin(body: AdminLoginDto): Promise<TokenDto> {
+    console.log(body.password)
     const sub = await this.adminService.validateAdmin(
       body.username,
       body.password,
     );
     const payload = { sub, isAdmin: true };
+    return {
+      accessToken: this.genToken(payload, '30d'),
+    };
+  }
+
+  async login(dto: LoginDto): Promise<TokenDto> {
+    const sub = await this.usersService.findActiveUserOne({
+      feanutId: dto.feanutId,
+    });
+
+    // 로그인 data logging
+    // auth.logged = true;
+    // auth.loggedAt = new Date();
+    // await auth.save();
+
+    const isAdmin = false;
+    const payload = { sub, isAdmin };
     return {
       accessToken: this.genToken(payload, '30d'),
     };

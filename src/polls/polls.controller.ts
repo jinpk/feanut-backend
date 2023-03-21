@@ -72,33 +72,7 @@ export class PollsController {
     return await this.pollsService.createPoll(body);
   }
 
-  @Put('rounds/:roundId/pollIds')
-  @ApiOperation({
-    summary: '(ADMIN) 라운드 PollIds 수정',
-    description: 'delete=false 이면 해당 pollId를 추가. delete=true 이면 해당 pollId를 삭제.',
-  })
-  @ApiBody({
-    type: UpdatePollIdsDto,
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: String,
-  })
-  async putPollIds(
-    @Param('roundId') roundId,
-    @Body() body,
-    @Request() req) {
-      if (!req.user.isAdmin) {
-        throw new UnauthorizedException('Not an Admin')
-      }
-      const [exist, round] = await this.pollsService.existRound(roundId)
-      if (!exist) {
-        throw new NotFoundException('not found round')
-      }
-      return await this.pollsService.updatePollIds(roundId, round, body)
-  }
-
-  @Put('rounds/:roundId')
+  @Put('rounds/:roundId/update')
   @ApiOperation({
     summary: '(ADMIN) 라운드 수정',
   })

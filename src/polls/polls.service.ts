@@ -39,23 +39,23 @@ export class PollsService {
 
   async updatePoll(poll_id: string, poll: Poll, body) {
     const result = await this.pollModel.findByIdAndUpdate( poll_id, { 
-      $set: {body, updatedAt: now()}
+      $set: {
+        emotion: body.emotion,
+        emoji: body.emoji,
+        contentText: body.contentText,
+        updatedAt: now()}
     });
     return result._id.toString()
   }
 
   async updateRound(round_id: string, round: Round, body: UpdateRoundDto) {
     const result = await this.roundModel.findByIdAndUpdate( round_id, { 
-      $set: {body, updatedAt: now()}
-    });
-    return result._id.toString()
-  }
-
-  async updatePollIds(round_id: string, round: Round, body: UpdatePollIdsDto) {
-    const newIds = round.pollIds.concat(body.pollIds)
-
-    const result = await this.roundModel.findByIdAndUpdate( round_id, { 
-      $set: {pollIds: newIds, updatedAt: now()}
+      $set: {
+        enabled: body.enabled,
+        pollIds: body.pollIds,
+        startedAt: body.startedAt,
+        endedAt: body.endedAt,
+        updatedAt: now()}
     });
     return result._id.toString()
   }
