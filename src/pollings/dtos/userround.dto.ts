@@ -11,15 +11,22 @@ export class UserRoundDto {
   @ApiProperty({})
   roundId: string;
 
-  // complete
-  @ApiProperty({default: false})
-  complete: boolean;
-
   // poll 목록
   @ApiProperty({})
   pollIds: string[];
+
+  @ApiProperty({})
+  skipCount?: number;
+
+  // complete
+  @ApiProperty({default: false})
+  complete?: boolean;
   
   // completedAt
   @ApiProperty({})
-  completedAt: Date;
+  completedAt?: Date;
 }
+
+export class PayUserRoundDto extends OmitType(UseCoinDto, [
+    'userId'
+] as const){}

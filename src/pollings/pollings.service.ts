@@ -22,6 +22,7 @@ import { CoinsService } from 'src/coins/conis.service';
 import { FriendsService } from 'src/friends/friends.service';
 import { UtilsService } from 'src/common/providers';
 import { UseType } from 'src/coins/enums/usetype.enum';
+import { UserRoundDto } from './dtos/userround.dto';
 
 @Injectable()
 export class PollingsService {
@@ -202,17 +203,48 @@ export class PollingsService {
   }
 
   // userRound
-  async createUserRound(user_id: string) {
-
+  async createUserRound(user_id: string): Promise<UserRoundDto> {
+    var userround = new UserRoundDto();
+    userround = {
+      userId: user_id,
+      roundId: '',
+      pollIds: [],
+    }
+    await new this.userroundModel(userround).save();
+    return userround
   }
 
   async createPayUserRound(user_id: string) {
-
+    var userround = new UserRoundDto();
+    userround = {
+      userId: user_id,
+      roundId: '',
+      pollIds: [],
+    }
+    await new this.userroundModel(userround).save();
   }
 
   async findUserRound(user_id: string) {
-    await this.userroundModel.findOne({})
+    var start = new Date();
+    start.setHours(0,0,0,0);
+
+    var end = new Date();
+    end.setHours(23,59,59,999);
+
+    const rounds = await this.userroundModel.find({
+      userId: user_id,
+      completedAt: {$gte: start, $lt: end},
+    })
+
+    var result = {
+      todayCount: rounds.length,
+      data: rounds
+    }
+
+    return result
   }
 
-  async updateComplete() {}
+  async updateComplete() {
+
+  }
 }

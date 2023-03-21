@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, now } from 'mongoose';
 import { USERROUND_NAME } from '../../pollings/pollings.constant';
 
 export type UserRoundDocument = HydratedDocument<UserRound>;
@@ -7,9 +7,6 @@ export type UserRoundDocument = HydratedDocument<UserRound>;
 // UserRound
 @Schema({ collection: USERROUND_NAME, timestamps: true })
 export class UserRound {
-  // pk
-  id: string;
-
   // userId
   @Prop({})
   userId: string;
@@ -18,19 +15,23 @@ export class UserRound {
   @Prop({})
   roundId: string;
 
-  // complete 여부
-  @Prop({})
-  complete: boolean;
-
   // poll 목록
   @Prop({})
   pollIds: string[];
 
-  @Prop({})
+  // skipCount
+  @Prop({default: 0})
+  skipCount?: number;
+
+  // complete 여부
+  @Prop({ default: false })
+  complete?: boolean;
+
+  @Prop({default: null})
   completedAt?: Date;
 
   // 생성시간
-  @Prop()
+  @Prop({default: now()})
   createdAt?: Date;
 }
 

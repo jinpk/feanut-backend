@@ -28,7 +28,7 @@ import { UserRound } from './schemas/userround.schema'
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
-import { UserRoundDto } from './dtos/userround.dto';
+import { UserRoundDto, PayUserRoundDto } from './dtos/userround.dto';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -57,9 +57,9 @@ export class PollingsController {
     return await this.pollingsService.findListPollingByProfileId(query);
   }
 
-  @Get('recieve/:pollingId')
+  @Get(':pollingId')
   @ApiOperation({
-      summary: '수신 상세내역 조회',
+      summary: 'Polling 상세내역 조회',
   })
   @ApiOkResponse({
     status: 200,
@@ -72,7 +72,7 @@ export class PollingsController {
   @Post('receive/:pollingId/open')
   @ApiOperation({
     summary: '수신투표 열람. 피넛 소모',
-})
+  })
   @ApiBody({
     type: PollingOpenDto,
   })
@@ -115,12 +115,13 @@ export class PollingsController {
   // async postPolling(@Body() body, @Request() req) {
   //     return await this.pollingsService.createPolling(req.user.id, body);
   // }
+
   @Post('userround/open')
   @ApiOperation({
     summary: 'userRound 결제 후 생성',
   })
   @ApiBody({
-    type: UserRoundDto,
+    type: PayUserRoundDto,
   })
   @ApiResponse({
       status: 200,
