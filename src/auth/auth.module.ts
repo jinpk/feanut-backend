@@ -7,10 +7,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './schemas/auth.schema';
 import { AuthEventListener } from './auth.listener';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { MailService } from 'src/common/providers/mail.provider';
 import { KakaoAuthProvider } from './providers/kakao.provider';
 import { HttpModule } from '@nestjs/axios';
-import { Admin, AdminSchema } from 'src/admin/schemas/admin.schema';
 import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
@@ -23,17 +21,10 @@ import { AdminModule } from 'src/admin/admin.module';
       }),
     }),
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
-    MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }]),
     UsersModule,
     AdminModule,
   ],
-  providers: [
-    AuthService,
-    AuthEventListener,
-    JwtStrategy,
-    MailService,
-    KakaoAuthProvider,
-  ],
+  providers: [AuthService, AuthEventListener, JwtStrategy, KakaoAuthProvider],
   exports: [AuthService],
 })
 export class AuthModule {}

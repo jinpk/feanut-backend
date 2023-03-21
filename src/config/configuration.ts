@@ -3,9 +3,8 @@ export default () => ({
   mongoURI: process.env.MONGO_URI || '',
   jwtSecret: process.env.JWT_SECRET,
   env: process.env.NODE_ENV || 'local', // production | development
-  awsRegion: process.env.AWS_REGION,
-  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+
+  host: process.env.HOST,
 
   firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
   firebasePrivateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
@@ -16,7 +15,4 @@ export default () => ({
 
   playConsoleClientEmail: process.env.PLAYCONSOLE_CLIENT_EMAIL,
   playConsolePrivateKey: process.env.PLAYCONSOLE_PRIVATE_KEY,
-
-  smtpUser: process.env.SMTP_USER,
-  smtpPassword: process.env.SMTP_PASSWORD,
 });
