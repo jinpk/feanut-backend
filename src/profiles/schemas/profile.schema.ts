@@ -28,6 +28,9 @@ export class Profile {
   gender?: Gender;
 
   @Prop()
+  mobile?: string;
+
+  @Prop()
   profileImageURL?: string;
 
   @Prop()

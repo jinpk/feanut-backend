@@ -16,4 +16,7 @@ export class ProfileDto {
   @Min(1900)
   @Max(2030)
   birthYear: number;
+
+  @ApiProperty({ description: '이름' })
+  mobile: string;
 }
