@@ -18,7 +18,6 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('');
     }
-
     return await this.usersService._userDocToDto(user);
   }
 

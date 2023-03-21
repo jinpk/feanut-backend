@@ -9,7 +9,7 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ collection: USER_MODULE_NAME, timestamps: true })
 export class User {
   // pk
-  id: string;
+  _id: Types.ObjectId;
 
   // 로그인 이메일
   // unique with isDeleted is false

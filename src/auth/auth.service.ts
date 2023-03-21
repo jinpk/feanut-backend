@@ -46,10 +46,9 @@ export class AuthService {
     const user = await this.usersService.findActiveUserOne({
       email: auth.email,
     });
-
     // 자동 회원가입
     const sub = user
-      ? user.id
+      ? user._id
       : await this.usersService.createUserWithEmail(auth.email);
 
     // 로그인 data logging
@@ -58,13 +57,9 @@ export class AuthService {
     await auth.save();
 
     const isAdmin = false;
-    const payload = {sub, isAdmin}
-    console.log(sub)
+    const payload = { sub, isAdmin };
     return {
-      accessToken: this.genToken(
-        payload,
-        '30d',
-      ),
+      accessToken: this.genToken(payload, '30d'),
     };
   }
 

@@ -12,9 +12,7 @@ export class UsersService {
     @InjectModel(User.name) private pollingModel: Model<PollingDocument>,
   ) {}
 
-  async findActiveUserOne(
-    filter: FilterQuery<UserDocument>,
-  ): Promise<User | null> {
+  async findActiveUserOne(filter: FilterQuery<User>): Promise<User | null> {
     const user = await this.userModel.findOne({
       ...filter,
       isDeleted: false,
@@ -23,11 +21,10 @@ export class UsersService {
     if (!user) {
       return null;
     }
-
     return user.toObject();
   }
 
-  async findActiveUserById(id: string): Promise<UserDocument | null> {
+  async findActiveUserById(id: string): Promise<User | null> {
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
       return null;
@@ -43,7 +40,7 @@ export class UsersService {
 
   async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
     // const myReceive = await this.pollingModel.find({profileId: profile_id})
-    var filter: FilterQuery<PollingDocument> = {
+    const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
     };
 
@@ -103,7 +100,7 @@ export class UsersService {
     return docs.map((doc) => doc.fcmToken);
   }
 
-  async _userDocToDto(user: UserDocument): Promise<UserDto> {
+  async _userDocToDto(user: User): Promise<UserDto> {
     const dto = new UserDto();
     dto.id = user._id.toHexString();
     dto.profileId = user.profileId?.toHexString();
