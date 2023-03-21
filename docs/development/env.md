@@ -1,13 +1,14 @@
 # ENV 관리
 
-* 담당자에게 AWS ACCESS KEY 발급 필요
-
-## AWS CLI 설치
+## GOOGLE CLOUND SDK 설치
 ```bash
-# install awscli 
-brew install awscli
-# login to aws
-aws configure
+# install google-cloud-sdk 
+brew install —cask google-cloud-sdk 
+# login to google cloud
+# 담당자에게 권한 요청한 계정으로 로그인
+gcloud auth login
+# project 설정
+gcloud config set project feanut
 ```
 
 ## ENV 다운로드

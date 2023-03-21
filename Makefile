@@ -1,5 +1,5 @@
 get-env-development:
-	aws s3 cp s3://files.feanut/envs/backend/.env.development .env.development
+	gcloud storage cp gs://bucket.feanut.com/env/.env.development .env.development 
 
 put-env-development:
-	aws s3 cp .env.development s3://files.feanut/envs/backend/.env.development
+	gcloud storage cp .env.development gs://bucket.feanut.com/env/.env.development
