@@ -11,6 +11,7 @@ import { MailService } from 'src/common/providers/mail.provider';
 import { KakaoAuthProvider } from './providers/kakao.provider';
 import { HttpModule } from '@nestjs/axios';
 import { Admin, AdminSchema } from 'src/admin/schemas/admin.schema';
+import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Admin, AdminSchema } from 'src/admin/schemas/admin.schema';
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
     MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }]),
     UsersModule,
+    AdminModule,
   ],
   providers: [
     AuthService,

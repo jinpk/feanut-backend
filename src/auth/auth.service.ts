@@ -11,7 +11,7 @@ import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
-import { LoginDto, TokenDto } from './dtos';
+import { AdminLoginDto, LoginDto, TokenDto } from './dtos';
 import { KakaoAuthProvider } from './providers/kakao.provider';
 import { AdminService } from 'src/admin/admin.service';
 

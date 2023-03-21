@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  UseGuards,
-  UnauthorizedException,
-  Request,
-  Get,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import {
   AUTH_ERROR_SIGNIN_COOL_TIME,
@@ -17,13 +7,13 @@ import {
 import { AuthService } from './auth/auth.service';
 import { Public } from './auth/decorators';
 import {
+  AdminLoginDto,
   AuthDto,
   EmailLoginDto,
   KakaoLoginDto,
   LoginDto,
   TokenDto,
 } from './auth/dtos';
-import { AdminLoginDto } from './admin/dtos/admin.dto';
 import { WrappedError } from './common/errors';
 
 @Controller()
@@ -58,7 +48,7 @@ export class AppController {
     };
   }
 
-  @Post('admin/signin')
+  @Post('signin/admin')
   @Public()
   @ApiOperation({
     summary: '관리자 로그인',
