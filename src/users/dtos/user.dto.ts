@@ -4,8 +4,8 @@ export class UserDto {
   @ApiProperty({ description: 'userId' })
   id: string;
 
-  @ApiProperty({ description: '이메일' })
-  email: string;
+  @ApiProperty({ description: 'feanutId' })
+  feanutId: string;
 
   @ApiProperty({ description: 'profileId' })
   profileId: string;

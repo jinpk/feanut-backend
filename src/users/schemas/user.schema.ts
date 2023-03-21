@@ -10,10 +10,10 @@ export class User {
   // pk
   _id: Types.ObjectId;
 
-  // 로그인 이메일
+  // 로그인 ID
   // unique with isDeleted is false
   @Prop({ lowercase: true })
-  email: string;
+  feanutId: string;
 
   // 로그인 kakao UID
   // unique with isDeleted is false

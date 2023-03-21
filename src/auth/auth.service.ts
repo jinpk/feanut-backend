@@ -30,7 +30,6 @@ export class AuthService {
       body.password,
     );
     const payload = { sub, isAdmin: true };
-    console.log(sub);
     return {
       accessToken: this.genToken(payload, '30d'),
     };

@@ -3,10 +3,10 @@ import { PagingReqDto } from 'src/common/dtos';
 
 export class GetListPollDto extends PagingReqDto {
   @ApiProperty({ 
-    description: 'userId',
+    description: 'emotion',
     required: false,
   })
-  userId: string;
+  emotion: string;
 }
 
 export class GetListRoundDto extends PagingReqDto{}

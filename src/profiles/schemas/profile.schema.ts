@@ -10,21 +10,21 @@ export class Profile {
   // pk
   id: string;
 
-  // 카카오 사용자 ID
-  @Prop({})
-  kakaoUserId: string;
+  // // 카카오 사용자 ID
+  // @Prop({})
+  // kakaoUserId: string;
 
-  // 카카오톡 이름
-  @Prop({})
+  // 이름
+  @Prop({ required: true })
   name: string;
 
   // 카카오톡 생일
   // format: YYYYMMDD
-  @Prop({ maxlength: 8 })
+  @Prop({ maxlength: 8, required: true })
   birth?: string;
 
-  // 카카오톡 성별
-  @Prop({ enum: Gender, required: false })
+  // 성별
+  @Prop({ enum: Gender, required: true })
   gender?: Gender;
 
   @Prop()

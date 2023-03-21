@@ -35,13 +35,13 @@ export class UsersService {
     return user.toObject();
   }
 
-  async createUserWithEmail(email: string): Promise<string> {
-    const user = await new this.userModel({ email }).save();
+  async createUserWithId(feanut_id: string): Promise<string> {
+    const user = await new this.userModel({ feanut_id }).save();
     return user._id.toHexString();
   }
 
-  async createUserWithKakao(kakaoId: string, email = ''): Promise<string> {
-    const user = await new this.userModel({ email, kakaoId }).save();
+  async createUserWithKakao(kakaoId: string, feanut_id = ''): Promise<string> {
+    const user = await new this.userModel({ feanut_id, kakaoId }).save();
     return user._id.toHexString();
   }
 
@@ -56,7 +56,7 @@ export class UsersService {
     const dto = new UserDto();
     dto.id = user._id.toHexString();
     dto.profileId = user.profileId?.toHexString();
-    dto.email = user.email;
+    dto.feanutId = user.feanutId;
     return dto;
   }
 }
