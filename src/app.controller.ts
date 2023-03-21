@@ -19,7 +19,7 @@ import { WrappedError } from './common/errors';
 export class AppController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signin/email')
+  /*@Post('signin/email')
   @Public()
   @ApiOperation({ summary: '이메일 로그인' })
   async signInEmail(@Body() body: EmailLoginDto): Promise<AuthDto> {
@@ -38,7 +38,7 @@ export class AppController {
     return {
       authId,
     };
-  }
+  }*/
 
   @Post('signin/admin')
   @Public()
@@ -55,12 +55,12 @@ export class AppController {
     return this.authService.adminLogin(body);
   }
 
-  @Post('signin')
+  /*@Post('signin')
   @Public()
   @ApiOperation({ summary: '로그인' })
   async signIn(@Body() body: LoginDto): Promise<TokenDto> {
     return await this.authService.login(body);
-  }
+  }*/
 
   @Get()
   @Public()
