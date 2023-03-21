@@ -25,7 +25,6 @@ import {
 } from './auth/dtos';
 import { AdminLoginDto } from './admin/dtos/admin.dto';
 import { WrappedError } from './common/errors';
-// import { LocalAuthAdminGuard } from '../src/auth/guards/local.guard';
 
 @Controller()
 export class AppController {
@@ -59,21 +58,20 @@ export class AppController {
     };
   }
 
-  // @Post('admin/signin')
-  // @Public()
-  // @UseGuards(LocalAuthAdminGuard)
-  // @ApiOperation({
-  //   summary: '관리자 로그인',
-  // })
-  // @ApiBody({
-  //   type: AdminLoginDto,
-  // })
-  // @ApiOkResponse({
-  //   type: TokenDto,
-  // })
-  // async adminLogin(@Request() req) {
-  //   return this.authService.adminLogin(req.user);
-  // }
+  @Post('admin/signin')
+  @Public()
+  @ApiOperation({
+    summary: '관리자 로그인',
+  })
+  @ApiBody({
+    type: AdminLoginDto,
+  })
+  @ApiOkResponse({
+    type: TokenDto,
+  })
+  async adminLogin(@Body() body: AdminLoginDto) {
+    return this.authService.adminLogin(body);
+  }
 
   @Post('signin')
   @Public()

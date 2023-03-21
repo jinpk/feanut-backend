@@ -8,9 +8,6 @@ export type PollDocument = HydratedDocument<Poll>;
 // Poll
 @Schema({ collection: POLL_MODULE_NAME, timestamps: true })
 export class Poll {
-  // pk
-  id: string;
-
   // emotion
   @Prop({})
   emotion: Emotion;

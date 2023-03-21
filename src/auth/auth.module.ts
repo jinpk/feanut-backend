@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailService } from 'src/common/providers/mail.provider';
 import { KakaoAuthProvider } from './providers/kakao.provider';
 import { HttpModule } from '@nestjs/axios';
+import { Admin, AdminSchema } from 'src/admin/schemas/admin.schema';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { HttpModule } from '@nestjs/axios';
       }),
     }),
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
+    MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }]),
     UsersModule,
   ],
   providers: [
