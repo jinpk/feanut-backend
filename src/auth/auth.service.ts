@@ -11,7 +11,7 @@ import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
-import { AdminLoginDto, LoginDto, TokenDto } from './dtos';
+import { AdminLoginDto, LoginDto, TokenDto, SignUpDto } from './dtos';
 import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
@@ -51,6 +51,23 @@ export class AuthService {
     return {
       accessToken: this.genToken(payload, '30d'),
     };
+  }
+
+  async signUpwithId(dto: SignUpDto): Promise<TokenDto> {
+    const user = await this.usersService.findActiveUserOne({
+      feanutId: dto.feanutId,
+    });
+    // 회원가입
+    const sub = user
+      ? user._id
+      : await this.usersService.createUserWithId(dto);
+
+    // 로그인
+    const isAdmin = false;
+    const payload = { sub, isAdmin };
+    return {
+      accessToken: this.genToken(payload, '30d'),
+    }
   }
 
   async checkAuthCoolTime(phoneNumber: string): Promise<boolean> {

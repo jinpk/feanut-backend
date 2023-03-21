@@ -8,25 +8,28 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ collection: USER_MODULE_NAME, timestamps: true })
 export class User {
   // pk
-  _id: Types.ObjectId;
+  _id?: Types.ObjectId;
 
-  // 로그인 ID
+  @Prop({ default: "" })
+  password?: string;
+
+  // feanut ID
   // unique with isDeleted is false
   @Prop({ lowercase: true })
   feanutId: string;
 
   // 로그인 kakao UID
   // unique with isDeleted is false
-  @Prop({})
-  kakaoId: string;
+  @Prop({defaul: null})
+  kakaoId?: string;
 
   // 계정에 연결된 profileId
   @Prop({ type: Types.ObjectId, default: null })
-  profileId: Types.ObjectId;
+  profileId?: Types.ObjectId;
 
   // 삭제여부
   @Prop({ default: false })
-  isDeleted: boolean;
+  isDeleted?: boolean;
 
   // 삭제시간
   @Prop()

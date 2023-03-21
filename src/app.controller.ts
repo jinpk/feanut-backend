@@ -12,6 +12,7 @@ import {
   EmailLoginDto,
   LoginDto,
   TokenDto,
+  SignUpDto,
 } from './auth/dtos';
 import { WrappedError } from './common/errors';
 
@@ -55,12 +56,19 @@ export class AppController {
     return this.authService.adminLogin(body);
   }
 
-  /*@Post('signin')
+  @Post('signup')
+  @Public()
+  @ApiOperation({ summary: '회원 가입' })
+  async signUp(@Body() body: SignUpDto): Promise<TokenDto> {
+    return await this.authService.signUpwithId(body);
+  }
+
+  @Post('signin')
   @Public()
   @ApiOperation({ summary: '로그인' })
   async signIn(@Body() body: LoginDto): Promise<TokenDto> {
     return await this.authService.login(body);
-  }*/
+  }
 
   @Get()
   @Public()

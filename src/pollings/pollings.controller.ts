@@ -100,7 +100,7 @@ export class PollingsController {
     return await this.pollingsService.createUserRound(req.user.id);
   }
 
-  @Get('userRound')
+  @Get('userround')
   @ApiOperation({
       summary: '사용자 round조회',
       description: '생성 전 GET userRound 조회. todayCount=0|1|2 반환.'

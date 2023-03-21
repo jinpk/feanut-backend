@@ -7,7 +7,7 @@ import {
 } from 'mongoose';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
-import { LoginDto } from 'src/auth/dtos';
+import { LoginDto, SignUpDto } from 'src/auth/dtos';
 
 @Injectable()
 export class UsersService {
@@ -36,8 +36,12 @@ export class UsersService {
     return user.toObject();
   }
 
-  async createUserWithId(dto: LoginDto): Promise<string> {
-    const user = await new this.userModel({ dto }).save();
+  async createUserWithId(dto: SignUpDto): Promise<string> {
+    var newuser: User = new User();
+    newuser = {
+      feanutId: dto.feanutId,
+    }
+    const user = await new this.userModel({ newuser }).save();
     return user._id.toHexString();
   }
 
