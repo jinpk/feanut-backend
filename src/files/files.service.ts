@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AWSS3Service } from 'src/common/providers';
 import { CreateFileDto, CreateFileResponseDto } from './dtos';
 import { File, FileDocument } from './schemas/files.schema';
 
 @Injectable()
 export class FilesService {
-  constructor(
-    @InjectModel(File.name) private fileModel: Model<FileDocument>,
-    private awsS3Service: AWSS3Service,
-  ) {}
+  constructor(@InjectModel(File.name) private fileModel: Model<FileDocument>) {}
 
   async updateUploadedState(fileId: string) {
     await this.fileModel.findByIdAndUpdate(fileId, {
@@ -35,9 +31,10 @@ export class FilesService {
 
     const objectKey = `uploads/${dto.type}-${userId}-${Date.now()}.${ext}`;
 
-    const preSignedUrl = await this.awsS3Service.genPreSignedUploadUrl(
+    let preSignedUrl = '';
+    /*const preSignedUrl = await this.awsS3Service.genPreSignedUploadUrl(
       objectKey,
-    );
+    );*/
 
     const fileDoc = await new this.fileModel({
       userId: new Types.ObjectId(userId),
