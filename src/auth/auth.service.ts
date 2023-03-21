@@ -12,7 +12,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
 import { LoginDto, TokenDto } from './dtos';
-import { AdminLoginDto } from 'src/admin/dtos/admin.dto';
 
 @Injectable()
 export class AuthService {
@@ -108,7 +107,11 @@ export class AuthService {
   }
 
   genAuthCode(): string {
-    return '000000';
+    const length = 6;
+    return Math.floor(
+      Math.pow(10, length - 1) +
+        Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1),
+    ).toString();
   }
 
   genToken(payload: any, expiresIn = '30m'): string {

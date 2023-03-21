@@ -15,4 +15,7 @@ export const validationSchema = joi.object({
   FIREBASE_CLIENT_ID: joi.string().required(),
   FIREBASE_CLIENT_EMAIL: joi.string().required(),
   GOOGLE_API_KEY: joi.string().required(),
+
+  SMTP_USER: joi.string().required(),
+  SMTP_PASSWORD: joi.string().required(),
 });

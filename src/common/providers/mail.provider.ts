@@ -1,9 +1,22 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class MailService {
-  constructor(private httpService: HttpService) {}
+  constructor(private readonly mailerService: MailerService) {}
 
-  send() {}
+  async send(
+    to: string,
+    subject: string,
+    body: string,
+    from = 'Feanut',
+  ): Promise<string> {
+    const res = await this.mailerService.sendMail({
+      to,
+      from: `${from} <noreply@feanut.com>`,
+      subject,
+      text: body,
+    });
+    return res.messageId;
+  }
 }

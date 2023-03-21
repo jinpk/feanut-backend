@@ -16,4 +16,7 @@ export default () => ({
 
   playConsoleClientEmail: process.env.PLAYCONSOLE_CLIENT_EMAIL,
   playConsolePrivateKey: process.env.PLAYCONSOLE_PRIVATE_KEY,
+
+  smtpUser: process.env.SMTP_USER,
+  smtpPassword: process.env.SMTP_PASSWORD,
 });
