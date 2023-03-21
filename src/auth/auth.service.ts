@@ -12,6 +12,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
 import { LoginDto, TokenDto } from './dtos';
+import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
+    private adminService: AdminService,
   ) {}
 
   async kakaoLogin(accessToken: string): Promise<TokenDto> {
@@ -62,18 +64,18 @@ export class AuthService {
     };
   }
 
-  // async adminLogin(dto: AdminLoginDto): Promise<TokenDto> {
-  //   const sub = await this.adminService.validateAdmin(dto.username, dto.password);
-  //   const isAdmin = true;
-  //   const payload = {sub, isAdmin}
-  //   console.log(sub)
-  //   return {
-  //     accessToken: this.genToken(
-  //       payload,
-  //       '30d',
-  //     ),
-  //   };
-  // }
+  async adminLogin(body: AdminLoginDto): Promise<TokenDto> {
+    const sub = await this.adminService.validateAdmin(body.username, body.password);
+    const isAdmin = true;
+    const payload = {sub, isAdmin}
+    console.log(sub)
+    return {
+      accessToken: this.genToken(
+        payload,
+        '30d',
+      ),
+    };
+  }
 
   async checkEmailLoginCoolTime(email: string): Promise<boolean> {
     if (await this.findAuthIn3MByField({ email })) {

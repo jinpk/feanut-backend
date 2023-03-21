@@ -214,22 +214,15 @@ export class PollingsService {
     return userround
   }
 
-  async createPayUserRound(user_id: string) {
-    var userround = new UserRoundDto();
-    userround = {
-      userId: user_id,
-      roundId: '',
-      pollIds: [],
-    }
-    await new this.userroundModel(userround).save();
-  }
-
   async findUserRound(user_id: string) {
     var start = new Date();
     start.setHours(0,0,0,0);
 
     var end = new Date();
     end.setHours(23,59,59,999);
+    console.log(start)
+    console.log(end)
+    console.log(user_id)
 
     const rounds = await this.userroundModel.find({
       userId: user_id,
@@ -244,7 +237,14 @@ export class PollingsService {
     return result
   }
 
-  async updateComplete() {
+  async updateComplete(user_id: string) {
+    const result = await this.userroundModel.findOneAndUpdate({
+      _id: new Types.ObjectId(''),
+      userId: user_id,
+    }, {
+      $set: {complete: true, completedAt: now()}
+    });
 
+    return result._id.toString()
   }
 }

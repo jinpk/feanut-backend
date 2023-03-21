@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty, Length } from 'class-validator';
 
 export class AdminLoginDto {
     @ApiProperty({
-      description: '로그인 아이디',
+      description: '로그인 username',
     })
     @IsNotEmpty()
     username: string;

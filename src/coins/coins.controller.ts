@@ -43,6 +43,7 @@ export class CoinsController {
         type: Coin
     })
     async getUsecoin(@Request() req) {
+        console.log(req.isAdmin)
       return await this.coinsService.findUserCoin(req.user.id);
     }
 

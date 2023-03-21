@@ -100,41 +100,10 @@ export class PollingsController {
     return await this.pollingsService.createUserRound(req.user.id);
   }
 
-  // @Post('')
-  // @ApiOperation({
-  //   summary: 'polling 생성',
-  //   description: '건너뛰기 선택 시 selectedProfileId는 empty string',
-  // })
-  // @ApiBody({
-  //     type: PollingDto,
-  // })
-  // @ApiResponse({
-  //     status: 200,
-  //     type: String,
-  // })
-  // async postPolling(@Body() body, @Request() req) {
-  //     return await this.pollingsService.createPolling(req.user.id, body);
-  // }
-
-  @Post('userround/open')
-  @ApiOperation({
-    summary: 'userRound 결제 후 생성',
-  })
-  @ApiBody({
-    type: PayUserRoundDto,
-  })
-  @ApiResponse({
-      status: 200,
-      type: UserRoundDto,
-  })
-  async postPayUserRound(@Request() req) {
-    return await this.pollingsService.createPayUserRound(req.user.id);
-  }
-
   @Get('userRound')
   @ApiOperation({
       summary: '사용자 round조회',
-      description: '생성 전 GET userRound 조회. todayCount=0|1|2|3 반환.'
+      description: '생성 전 GET userRound 조회. todayCount=0|1|2 반환.'
   })
   @ApiOkResponse({
     status: 200,
