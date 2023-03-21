@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  FilterQuery,
-  Model,
-  PipelineStage,
-  ProjectionFields,
- } from 'mongoose';
+import { FilterQuery, Model, PipelineStage, ProjectionFields } from 'mongoose';
 import { UserDto, FeanutCardDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
@@ -14,8 +9,8 @@ import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(User.name) private pollingModel: Model<PollingDocument>,    
-    ) {}
+    @InjectModel(User.name) private pollingModel: Model<PollingDocument>,
+  ) {}
 
   async findActiveUserOne(
     filter: FilterQuery<UserDocument>,
@@ -32,7 +27,7 @@ export class UsersService {
     return user.toObject();
   }
 
-  async findActiveUserById(id: string): Promise<User | null> {
+  async findActiveUserById(id: string): Promise<UserDocument | null> {
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
       return null;
@@ -50,7 +45,7 @@ export class UsersService {
     // const myReceive = await this.pollingModel.find({profileId: profile_id})
     var filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
-    }
+    };
 
     const lookups: PipelineStage[] = [
       {
@@ -75,7 +70,7 @@ export class UsersService {
       emotion: '$polls.emotion',
       selectedAt: 1,
       createdAt: 1,
-    };    
+    };
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
@@ -87,13 +82,13 @@ export class UsersService {
 
     const myCard = new FeanutCardDto();
 
-    data.array.forEach(element => {
+    data.array.forEach((element) => {
       if (element.emotion == 'joy') {
         myCard.joy += 1;
       }
     });
 
-    return myCard
+    return myCard;
   }
 
   async getActiveFCMUsers(): Promise<string[]> {
@@ -108,10 +103,10 @@ export class UsersService {
     return docs.map((doc) => doc.fcmToken);
   }
 
-  async _userToDto(user: UserDocument | User): Promise<UserDto> {
+  async _userDocToDto(user: UserDocument): Promise<UserDto> {
     const dto = new UserDto();
-    dto.id = user.id;
-    dto.profileId = user.profileId.toHexString()
+    dto.id = user._id.toHexString();
+    dto.profileId = user.profileId?.toHexString();
     dto.email = user.email;
     return dto;
   }

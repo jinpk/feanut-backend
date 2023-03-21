@@ -14,13 +14,12 @@ export class UsersController {
     summary: '로그인 정보 조회',
   })
   async getMe(@Req() req): Promise<UserDto> {
-    console.log(req)
     const user = await this.usersService.findActiveUserById(req.user.id);
     if (!user) {
       throw new NotFoundException('');
     }
 
-    return await this.usersService._userToDto(user);
+    return await this.usersService._userDocToDto(user);
   }
 
   @Get('feanutcard')
@@ -28,7 +27,7 @@ export class UsersController {
     summary: '나의 피넛 카드 조회',
   })
   async getMyFeanutCard(@Req() req): Promise<FeanutCardDto> {
-    console.log(req)
+    console.log(req);
     const user = await this.usersService.findActiveUserById(req.user.id);
     if (!user) {
       throw new NotFoundException('');
