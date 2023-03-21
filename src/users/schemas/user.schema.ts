@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { ApiProperty } from '@nestjs/swagger';
 import { USER_MODULE_NAME } from '../users.constant';
 
 export type UserDocument = HydratedDocument<User>;
@@ -16,13 +15,14 @@ export class User {
   @Prop({ lowercase: true })
   email: string;
 
-  // profileId
+  // 로그인 kakao UID
+  // unique with isDeleted is false
+  @Prop({})
+  kakaoId: string;
+
+  // 계정에 연결된 profileId
   @Prop({ type: Types.ObjectId, default: null })
   profileId: Types.ObjectId;
-
-  @Prop({})
-  @ApiProperty({ description: 'Firebase Messaging Token' })
-  fcmToken?: string;
 
   // 삭제여부
   @Prop({ default: false })

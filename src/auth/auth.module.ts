@@ -8,9 +8,12 @@ import { Auth, AuthSchema } from './schemas/auth.schema';
 import { AuthEventListener } from './auth.listener';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailService } from 'src/common/providers/mail.provider';
+import { KakaoAuthProvider } from './providers/kakao.provider';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -20,7 +23,13 @@ import { MailService } from 'src/common/providers/mail.provider';
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
     UsersModule,
   ],
-  providers: [AuthService, AuthEventListener, JwtStrategy, MailService],
+  providers: [
+    AuthService,
+    AuthEventListener,
+    JwtStrategy,
+    MailService,
+    KakaoAuthProvider,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

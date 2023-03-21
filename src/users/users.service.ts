@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, PipelineStage, ProjectionFields } from 'mongoose';
+import {
+  FilterQuery,
+  Model,
+  PipelineStage,
+  ProjectionFields,
+  Types,
+} from 'mongoose';
 import { UserDto, FeanutCardDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
@@ -36,6 +42,18 @@ export class UsersService {
   async createUserWithEmail(email: string): Promise<string> {
     const user = await new this.userModel({ email }).save();
     return user._id.toHexString();
+  }
+
+  async createUserWithKakao(kakaoId: string, email = ''): Promise<string> {
+    const user = await new this.userModel({ email, kakaoId }).save();
+    return user._id.toHexString();
+  }
+
+  async updateKakaoId(
+    id: string | Types.ObjectId,
+    kakaoId: string,
+  ): Promise<void> {
+    await this.userModel.findByIdAndUpdate(id, { $set: { kakaoId } });
   }
 
   async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
@@ -86,18 +104,6 @@ export class UsersService {
     });
 
     return myCard;
-  }
-
-  async getActiveFCMUsers(): Promise<string[]> {
-    const docs = await this.userModel
-      .find()
-      .and([
-        { fcmToken: { $ne: '' } },
-        { fcmToken: { $ne: null } },
-        { deleted: false },
-      ]);
-
-    return docs.map((doc) => doc.fcmToken);
   }
 
   async _userDocToDto(user: User): Promise<UserDto> {

@@ -30,7 +30,7 @@ export class SchedulerService {
           notifications.map((x) => x.id),
         );
 
-        const tokens = await this.usersService.getActiveFCMUsers();
+        const tokens = []; // await this.usersService.getActiveFCMUsers();
         this.logger.log(`found ${tokens.length} notification receviers!`);
         if (!tokens.length) {
           return;
