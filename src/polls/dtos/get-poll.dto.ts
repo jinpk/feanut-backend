@@ -9,12 +9,6 @@ export class GetListPollDto extends PagingReqDto {
   userId: string;
 }
 
-export class GetListRoundDto extends PagingReqDto{
-  @ApiProperty({ 
-    description: 'userId',
-    required: false,
-  })
-  userId: string;
-}
+export class GetListRoundDto extends PagingReqDto{}
 
 export class GetListPublicPollDto extends PagingReqDto{}

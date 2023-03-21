@@ -7,7 +7,7 @@ export class RoundDto {
   enabled: boolean;
 
   @ApiProperty({})
-  pollIds: string[];
+  pollIds?: string[];
 
   @ApiProperty({})
   startedAt?: Date;

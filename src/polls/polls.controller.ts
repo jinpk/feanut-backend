@@ -199,8 +199,7 @@ export class PollsController {
 
   @Get(':pollId')
   @ApiOperation({
-    summary: '(ADMIN) 등록된 투표 상세 조회',
-    description: 'userId 미입력 시 전체조회',
+    summary: '등록된 투표 상세 조회',
   })
   @ApiOkResponse({
     status: 200,
