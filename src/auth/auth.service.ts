@@ -29,6 +29,7 @@ export class AuthService {
   async kakaoLogin(accessToken: string): Promise<TokenDto> {
     const kakaoProfile = await this.kakaoAuthProvider.me(accessToken);
 
+    console.log(kakaoProfile);
     const userById = await this.usersService.findActiveUserOne({
       kakaoId: kakaoProfile.id,
     });

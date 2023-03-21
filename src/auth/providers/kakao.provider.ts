@@ -33,7 +33,6 @@ export class KakaoAuthProvider {
     if (!data.id) {
       throw new Error('조회할 수 없는 카카오 계정입니다.');
     }
-    console.log(data);
 
     const id = (data.id as bigint).toString();
     const profile_image = data.properties?.profile_image as string;
@@ -41,8 +40,12 @@ export class KakaoAuthProvider {
     const email = (
       data.kakao_account?.has_email ? data.kakao_account?.email : ''
     ) as string;
-
-    const birthday = data.kakao_account?.birthday as string; // YYY
+    const birthyear = data.kakao_account?.birthyear
+      ? (data.kakao_account?.birthyear as string)
+      : ''; // YYYY
+    const birthday = data.kakao_account?.birthday
+      ? (data.kakao_account?.birthday as string)
+      : ''; // MMDD
     const gender = data.kakao_account?.gender
       ? (data.kakao_account?.gender as Gender)
       : '';
@@ -54,6 +57,7 @@ export class KakaoAuthProvider {
       email,
       birthday,
       gender,
+      birthyear,
     };
   }
 }
