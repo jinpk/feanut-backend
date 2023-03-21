@@ -12,7 +12,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailLoginEvent } from './events';
 import { InjectModel } from '@nestjs/mongoose';
 import { AdminLoginDto, LoginDto, TokenDto } from './dtos';
-import { KakaoAuthProvider } from './providers/kakao.provider';
 import { AdminService } from 'src/admin/admin.service';
 
 @Injectable()
@@ -22,55 +21,8 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private eventEmitter: EventEmitter2,
-    private kakaoAuthProvider: KakaoAuthProvider,
     private adminService: AdminService,
   ) {}
-
-  async kakaoLogin(accessToken: string): Promise<TokenDto> {
-    const kakaoProfile = await this.kakaoAuthProvider.me(accessToken);
-
-    console.log(kakaoProfile);
-    const userById = await this.usersService.findActiveUserOne({
-      kakaoId: kakaoProfile.id,
-    });
-
-    let sub = '';
-    let needSignUp = false;
-
-    if (userById) {
-      sub = userById._id.toHexString();
-    } else {
-      if (kakaoProfile.email) {
-        const userByEmail = await this.usersService.findActiveUserOne({
-          email: kakaoProfile.email,
-        });
-        // 기존 가입했던 email이 있다면 id update
-        if (userByEmail) {
-          sub = userByEmail._id.toHexString();
-          await this.usersService.updateKakaoId(
-            userByEmail._id,
-            kakaoProfile.id,
-          );
-        } else {
-          needSignUp = true;
-        }
-      } else {
-        needSignUp = true;
-      }
-    }
-
-    if (needSignUp) {
-      sub = await this.usersService.createUserWithKakao(
-        kakaoProfile.id,
-        kakaoProfile.email,
-      );
-    }
-
-    const payload = { sub, isAdmin: false };
-    return {
-      accessToken: this.genToken(payload, '30d'),
-    };
-  }
 
   async login(dto: LoginDto): Promise<TokenDto> {
     // 유효한 인증인지 확인

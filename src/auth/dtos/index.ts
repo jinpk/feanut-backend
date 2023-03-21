@@ -12,15 +12,6 @@ export class LoginDto {
   authId: string;
 }
 
-export class KakaoLoginDto {
-  @ApiProperty({
-    title: 'Kakao Access Token',
-    description: 'frontend에서 accessToken까지 발급',
-  })
-  @IsNotEmpty()
-  accessToken: string;
-}
-
 export class EmailLoginDto {
   @ApiProperty({ title: '이메일' })
   @IsNotEmpty()

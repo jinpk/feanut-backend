@@ -7,13 +7,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './schemas/auth.schema';
 import { AuthEventListener } from './auth.listener';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { KakaoAuthProvider } from './providers/kakao.provider';
-import { HttpModule } from '@nestjs/axios';
 import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
   imports: [
-    HttpModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -24,7 +21,7 @@ import { AdminModule } from 'src/admin/admin.module';
     UsersModule,
     AdminModule,
   ],
-  providers: [AuthService, AuthEventListener, JwtStrategy, KakaoAuthProvider],
+  providers: [AuthService, AuthEventListener, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
