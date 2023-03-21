@@ -150,6 +150,7 @@ export class PollsService {
       _id: 1,
       emotion: 1,
       emoji: 1,
+      isOpenedCount: 1,
       contentText: 1,
       createdAt: 1,
     };
