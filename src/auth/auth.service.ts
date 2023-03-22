@@ -235,7 +235,7 @@ export class AuthService {
   // 회원가입
   async signUp(dto: SignUpDto) {
     const auth = await this.authModel.findById(dto.authId);
-    if (!auth) {
+    if (!auth || auth.used) {
       throw new WrappedError(AUTH_MODULE_NAME).reject();
     }
 
@@ -339,7 +339,7 @@ export class AuthService {
     name: string,
     username: string,
   ) {
-    return `${username}\n${name}\n${birth}\n${gender}}`;
+    return `${username}\n${name}\n${birth}\n${gender}`;
   }
 
   parseSignUpPayload(payload: string): {

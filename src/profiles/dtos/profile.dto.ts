@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '../enums';
 
 export class ProfileDto {
+  @ApiProperty({ description: 'profile ID' })
+  id: string;
+
   @ApiProperty({ description: '이름' })
   name: string;
 
@@ -13,4 +16,7 @@ export class ProfileDto {
 
   @ApiProperty({ title: '상태메시지' })
   statusMessage: string;
+
+  @ApiProperty({ title: 'profile Image Key' })
+  profileImageKey: string;
 }

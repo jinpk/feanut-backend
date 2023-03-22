@@ -58,25 +58,4 @@ export class FirebaseService {
         console.error('Firebase Messaging sendAll errors: ', error);
       });
   }
-
-  async generateDynamicLink(params: DynamicLinkQuery): Promise<string> {
-    const res = await this.httpService.axiosRef.post(
-      DYNAMICLINK_POST_URL,
-      {
-        dynamicLinkInfo: {
-          domainUriPrefix: DYNAMICLINK_URL_PREFIX,
-          link: `${this.configService.get('env').host}/link?action=${params.action}&payload=${params.payload}`,
-          androidInfo: {
-            androidPackageName: ANDROID_PACKAGE_NAME,
-          },
-          iosInfo: {
-            iosBundleId: IOS_BUNDLE_ID,
-          },
-        },
-      },
-      { params: { key: this.configService.get('googleAPIKey') } },
-    );
-
-    return res.data.shortLink;
-  }
 }

@@ -10,7 +10,7 @@ export type ProfileDocument = HydratedDocument<Profile>;
 @Schema({ collection: PROFILE_SCHEMA_NAME, timestamps: true })
 export class Profile {
   // pk
-  id: string;
+  _id: Types.ObjectId;
 
   // 이름
   @Prop({ required: true })

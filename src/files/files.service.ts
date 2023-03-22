@@ -1,30 +1,41 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateFileDto, CreateFileResponseDto } from './dtos';
 import { File, FileDocument } from './schemas/files.schema';
-import { Storage } from '@google-cloud/storage';
+import { Bucket, Storage } from '@google-cloud/storage';
 import * as dayjs from 'dayjs';
-import { GC_STORAGE_BUCKET } from './files.constant';
 import { GOOGLE_CLOUD_PROJECT_ID } from 'src/common/common.constant';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FilesService {
-  private readonly logger = new Logger(FilesService.name);
-  private gcStorage = new Storage();
+  private readonly bucket: Bucket;
 
   constructor(
     @InjectModel(File.name) private fileModel: Model<FileDocument>,
     private configService: ConfigService,
   ) {
-    this.gcStorage = new Storage({
+    const storage = new Storage({
       projectId: GOOGLE_CLOUD_PROJECT_ID,
       credentials: {
         client_email: this.configService.get('googleCloudClientEmail'),
         private_key: this.configService.get('googleCloudPrivateKey'),
       },
     });
+    this.bucket = storage.bucket(this.configService.get('googleCloudBucket'));
+  }
+
+  async getKeyById(fileId: string | Types.ObjectId): Promise<string | null> {
+    return (await this.fileModel.findById(fileId))?.key || null;
+  }
+
+  async hasById(fileId: string) {
+    if (await this.fileModel.findById(fileId)) {
+      return true;
+    }
+
+    return false;
   }
 
   async updateUploadedState(fileId: string) {
@@ -48,17 +59,12 @@ export class FilesService {
       key,
     });
 
-    const file = `${this.configService.get('env')}/${key}`;
-
-    const [signedUrl] = await this.gcStorage
-      .bucket(GC_STORAGE_BUCKET)
-      .file(file)
-      .getSignedUrl({
-        version: 'v4',
-        action: 'write',
-        contentType: dto.contentType,
-        expires: dayjs().add(3, 'minutes').toDate(), // 3min
-      });
+    const [signedUrl] = await this.bucket.file(key).getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      contentType: dto.contentType,
+      expires: dayjs().add(3, 'minutes').toDate(), // 3min
+    });
 
     await doc.save();
 

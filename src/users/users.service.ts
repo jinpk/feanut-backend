@@ -94,7 +94,13 @@ export class UsersService {
         birth,
       );
     } else {
-      await this.profilesService.create(user._id, name, gender, birth);
+      await this.profilesService.create(
+        user._id,
+        phoneNumber,
+        name,
+        gender,
+        birth,
+      );
     }
 
     // 친구목록 초기화

@@ -6,6 +6,8 @@ import { Profile, ProfileDocument } from './schemas/profile.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
 import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
+import { WrappedError } from 'src/common/errors';
+import { PROFILE_MODULE_NAME } from './profiles.constant';
 
 @Injectable()
 export class ProfilesService {
@@ -45,6 +47,7 @@ export class ProfilesService {
 
   async create(
     ownerId: Types.ObjectId,
+    phoneNumber: string,
     name?: string,
     gender?: Gender,
     birth?: string,
@@ -54,6 +57,7 @@ export class ProfilesService {
       name,
       gender,
       birth,
+      phoneNumber,
     }).save();
     const id = doc._id.toHexString();
 
@@ -63,12 +67,6 @@ export class ProfilesService {
   async updateById(id: string | Types.ObjectId, dto: UpdateProfileDto) {
     const profile = await this.profileModel.findById(id);
 
-    if (dto.imageFileId !== undefined) {
-      profile.imageFileId = dto.imageFileId
-        ? new Types.ObjectId(dto.imageFileId)
-        : null;
-    }
-
     if (dto.name) {
       profile.name = dto.name;
     }
@@ -77,12 +75,34 @@ export class ProfilesService {
       profile.statusMessage = dto.statusMessage;
     }
 
+    if (dto.imageFileId !== undefined) {
+      if (dto.imageFileId) {
+        if (!(await this.filesService.hasById(dto.imageFileId))) {
+          throw new WrappedError(
+            PROFILE_MODULE_NAME,
+            null,
+            'non-exist imageFileId',
+          ).badRequest();
+        } else {
+          profile.imageFileId = new Types.ObjectId(dto.imageFileId);
+        }
+      } else {
+        profile.imageFileId = null;
+      }
+    }
+
     await profile.save();
 
     // 파일 업로드 완료 상태 변경
     if (dto.imageFileId) {
       await this.filesService.updateUploadedState(dto.imageFileId);
     }
+  }
+
+  async getById(id: string | Types.ObjectId): Promise<Profile | null> {
+    const profile = await this.profileModel.findById(id);
+    if (!profile) return null;
+    return profile.toObject();
   }
 
   async getByUserId(userId: string | Types.ObjectId): Promise<Profile | null> {
@@ -145,8 +165,13 @@ export class ProfilesService {
     return myCard;
   }
 
+  async getProfileImageKey(imageFileId: Types.ObjectId) {
+    return await this.filesService.getKeyById(imageFileId);
+  }
+
   docToDto(doc: Profile | ProfileDocument): ProfileDto {
     const dto = new ProfileDto();
+    dto.id = doc._id.toHexString();
     dto.birth = doc.birth || null;
     dto.gender = doc.gender || null;
     dto.name = doc.name || '';

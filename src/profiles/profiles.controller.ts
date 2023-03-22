@@ -27,7 +27,14 @@ export class ProfilesController {
       throw new WrappedError(PROFILE_MODULE_NAME).notFound();
     }
 
-    return this.profileService.docToDto(profile);
+    const dto = this.profileService.docToDto(profile);
+
+    if (profile.imageFileId) {
+      dto.profileImageKey = await this.profileService.getProfileImageKey(
+        profile.imageFileId,
+      );
+    }
+    return dto;
   }
 
   @Get(':profileId/card')
@@ -51,8 +58,11 @@ export class ProfilesController {
     @Param('profileId') profileId: string,
     @Body() body: UpdateProfileDto,
   ) {
-    if (profileId !== req.user.id) {
-      throw new WrappedError(PROFILE_MODULE_NAME).unauthorized();
+    const profile = await this.profileService.getById(profileId);
+    if (!profile) {
+      throw new WrappedError(PROFILE_MODULE_NAME).notFound();
+    } else if (!profile.ownerId || !profile.ownerId.equals(req.user.id)) {
+      throw new WrappedError(PROFILE_MODULE_NAME).reject();
     }
 
     await this.profileService.updateById(profileId, body);
