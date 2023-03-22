@@ -18,6 +18,7 @@ import {
   PollingDto,
   PollingOpenDto,
   PollingRefreshDto,
+  Opened,
 } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
@@ -46,8 +47,40 @@ export class PollingsService {
     private utilsService: UtilsService,
   ) {}
 
-  async createPolling(user_id: string, body: PollingDto) {
-    const result = await new this.pollingModel(body).save();
+  async createPolling(user_id: string, userround) {
+    var isopened = new Opened();
+    isopened = { isOpened: false, useCoinId: null}
+
+    // userround의 pollIds에 추가 되지 않은 pollId sorting
+
+    
+    // 친구목록 불러오기/셔플
+    const friendList = await this.friendShipsService.listFriend(
+      // **{user.profileId 사용안함 profile이 userId가짐}
+      //user.profileId.toString()
+      '',
+    );
+    const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
+    // polling friendlist 갱신
+    var newIds = [];
+    for (const friend of temp_arr) {
+      newIds.push(friend.profileId);
+    }
+
+    // userround에 pollId추가
+
+    // 친구목록에서 4명 선정
+
+    var polling = new Polling();
+    polling = {
+      userId: user_id,
+      roundId: userround.roundId,
+      pollId: 'werwqerw',
+      friendIds: [],
+      opened: isopened,
+    }
+
+    const result = await new this.pollingModel(polling).save();
     return result._id.toString();
   }
 
@@ -242,15 +275,13 @@ export class PollingsService {
     const enbaleRounds = await this.roundModel.find(
       {
         enabled: true,
-        startedAt: {$gte: today},
-        endedAt: {$lt: today || null},
+        startedAt: {$lte: today},
+        endedAt: {$gt: today},
       }
     )
     enbaleRounds.forEach(element => {
       enbaleRoundIds.push(element._id.toString())
     });
-
-    console.log(enbaleRounds)
 
     // roundModel중 userrounds roundId들 삭제.
     for(var i = 0; i < enbaleRoundIds.length; i++){
@@ -266,14 +297,30 @@ export class PollingsService {
     const randomIndex = Math.floor(Math.random() * enbaleRoundIds.length);
     const RandomRoundId = enbaleRoundIds[randomIndex];
 
+    // 해당 라운드에 속한 pollId 12개 생성
+    var polls = []
+    enbaleRounds.forEach(element => {
+      if (element._id.toString() == RandomRoundId) {
+        polls = element.pollIds.sort(() => Math.random() - 0.5);
+      }
+    });
+
     var userround = new UserRoundDto();
     userround = {
       userId: user_id,
       roundId: RandomRoundId,
-      pollIds: [],
+      pollIds: polls.slice(0, 12),
     }
     await new this.userroundModel(userround).save();
     return userround
+  }
+
+  async findRecentUserRound(user_id: string): Promise<UserRound> {
+    const round = await this.userroundModel.findOne({
+      userId: user_id,
+    }).sort({createdAt: -1});
+
+    return round;
   }
 
   async findUserRound(user_id: string) {
@@ -282,9 +329,6 @@ export class PollingsService {
 
     var end = new Date();
     end.setHours(23, 59, 59, 999);
-    console.log(start);
-    console.log(end);
-    console.log(user_id);
 
     const rounds = await this.userroundModel.find({
       userId: user_id,
