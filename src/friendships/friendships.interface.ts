@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 
-export interface FriendsServiceInterface {
+export interface FriendShipsServiceInterface {
   // 친구 문서 초기화
-  initUserFriendsById(userId: string | Types.ObjectId): Promise<void>;
+  initFriendShip(userId: string | Types.ObjectId): Promise<void>;
 
   // 친구추가
   addFriendToList(

@@ -26,7 +26,7 @@ async function bootstrap() {
       .setVersion('0.0.1')
       .addTag('User', '회원 API')
       .addTag('Profile', '프로필 API')
-      .addTag('Friend', '친구 API')
+      .addTag('FriendShip', '친구 API')
       .addTag('Polling', '투표 API')
       .addTag('Poll', 'poll&round API')
       .addTag('Notification', '알림 API')

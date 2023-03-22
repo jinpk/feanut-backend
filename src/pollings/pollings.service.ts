@@ -27,7 +27,7 @@ import {
 import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
-import { FriendsService } from 'src/friends/friends.service';
+import { FriendShipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
 import { UseType } from 'src/coins/enums/usetype.enum';
 import { UserRoundDto } from './dtos/userround.dto';
@@ -42,7 +42,7 @@ export class PollingsService {
     private profilesService: ProfilesService,
     private userService: UsersService,
     private coinService: CoinsService,
-    private friendService: FriendsService,
+    private friendShipsService: FriendShipsService,
     private utilsService: UtilsService,
   ) {}
 
@@ -83,7 +83,7 @@ export class PollingsService {
       return 'Exceed your free refresh count';
     }
     // 친구목록 불러오기/셔플
-    const friendList = await this.friendService.listFriend(
+    const friendList = await this.friendShipsService.listFriend(
       // **{user.profileId 사용안함 profile이 userId가짐}
       //user.profileId.toString()
       '',

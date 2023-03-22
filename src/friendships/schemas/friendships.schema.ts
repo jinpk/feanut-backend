@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/users/schemas/user.schema';
-import { SCHEMA_NAME } from '../friends.constant';
+import { SCHEMA_NAME } from '../friendships.constant';
 import { FriendSchema, Friend } from './friend.schema';
 
-export type UserFriendsDocument = HydratedDocument<UserFriends>;
+export type FriendShipDocument = HydratedDocument<FriendShip>;
 
 @Schema({ collection: SCHEMA_NAME, timestamps: true })
-export class UserFriends {
+export class FriendShip {
   // pk
   _id: Types.ObjectId;
 
@@ -22,4 +22,4 @@ export class UserFriends {
   friends: Friend[];
 }
 
-export const UserFriendsSchema = SchemaFactory.createForClass(UserFriends);
+export const FriendShipSchema = SchemaFactory.createForClass(FriendShip);

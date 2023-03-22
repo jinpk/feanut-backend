@@ -5,13 +5,13 @@ import { UserRound, UserRoundSchema } from './schemas/userround.schema';
 import { Coin, CoinSchema } from '../coins/schemas/coin.schema';
 import { Poll, PollSchema } from '../polls/schemas/poll.schema';
 import { Round, RoundSchema } from '../polls/schemas/round.schema';
-import { Friend, FriendSchema } from '../friends/schemas/friend.schema';
+import { Friend, FriendSchema } from '../friendships/schemas/friend.schema';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { PollingsService } from './pollings.service';
 import { PollingsController } from './pollings.controller';
 import { UsersModule } from 'src/users/users.module';
 import { CoinsModule } from 'src/coins/coins.module';
-import { FriendsModule } from 'src/friends/friends.module';
+import { FriendsModule } from 'src/friendships/friendships.module';
 
 @Module({
   imports: [

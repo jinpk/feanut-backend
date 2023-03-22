@@ -2,26 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
-import {
-  UserFriends,
-  UserFriendsDocument,
-} from './schemas/user-friends.schema';
-import { FriendsServiceInterface } from './friends.interface';
+import { FriendShip, FriendShipDocument } from './schemas/friendships.schema';
+import { FriendShipsServiceInterface } from './friendships.interface';
 import { AddFriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
-import { FRIENDS_MODULE_NAME } from './friends.constant';
+import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
 
 @Injectable()
-export class FriendsService implements FriendsServiceInterface {
+export class FriendShipsService implements FriendShipsServiceInterface {
   constructor(
-    @InjectModel(UserFriends.name)
-    private userFriendsModel: Model<UserFriendsDocument>,
+    @InjectModel(FriendShip.name)
+    private friendShipModel: Model<FriendShipDocument>,
     private profilesService: ProfilesService,
   ) {}
 
-  async initUserFriendsById(userId: string | Types.ObjectId) {
-    await new this.userFriendsModel({
+  async initFriendShip(userId: string | Types.ObjectId) {
+    await new this.friendShipModel({
       userId: new Types.ObjectId(userId),
       friends: [],
     }).save();
@@ -42,7 +39,7 @@ export class FriendsService implements FriendsServiceInterface {
       // 이미 추가된 친구인지 검증
       if (await this.hasFriend(userId, profileId)) {
         throw new WrappedError(
-          FRIENDS_MODULE_NAME,
+          FRIENDSHIPS_MODULE_NAME,
           null,
           'already added friend ',
         ).alreadyExist();
@@ -57,7 +54,7 @@ export class FriendsService implements FriendsServiceInterface {
     friendProfileId: string | Types.ObjectId,
     name: string,
   ) {
-    const doc = await this.userFriendsModel.findOne({
+    const doc = await this.friendShipModel.findOne({
       userId: new Types.ObjectId(userId),
     });
 
@@ -73,7 +70,7 @@ export class FriendsService implements FriendsServiceInterface {
     userId: string | Types.ObjectId,
     friendProfileId: string | Types.ObjectId,
   ) {
-    const doc = await this.userFriendsModel.findOne({
+    const doc = await this.friendShipModel.findOne({
       userId: new Types.ObjectId(userId),
     });
     if (
@@ -90,7 +87,7 @@ export class FriendsService implements FriendsServiceInterface {
   async unHideFriend(userId: string, friendProfileId: string) {}
 
   async listFriend(userId: string | Types.ObjectId): Promise<Friend[]> {
-    const filter: FilterQuery<UserFriends> = {
+    const filter: FilterQuery<FriendShip> = {
       userId: new Types.ObjectId(userId),
     };
 
@@ -98,7 +95,7 @@ export class FriendsService implements FriendsServiceInterface {
       hidden: { $ne: true },
     };
 
-    const doc = await this.userFriendsModel.aggregate<Friend>([
+    const doc = await this.friendShipModel.aggregate<Friend>([
       // 친구 도큐먼트 조회
       { $match: filter },
       // 친구목록 언와인딩
@@ -113,7 +110,7 @@ export class FriendsService implements FriendsServiceInterface {
   }
 
   async listHiddenFriend(userId: string | Types.ObjectId): Promise<Friend[]> {
-    const filter: FilterQuery<UserFriends> = {
+    const filter: FilterQuery<FriendShip> = {
       userId: new Types.ObjectId(userId),
     };
 
@@ -121,7 +118,7 @@ export class FriendsService implements FriendsServiceInterface {
       hidden: true,
     };
 
-    const doc = await this.userFriendsModel.aggregate<Friend>([
+    const doc = await this.friendShipModel.aggregate<Friend>([
       // 친구 도큐먼트 조회
       { $match: filter },
       // 친구목록 언와인딩

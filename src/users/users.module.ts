@@ -4,7 +4,7 @@ import { User, UserSchema } from './schemas/user.schema';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
-import { FriendsModule } from 'src/friends/friends.module';
+import { FriendsModule } from 'src/friendships/friendships.module';
 
 @Module({
   imports: [

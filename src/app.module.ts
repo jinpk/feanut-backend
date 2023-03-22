@@ -7,7 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CoinsModule } from './coins/coins.module';
-import { FriendsModule } from './friends/friends.module';
+import { FriendsModule } from './friendships/friendships.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PollingsModule } from './pollings/pollings.module';
 import { PollsModule } from './polls/polls.module';
