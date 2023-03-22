@@ -29,6 +29,7 @@ import {
 import { Gender } from 'src/profiles/enums';
 import * as bcrypt from 'bcrypt';
 import { AuthPurpose } from './enums';
+import { AligoProvider } from './providers';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +38,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private adminService: AdminService,
+    private aligoProvider: AligoProvider,
   ) {}
 
   // 리프레시 토큰 검증 및 token 재발급
@@ -305,16 +307,17 @@ export class AuthService {
 
   // no error handling
   async sendSignUpSMS(phoneNumber: string, code: string) {
-    console.log('send sign-up sms to: ', phoneNumber + '. code: ' + code);
-    return phoneNumber;
+    await this.aligoProvider.sendSMS(
+      phoneNumber,
+      `[인증번호:${code}] feanut - 피넛 회원가입 인증번호입니다.`,
+    );
   }
 
   async sendResetPasswordSMS(phoneNumber: string, code: string) {
-    console.log(
-      'send reset-password sms to: ',
-      phoneNumber + '. code: ' + code,
+    await this.aligoProvider.sendSMS(
+      phoneNumber,
+      `[인증번호:${code}] feanut - 피넛 비밀번호 재설정 인증번호입니다.`,
     );
-    return phoneNumber;
   }
 
   comparePassword(input: string, hashed: string): boolean {

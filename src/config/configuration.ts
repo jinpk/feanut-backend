@@ -4,11 +4,10 @@ export default () => ({
   port: parseInt(process.env.PORT, 10) || 3001,
 
   mongoURI: process.env.MONGO_URI || '',
-  
-  jwtSecret: process.env.JWT_SECRET,
-  
-  env: process.env.NODE_ENV || 'local', // production | development
 
+  jwtSecret: process.env.JWT_SECRET,
+
+  env: process.env.NODE_ENV || 'local', // production | development
 
   firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
   firebasePrivateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
@@ -19,4 +18,8 @@ export default () => ({
   googleCloudClientEmail: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
   googleCloudPrivateKey: process.env.GOOGLE_CLOUD_PRIVATE_KEY,
   googleCloudBucket: process.env.GOOGLE_CLOUD_BUCKET,
+
+  aligoAPIKey: process.env.ALIGO_API_KEY,
+  aligoUserId: process.env.ALIGO_USER_ID,
+  aligoSender: process.env.ALIGO_SENDER,
 });

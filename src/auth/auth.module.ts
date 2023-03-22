@@ -7,9 +7,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './schemas/auth.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AdminModule } from 'src/admin/admin.module';
+import { AligoProvider } from './providers/aligo.provider';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -20,7 +23,7 @@ import { AdminModule } from 'src/admin/admin.module';
     UsersModule,
     AdminModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, AligoProvider],
   exports: [AuthService],
 })
 export class AuthModule {}
