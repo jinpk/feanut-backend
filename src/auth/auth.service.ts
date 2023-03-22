@@ -12,6 +12,7 @@ import {
   SignUpDto,
   ResetPasswordVerificationDto,
   ResetPasswordDto,
+  ResetPasswordVerificationCodeDto,
 } from './dtos';
 import { AdminService } from 'src/admin/admin.service';
 import { WrappedError } from 'src/common/errors';
@@ -44,14 +45,15 @@ export class AuthService {
   ): Promise<string> {
     const user = await this.usersService.findActiveUserOne({
       username: dto.username,
+      phoneNumber: dto.phoneNumber,
     });
 
-    if (!user || !bcrypt.compareSync(dto.phoneNumber, user.hashedPhoneNumber)) {
+    if (!user) {
       throw new WrappedError(AUTH_MODULE_NAME).reject();
     }
 
     // 3분 쿨타임
-    await this.require3MCoolTime(user.hashedPhoneNumber);
+    await this.require3MCoolTime(user.phoneNumber);
 
     // 인증코드 처리
     const code = this.genAuthCode();
@@ -59,6 +61,7 @@ export class AuthService {
       code,
       payload: dto.username,
       purpose: AuthPurpose.ResetPassword,
+      phoneNumber: user.phoneNumber,
     }).save();
 
     // 인증코드 전송
@@ -67,10 +70,11 @@ export class AuthService {
     return doc._id.toHexString();
   }
 
-  // 비밀번호 초기화
-  async resetPassword(dto: ResetPasswordDto) {
+  // 비밀번호 초기화 인증코드 검증
+  async resetPasswordVerificationCode(dto: ResetPasswordVerificationCodeDto) {
     const auth = await this.authModel.findById(dto.authId);
-    if (!auth) {
+    // 이미 인증했으면 reject
+    if (!auth || auth.verified) {
       throw new WrappedError(AUTH_MODULE_NAME).reject();
     }
 
@@ -88,6 +92,25 @@ export class AuthService {
       ).badRequest();
     }
 
+    auth.verified = true;
+    await auth.save();
+  }
+
+  // 비밀번호 초기화
+  async resetPassword(dto: ResetPasswordDto) {
+    const auth = await this.authModel.findById(dto.authId);
+    // 검증되지 않았거나 이미 사용한 인증은 reject
+    if (!auth || !auth.verified || auth.used) {
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    }
+
+    if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_VERIFICATION_TIMEOUT,
+      ).reject();
+    }
+
     const user = await this.usersService.findActiveUserOne({
       username: auth.payload,
     });
@@ -95,7 +118,7 @@ export class AuthService {
 
     auth.used = true;
     auth.usedAt = dayjs().toDate();
-    auth.save();
+    await auth.save();
   }
 
   // 로그인
@@ -153,11 +176,12 @@ export class AuthService {
       ).alreadyExist();
     }
 
-    // 휴대폰번호 해시
-    const hashedPhoneNumber = this.hashPhoneNumber(dto.phoneNumber);
-
     // 휴대폰번호 검증
-    if (await this.usersService.findActiveUserOne({ hashedPhoneNumber })) {
+    if (
+      await this.usersService.findActiveUserOne({
+        phoneNumber: dto.phoneNumber,
+      })
+    ) {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_EXIST_PHONE_NUMBER,
@@ -165,7 +189,7 @@ export class AuthService {
     }
 
     // 3분 쿨타임
-    await this.require3MCoolTime(hashedPhoneNumber);
+    await this.require3MCoolTime(dto.phoneNumber);
 
     // 인증코드 처리
     const code = this.genAuthCode();
@@ -180,6 +204,7 @@ export class AuthService {
       code,
       payload,
       purpose: AuthPurpose.SignUp,
+      phoneNumber: dto.phoneNumber,
     }).save();
 
     // 인증코드 전송
@@ -221,7 +246,7 @@ export class AuthService {
 
     const sub = await this.usersService.create(
       payload.username,
-      auth.hashedPhoneNumber,
+      auth.phoneNumber,
       payload.name,
       payload.gender,
       payload.birth,
@@ -235,10 +260,10 @@ export class AuthService {
   }
 
   // 3분 이내 데이터 있는 경우 throw Excepction
-  async require3MCoolTime(hashedPhoneNumber: string) {
+  async require3MCoolTime(phoneNumber: string) {
     if (
       await this.findAuthIn3MByField({
-        hashedPhoneNumber,
+        phoneNumber,
       })
     ) {
       throw new WrappedError(
@@ -275,10 +300,6 @@ export class AuthService {
 
   comparePassword(input: string, hashed: string): boolean {
     return bcrypt.compareSync(input, hashed);
-  }
-
-  hashPhoneNumber(phoneNumber: string): string {
-    return bcrypt.hashSync(phoneNumber, 10);
   }
 
   genAuthCode(): string {

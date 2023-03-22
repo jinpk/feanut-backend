@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { FileType } from '../enums';
+import { User } from 'src/users/schemas/user.schema';
+import { FilePurpose, SupportContentType } from '../enums';
 import { FILE_MODULE_NAME } from '../files.constant';
 
 export type FileDocument = HydratedDocument<File>;
@@ -9,23 +10,23 @@ export type FileDocument = HydratedDocument<File>;
 @Schema({ collection: FILE_MODULE_NAME, timestamps: true })
 export class File {
   // pk
-  id: string;
+  _id: Types.ObjectId;
 
-  // S3 Object Key Location
-  @Prop({ required: true, type: Types.ObjectId })
-  userId: Types.ObjectId;
+  // owner
+  @Prop({ required: true, type: Types.ObjectId, ref: User.name })
+  ownerId: Types.ObjectId;
 
-  // S3 Object Key Location
+  // object located key
   @Prop({ required: true })
-  objectKey: string;
+  key: string;
 
-  // S3 Object mimetype
-  @Prop({ required: true })
-  mimetype: string;
+  // File contentType
+  @Prop({ required: true, enum: SupportContentType })
+  contentType: string;
 
   // File usage type
-  @Prop({ required: true, enum: FileType })
-  type: string;
+  @Prop({ required: true, enum: FilePurpose })
+  purpose: string;
 
   // File successfuly uploaded state
   @Prop({})

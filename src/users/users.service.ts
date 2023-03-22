@@ -53,14 +53,14 @@ export class UsersService {
   // 호출전에 hashedPhoneNumber와 username 존재여부 확인
   async create(
     username: string,
-    hashedPhoneNumber: string,
+    phoneNumber: string,
     name: string,
     gender: Gender,
     birth: string,
   ): Promise<string> {
     const user = await new this.userModel({
       username,
-      hashedPhoneNumber,
+      phoneNumber,
     }).save();
 
     // 프로필 맵핑 or 생성 필요

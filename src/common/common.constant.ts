@@ -9,3 +9,7 @@ export const DYNAMICLINK_PAID = DYNAMICLINK_URL_PREFIX + '/paid';
 
 export const ANDROID_PACKAGE_NAME = 'com.feanut.android';
 export const IOS_BUNDLE_ID = 'com.feanut.ios';
+
+export const GOOGLE_CLOUD_PROJECT_ID = 'feanut';
+
+export const SECURITY_ENCRYPT_ALGORITHM = 'aes-256-ctr';

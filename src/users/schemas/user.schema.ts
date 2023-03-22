@@ -18,9 +18,8 @@ export class User {
   @Prop({})
   password?: string;
 
-  // hashed phoneNumber
   @Prop({})
-  hashedPhoneNumber: string;
+  phoneNumber: string;
 
   // 탈퇴여부
   @Prop({ default: false })

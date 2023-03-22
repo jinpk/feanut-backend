@@ -8,9 +8,8 @@ export type AuthDocument = HydratedDocument<Auth>;
 // 회원가입 인증 관리
 @Schema({ collection: AUTH_MODULE_NAME, timestamps: true })
 export class Auth {
-  // hashedPhoneNumber
   @Prop({ required: true })
-  hashedPhoneNumber: string;
+  phoneNumber: string;
 
   // verification code (6 digit)
   @Prop({ required: true })
@@ -22,6 +21,10 @@ export class Auth {
   // purpose payload
   @Prop({ required: true })
   payload: string;
+
+  // verified
+  @Prop({})
+  verified: boolean;
 
   // used state
   @Prop({})

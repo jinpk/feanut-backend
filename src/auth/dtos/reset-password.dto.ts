@@ -16,7 +16,7 @@ export class ResetPasswordVerificationDto {
   phoneNumber: string;
 }
 
-export class ResetPasswordDto {
+export class ResetPasswordVerificationCodeDto {
   @ApiProperty({ title: 'authId' })
   @IsNotEmpty()
   authId: string;
@@ -26,6 +26,12 @@ export class ResetPasswordDto {
   @IsNumberString()
   @Length(6)
   code: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ title: 'authId' })
+  @IsNotEmpty()
+  authId: string;
 
   @ApiProperty({ title: '변경할 비밀번호' })
   @IsNotEmpty()

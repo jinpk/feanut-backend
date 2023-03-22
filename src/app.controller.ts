@@ -7,7 +7,6 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiOperation,
   ApiBody,
@@ -25,6 +24,7 @@ import {
   LoginDto,
   ResetPasswordDto,
   ResetPasswordVerificationDto,
+  ResetPasswordVerificationCodeDto,
 } from './auth/dtos';
 
 @Controller()
@@ -46,7 +46,6 @@ export class AppController {
     return this.authService.adminLogin(body);
   }
 
-  @UseGuards(AuthGuard('local'))
   @Post('signin')
   @Public()
   @ApiOperation({
@@ -55,9 +54,9 @@ export class AppController {
   })
   @ApiBody({ type: LoginDto })
   @ApiOkResponse({ type: TokenDto })
-  async signin(@Request() req) {
-    console.log('succefully login!: ' + req.user);
-    return await this.authService.userLogin(req.user);
+  async signin(@Body() body: LoginDto) {
+    const sub = await this.authService.validate(body.username, body.password);
+    return await this.authService.userLogin(sub);
   }
 
   @Post('signup/verification')
@@ -83,6 +82,18 @@ export class AppController {
   @ApiCreatedResponse({ type: TokenDto })
   async signUp(@Body() body: SignUpDto) {
     return await this.authService.signUp(body);
+  }
+
+  @Post('resetpassword/verification/code')
+  @Public()
+  @ApiOperation({
+    summary: '비밀번호 재설정 인증코드 검증',
+  })
+  @ApiOkResponse({ type: String, description: 'authId' })
+  async resetPasswordVerificationCode(
+    @Body() body: ResetPasswordVerificationCodeDto,
+  ) {
+    return await this.authService.resetPasswordVerificationCode(body);
   }
 
   @Post('resetpassword/verification')

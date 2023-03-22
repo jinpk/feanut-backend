@@ -3,10 +3,28 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateFileDto, CreateFileResponseDto } from './dtos';
 import { File, FileDocument } from './schemas/files.schema';
+import { Storage } from '@google-cloud/storage';
+import * as dayjs from 'dayjs';
+import { GC_STORAGE_BUCKET } from './files.constant';
+import { GOOGLE_CLOUD_PROJECT_ID } from 'src/common/common.constant';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FilesService {
-  constructor(@InjectModel(File.name) private fileModel: Model<FileDocument>) {}
+  private gcStorage = new Storage();
+
+  constructor(
+    @InjectModel(File.name) private fileModel: Model<FileDocument>,
+    private configService: ConfigService,
+  ) {
+    this.gcStorage = new Storage({
+      projectId: GOOGLE_CLOUD_PROJECT_ID,
+      credentials: {
+        client_email: this.configService.get('googleCloudClientEmail'),
+        private_key: this.configService.get('googleCloudPrivateKey'),
+      },
+    });
+  }
 
   async updateUploadedState(fileId: string) {
     await this.fileModel.findByIdAndUpdate(fileId, {
@@ -14,38 +32,38 @@ export class FilesService {
     });
   }
 
-  async createFileWithPreSignedUrl(
-    userId: string,
+  async createFileWithSignedUrl(
+    userId: string | Types.ObjectId,
     dto: CreateFileDto,
   ): Promise<CreateFileResponseDto> {
-    let ext: string;
+    const key = `${userId}-${dto.purpose}-${Date.now()}.${dto.contentType
+      .split('/')
+      .pop()}`;
 
-    switch (dto.mimetype) {
-      case 'image/png':
-        ext = 'png';
-        break;
-      case 'image/jpeg':
-        ext = 'jpeg';
-        break;
-    }
+    const doc = new this.fileModel({
+      ownerId: userId,
+      purpose: dto.purpose,
+      contentType: dto.contentType,
+      key,
+    });
 
-    const objectKey = `uploads/${dto.type}-${userId}-${Date.now()}.${ext}`;
+    const file = `${this.configService.get('env')}/${key}`;
 
-    let preSignedUrl = '';
-    /*const preSignedUrl = await this.awsS3Service.genPreSignedUploadUrl(
-      objectKey,
-    );*/
+    const [signedUrl] = await this.gcStorage
+      .bucket(GC_STORAGE_BUCKET)
+      .file(file)
+      .getSignedUrl({
+        version: 'v4',
+        action: 'write',
+        contentType: dto.contentType,
+        expires: dayjs().add(3, 'minutes').toDate(), // 3min
+      });
 
-    const fileDoc = await new this.fileModel({
-      userId: new Types.ObjectId(userId),
-      mimetype: dto.mimetype,
-      type: dto.type,
-      objectKey,
-    }).save();
+    await doc.save();
 
     return {
-      fileId: fileDoc._id.toHexString(),
-      preSignedUrl,
+      fileId: doc._id.toHexString(),
+      signedUrl,
     };
   }
 }

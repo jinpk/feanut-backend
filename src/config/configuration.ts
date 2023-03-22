@@ -15,4 +15,9 @@ export default () => ({
 
   playConsoleClientEmail: process.env.PLAYCONSOLE_CLIENT_EMAIL,
   playConsolePrivateKey: process.env.PLAYCONSOLE_PRIVATE_KEY,
+
+  securityKey: process.env.SECURITY_KEY,
+
+  googleCloudClientEmail: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
+  googleCloudPrivateKey: process.env.GOOGLE_CLOUD_PRIVATE_KEY,
 });

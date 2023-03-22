@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsMimeType, IsNotEmpty } from 'class-validator';
-import { FileType } from '../enums';
+import { IsEnum, IsNotEmpty } from 'class-validator';
+import { FilePurpose, SupportContentType } from '../enums';
 
 export class CreateFileDto {
-  @ApiProperty({ title: 'object mimetype' })
+  @ApiProperty({ title: 'file usage purpose', enum: FilePurpose })
   @IsNotEmpty()
-  @IsMimeType()
-  mimetype: string;
+  @IsEnum(FilePurpose)
+  purpose: FilePurpose;
 
-  @ApiProperty({ title: 'file usage type', enum: FileType })
+  @ApiProperty({ title: 'object contentType', enum: SupportContentType })
   @IsNotEmpty()
-  @IsEnum(FileType)
-  type: FileType;
+  @IsEnum(SupportContentType)
+  contentType: string;
 }
 
 export class CreateFileResponseDto {
-  @ApiProperty({ title: 'S3 PreSigned Upload Url' })
-  preSignedUrl: string;
+  @ApiProperty({ title: 'Google Cloud Storage signed-url for upload' })
+  signedUrl: string;
 
   @ApiProperty({ title: 'fileId' })
   fileId: string;

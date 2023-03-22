@@ -14,4 +14,9 @@ export const validationSchema = joi.object({
   FIREBASE_CLIENT_EMAIL: joi.string().required(),
 
   GOOGLE_API_KEY: joi.string().required(),
+
+  SECURITY_KEY: joi.string().required().length(32),
+
+  GOOGLE_CLOUD_CLIENT_EMAIL: joi.string().required(),
+  GOOGLE_CLOUD_PRIVATE_KEY: joi.string().required(),
 });
