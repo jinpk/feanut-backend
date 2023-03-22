@@ -17,6 +17,8 @@ import {
   AUTH_ERROR_EXIST_PHONE_NUMBER,
   AUTH_ERROR_EXIST_USERNAME,
   AUTH_ERROR_INVALID_CODE,
+  AUTH_ERROR_INVALID_LOGIN,
+  AUTH_ERROR_NOT_FOUND_USERNAME,
   AUTH_ERROR_VERIFICATION_TIMEOUT,
   AUTH_MODULE_NAME,
 } from './auth.constant';
@@ -30,6 +32,13 @@ export class AuthService {
     private jwtService: JwtService,
     private adminService: AdminService,
   ) {}
+
+  async userLogin(sub: string): Promise<TokenDto> {
+    const payload = { sub, isAdmin: false };
+    return {
+      accessToken: this.genToken(payload, '30d'),
+    };
+  }
 
   async adminLogin(body: AdminLoginDto): Promise<TokenDto> {
     const sub = await this.adminService.validateAdmin(
@@ -125,16 +134,16 @@ export class AuthService {
     auth.usedAt = dayjs().toDate();
     auth.save();
 
-    const tokenPayload = { sub, isAdmin: false };
-    return {
-      accessToken: this.genToken(tokenPayload, '1d'),
-    };
+    return await this.userLogin(sub);
   }
 
-  async validate(username: string, password: string): Promise<string | null> {
+  async validate(username: string, password: string): Promise<string> {
     // 아이디 검증
     if (!(await this.usersService.hasUsername(username))) {
-      return null;
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_USERNAME,
+      ).notFound();
     }
 
     const user = await this.usersService.findActiveUserOne({
@@ -146,7 +155,10 @@ export class AuthService {
       !user.password ||
       !(await this.comparePassword(password, user.password))
     ) {
-      return null;
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVALID_LOGIN,
+      ).unauthorized();
     }
 
     return user._id.toHexString();

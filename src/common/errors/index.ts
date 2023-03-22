@@ -8,6 +8,12 @@ export class WrappedError {
     private _status?: number,
   ) {}
 
+  // 인증/인가 실패
+  unauthorized() {
+    this._status = HttpStatus.UNAUTHORIZED;
+    return this;
+  }
+
   // 존재하지않는 데이터 접근
   notFound() {
     this._status = HttpStatus.NOT_FOUND;

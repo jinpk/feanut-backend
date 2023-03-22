@@ -64,7 +64,6 @@ export class UsersService {
     const dto = new UserDto();
     dto.id = user._id.toHexString();
     dto.username = user.username;
-    dto.hasPassword = user.password ? true : false;
     return dto;
   }
 }

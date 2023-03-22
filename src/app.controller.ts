@@ -1,5 +1,20 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiBody, ApiOkResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiOperation,
+  ApiBody,
+  ApiOkResponse,
+  ApiCreatedResponse,
+} from '@nestjs/swagger';
+import { AUTH_ERROR_NOT_FOUND_USERNAME } from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
 import { Public } from './auth/decorators';
 import {
@@ -7,6 +22,7 @@ import {
   TokenDto,
   SignUpDto,
   SignUpVerificationDto,
+  LoginDto,
 } from './auth/dtos';
 
 @Controller()
@@ -28,6 +44,20 @@ export class AppController {
     return this.authService.adminLogin(body);
   }
 
+  @UseGuards(AuthGuard('local'))
+  @Post('signin')
+  @Public()
+  @ApiOperation({
+    summary: 'feanutID로 로그인',
+    description: `존재하지 않는 ID는 status: 404(Not Found), code: ${AUTH_ERROR_NOT_FOUND_USERNAME} 응답`,
+  })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({ type: TokenDto })
+  async signin(@Request() req) {
+    console.log('succefully login!: ' + req.user);
+    return await this.authService.userLogin(req.user);
+  }
+
   @Post('signup/verification')
   @Public()
   @ApiOperation({
@@ -36,9 +66,8 @@ export class AppController {
     \nresponse된 authId와 사용자가 입력한 인증코드를 입력하여 /signup API 호출필요
   `,
   })
-  async signUpVerification(
-    @Body() body: SignUpVerificationDto,
-  ): Promise<string> {
+  @ApiOkResponse({ type: String })
+  async signUpVerification(@Body() body: SignUpVerificationDto) {
     return await this.authService.signUpVerification(body);
   }
 
@@ -49,7 +78,8 @@ export class AppController {
     description: `회원가입 정보는 signup/verification에서 저장한 정보로 가입처리 됩니다.
       \n가입완료시 자동로그인 accessToken발급`,
   })
-  async signUp(@Body() body: SignUpDto): Promise<TokenDto> {
+  @ApiCreatedResponse({ type: TokenDto })
+  async signUp(@Body() body: SignUpDto) {
     return await this.authService.signUp(body);
   }
 
