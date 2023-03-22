@@ -109,14 +109,31 @@ export class PollingsController {
   async postUserRound(@Request() req) {
     var rounds = await this.pollingsService.findUserRound(req.user.id);
     if (rounds.todayCount >= 2) {
-      throw new WrappedError('일일 투표횟수 초과').reject();
+      throw new WrappedError('일일 투표 횟수 초과').reject();
     }
     return await this.pollingsService.createUserRound(req.user.id, rounds);
   }
 
+  @Post('')
+  @ApiOperation({
+    summary: 'New Polling 생성',
+    description: 'userRound 생성 시 기본 12개 생성. 이후 1개씩 추가. 라운드당 촤대 5번 건너뛰기 가능.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: PollingDto,
+  })
+  async postPolling(@Request() req) {
+    const userround = await this.pollingsService.findRecentUserRound(req.user.id);
+    if (userround.pollIds.length >= 17) {
+      throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
+    }
+    return await this.pollingsService.createPolling(req.user.id, userround);
+  }
+
   @Get('userround')
   @ApiOperation({
-    summary: '사용자 round조회',
+    summary: '사용자 userround조회',
     description: '생성 전 GET userRound 조회. todayCount=0|1|2 반환.',
   })
   @ApiOkResponse({

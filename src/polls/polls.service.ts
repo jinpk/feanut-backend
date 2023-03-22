@@ -33,6 +33,10 @@ export class PollsService {
   }
 
   async createRound(body: RoundDto): Promise<string> {
+    // pollids가 12개 이하이면 비활성화
+    if (body.pollIds.length < 12) {
+      body.enabled = false;
+    }
     const result = await new this.roundModel(body).save()
     return result._id.toString()
   }
@@ -49,6 +53,11 @@ export class PollsService {
   }
 
   async updateRound(round_id: string, round: Round, body: UpdateRoundDto) {
+    // pollids가 12개 이하이면 우선 비활성화
+    if (body.pollIds.length < 12) {
+      body.enabled = false;
+    }
+
     const result = await this.roundModel.findByIdAndUpdate( round_id, { 
       $set: {
         enabled: body.enabled,
