@@ -20,4 +20,6 @@ export const validationSchema = joi.object({
   ALIGO_API_KEY: joi.string().required(),
   ALIGO_USER_ID: joi.string().required(),
   ALIGO_SENDER: joi.string().required(),
+
+  APPSTORE_SECRET: joi.string().required(),
 });

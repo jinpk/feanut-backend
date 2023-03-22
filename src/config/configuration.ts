@@ -22,4 +22,6 @@ export default () => ({
   aligoAPIKey: process.env.ALIGO_API_KEY,
   aligoUserId: process.env.ALIGO_USER_ID,
   aligoSender: process.env.ALIGO_SENDER,
+
+  appStoreSecret: process.env.APPSTORE_SECRET,
 });
