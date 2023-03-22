@@ -4,9 +4,9 @@ export class UserDto {
   @ApiProperty({ description: 'userId' })
   id?: string;
 
-  @ApiProperty({ description: 'feanutId' })
-  feanutId: string;
+  @ApiProperty({ description: 'username (feanutID)' })
+  username: string;
 
-  @ApiProperty({ description: 'profileId' })
-  profileId?: string;
+  @ApiProperty({ description: 'hasPassword' })
+  hasPassword: boolean;
 }

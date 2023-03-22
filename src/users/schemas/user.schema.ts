@@ -10,28 +10,23 @@ export class User {
   // pk
   _id?: Types.ObjectId;
 
-  @Prop({ default: "" })
+  // feanut ID
+  // 전역으로 unique
+  @Prop({ lowercase: true, unique: true })
+  username: string;
+
+  @Prop({})
   password?: string;
 
-  // feanut ID
-  // unique with isDeleted is false
-  @Prop({ lowercase: true })
-  feanutId: string;
+  // hashed phoneNumber
+  @Prop({})
+  hashedPhoneNumber: string;
 
-  // 로그인 kakao UID
-  // unique with isDeleted is false
-  @Prop({defaul: null})
-  kakaoId?: string;
-
-  // 계정에 연결된 profileId
-  @Prop({ type: Types.ObjectId, default: null })
-  profileId?: Types.ObjectId;
-
-  // 삭제여부
+  // 탈퇴여부
   @Prop({ default: false })
   isDeleted?: boolean;
 
-  // 삭제시간
+  // 탈퇴시간
   @Prop()
   deletedAt?: Date;
 

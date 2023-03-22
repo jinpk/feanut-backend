@@ -1,19 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  FilterQuery,
-  Model,
-  Types,
-} from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
-import { LoginDto, SignUpDto } from 'src/auth/dtos';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+
+  // 이미 사용중인 feanutId가 존재하는지 확인
+  async hasUsername(username: string): Promise<boolean> {
+    const user = await this.userModel.findOne({
+      username,
+    });
+
+    if (user) {
+      return true;
+    }
+    return false;
+  }
 
   async findActiveUserOne(filter: FilterQuery<User>): Promise<User | null> {
     const user = await this.userModel.findOne({
@@ -36,32 +41,21 @@ export class UsersService {
     return user.toObject();
   }
 
-  async createUserWithId(dto: SignUpDto): Promise<string> {
-    var newuser: User = new User();
-    newuser = {
-      feanutId: dto.feanutId,
-    }
-    const user = await new this.userModel({ newuser }).save();
-    return user._id.toHexString();
-  }
+  // 호출전에 hashedPhoneNumber와 username 존재여부 확인
+  async create(username: string, hashedPhoneNumber: string): Promise<string> {
+    const user = await new this.userModel({
+      username,
+      hashedPhoneNumber,
+    }).save();
 
-  async createUserWithKakao(kakaoId: string, feanut_id = ''): Promise<string> {
-    const user = await new this.userModel({ feanut_id, kakaoId }).save();
     return user._id.toHexString();
-  }
-
-  async updateKakaoId(
-    id: string | Types.ObjectId,
-    kakaoId: string,
-  ): Promise<void> {
-    await this.userModel.findByIdAndUpdate(id, { $set: { kakaoId } });
   }
 
   async _userDocToDto(user: User): Promise<UserDto> {
     const dto = new UserDto();
     dto.id = user._id.toHexString();
-    dto.profileId = user.profileId?.toHexString();
-    dto.feanutId = user.feanutId;
+    dto.username = user.username;
+    dto.hasPassword = user.password ? true : false;
     return dto;
   }
 }
