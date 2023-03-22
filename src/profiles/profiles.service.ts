@@ -30,6 +30,20 @@ export class ProfilesService {
     });
   }
 
+  // 휴대폰번호로 프로필 ID 조회
+  async getIdByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<Types.ObjectId | null> {
+    const profile = await this.profileModel.findOne({
+      phoneNumber,
+    });
+    if (profile) {
+      return profile._id;
+    }
+
+    return null;
+  }
+
   // 아직 소유권없는 프로필 조회
   async getOwnerLessProfileByPhoneNumber(
     phoneNumber: string,
@@ -43,6 +57,14 @@ export class ProfilesService {
     }
 
     return null;
+  }
+
+  async createWithPhoneNumber(phoneNumber: string): Promise<Types.ObjectId> {
+    const doc = await new this.profileModel({
+      phoneNumber,
+    }).save();
+
+    return doc._id;
   }
 
   async create(

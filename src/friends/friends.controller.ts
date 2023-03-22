@@ -1,27 +1,24 @@
+import { Controller, Post, Body, Request, Get } from '@nestjs/common';
 import {
-    Controller,
-    Get,
-    Param,
-    Delete,
-    Patch,
-    Put,
-    Post,
-    Query,
-    NotFoundException,
-    UnauthorizedException,
-    Body,
-    Request,
-} from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOkResponse,
-    ApiOperation,
-    ApiTags,
-    ApiResponse,
-} from '@nestjs/swagger'
-import { ApiOkResponsePaginated } from 'src/common/decorators';
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiCreatedResponse,
+} from '@nestjs/swagger';
+import { AddFriendDto } from './dtos';
+import { FRIENDS_MODULE_NAME } from './friends.constant';
+import { FriendsService } from './friends.service';
 
 @ApiTags('Friend')
-@Controller('friends')
-export class FriendsController {}
+@Controller(FRIENDS_MODULE_NAME)
+@ApiBearerAuth()
+export class FriendsController {
+  constructor(private friendsService: FriendsService) {}
+
+  @Post('')
+  @ApiOperation({ summary: '친구추가', description: `` })
+  @ApiCreatedResponse({ description: '친구등록 완료' })
+  async addFriend(@Request() req, @Body() body: AddFriendDto) {
+    await this.friendsService.addFriendWithCheck(req.user.id, body);
+  }
+}
