@@ -42,6 +42,17 @@ export class UsersService {
     return user.toObject();
   }
 
+  async updateRefreshTokenById(
+    id: string | Types.ObjectId,
+    refreshToken: string,
+  ) {
+    await this.userModel.findByIdAndUpdate(id, {
+      $set: {
+        refreshToken,
+      },
+    });
+  }
+
   async updatePasswordById(id: string | Types.ObjectId, password: string) {
     await this.userModel.findByIdAndUpdate(id, {
       $set: {

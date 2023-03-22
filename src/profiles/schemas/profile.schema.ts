@@ -25,13 +25,17 @@ export class Profile {
   @Prop({ enum: Gender, required: true })
   gender?: Gender;
 
-  // hashed 전화번호
+  // 전화번호
   @Prop({ required: true })
-  hashedPhoneNumber?: string;
+  phoneNumber?: string;
 
   // 프로필이미지 ID
   @Prop({ type: Types.ObjectId, ref: File.name })
   imageFileId?: Types.ObjectId;
+
+  // 상태메시지
+  @Prop({ maxlength: 50 })
+  statusMessage?: string;
 
   // 프로필 Owner User
   @Prop({ type: Types.ObjectId, ref: User.name })

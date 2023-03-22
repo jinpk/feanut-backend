@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import {
   ApiOperation,
   ApiBody,
@@ -25,11 +17,22 @@ import {
   ResetPasswordDto,
   ResetPasswordVerificationDto,
   ResetPasswordVerificationCodeDto,
+  RefreshTokenDto,
 } from './auth/dtos';
 
 @Controller()
 export class AppController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('token')
+  @Public()
+  @ApiOperation({
+    summary: 'Token 재발급',
+  })
+  @ApiOkResponse({ type: TokenDto })
+  async token(@Body() body: RefreshTokenDto) {
+    return await this.authService.validateRefreshToken(body.refreshToken);
+  }
 
   @Post('signin/admin')
   @Public()

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateFileDto, CreateFileResponseDto } from './dtos';
@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger(FilesService.name);
   private gcStorage = new Storage();
 
   constructor(

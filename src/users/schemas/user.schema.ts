@@ -21,6 +21,9 @@ export class User {
   @Prop({})
   phoneNumber: string;
 
+  @Prop({})
+  refreshToken?: string;
+
   // 탈퇴여부
   @Prop({ default: false })
   isDeleted?: boolean;

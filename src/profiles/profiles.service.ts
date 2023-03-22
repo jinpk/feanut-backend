@@ -1,19 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage, ProjectionFields, FilterQuery } from 'mongoose';
+import {
+  Model,
+  PipelineStage,
+  ProjectionFields,
+  FilterQuery,
+  Types,
+} from 'mongoose';
 import { Gender } from './enums';
 import { ProfileCreatedEvent } from './events';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
-import { FeanutCardDto } from './dtos';
+import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
     @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
-    private eventEmitter: EventEmitter2,
+    private filesService: FilesService,
   ) {}
 
   /*
@@ -42,35 +49,41 @@ export class ProfilesService {
 
     return id;
   }
+*/
+  async updateById(id: string | Types.ObjectId, dto: UpdateProfileDto) {
+    const profile = await this.profileModel.findById(id);
 
-  async updateByKakaoUserId(
-    kakaoUserId: string,
-    name?: string,
-    gender?: Gender,
-    birth?: string,
-    profileImageURL?: string,
-    thumbnailURL?: string,
-  ) {
-    const doc = await this.profileModel.findOne({ kakaoUserId });
-
-    if (name) {
-      doc.name = name;
-    }
-    if (gender) {
-      doc.gender = gender;
-    }
-    if (birth) {
-      doc.birth = birth;
-    }
-    if (profileImageURL) {
-      doc.profileImageURL = profileImageURL;
-    }
-    if (thumbnailURL) {
-      doc.thumbnailURL = thumbnailURL;
+    if (dto.imageFileId !== undefined) {
+      profile.imageFileId = dto.imageFileId
+        ? new Types.ObjectId(dto.imageFileId)
+        : null;
     }
 
-    await doc.save();
-  }*/
+    if (dto.name) {
+      profile.name = dto.name;
+    }
+
+    if (dto.statusMessage !== undefined) {
+      profile.statusMessage = dto.statusMessage;
+    }
+
+    await profile.save();
+
+    // 파일 업로드 완료 상태 변경
+    if (dto.imageFileId) {
+      await this.filesService.updateUploadedState(dto.imageFileId);
+    }
+  }
+
+  async getByUserId(userId: string | Types.ObjectId): Promise<Profile | null> {
+    const profile = await this.profileModel.findOne({
+      ownerId: new Types.ObjectId(userId),
+    });
+
+    if (!profile) return null;
+
+    return profile.toObject();
+  }
 
   async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
     // const myReceive = await this.pollingModel.find({profileId: profile_id})
@@ -120,5 +133,14 @@ export class ProfilesService {
     });
 
     return myCard;
+  }
+
+  docToDto(doc: Profile | ProfileDocument): ProfileDto {
+    const dto = new ProfileDto();
+    dto.birth = doc.birth || null;
+    dto.gender = doc.gender || null;
+    dto.name = doc.name || '';
+    dto.statusMessage = doc.statusMessage || '';
+    return dto;
   }
 }

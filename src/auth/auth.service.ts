@@ -39,6 +39,18 @@ export class AuthService {
     private adminService: AdminService,
   ) {}
 
+  // 리프레시 토큰 검증 및 token 재발급
+  async validateRefreshToken(refreshToken: string): Promise<TokenDto> {
+    await this.jwtService.verify(refreshToken);
+
+    const user = await this.usersService.findActiveUserOne({ refreshToken });
+    if (!user) {
+      throw new WrappedError(AUTH_MODULE_NAME).unauthorized();
+    }
+
+    return this.userLogin(user._id.toHexString());
+  }
+
   // 비밀번호 초기화 인증 요청
   async resetPasswordVerification(
     dto: ResetPasswordVerificationDto,
@@ -149,8 +161,14 @@ export class AuthService {
   // 사용자 로그인후 토큰 발급
   async userLogin(sub: string): Promise<TokenDto> {
     const payload = { sub, isAdmin: false };
+
+    const accessToken = this.genToken(payload, '30m');
+    const refreshToken = this.genToken({}, '2w');
+
+    await this.usersService.updateRefreshTokenById(sub, refreshToken);
     return {
-      accessToken: this.genToken(payload, '30d'),
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -163,6 +181,7 @@ export class AuthService {
     const payload = { sub, isAdmin: true };
     return {
       accessToken: this.genToken(payload, '1d'),
+      refreshToken: '',
     };
   }
 

@@ -1,7 +1,14 @@
-import { Controller, Get, Param, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ProfilesService } from './profiles.service';
-import { FeanutCardDto } from './dtos';
+import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
+import { WrappedError } from 'src/common/errors';
+import { PROFILE_MODULE_NAME } from './profiles.constant';
 
 @ApiTags('Profile')
 @Controller('profiles')
@@ -9,14 +16,45 @@ import { FeanutCardDto } from './dtos';
 export class ProfilesController {
   constructor(private readonly profileService: ProfilesService) {}
 
-  @Get(':id/feanutcard')
+  @Get('me')
+  @ApiOperation({
+    summary: '로그인 계정의 프로필 조회',
+  })
+  @ApiOkResponse({ type: ProfileDto })
+  async getMyProfile(@Req() req) {
+    const profile = await this.profileService.getByUserId(req.user.id);
+    if (!profile) {
+      throw new WrappedError(PROFILE_MODULE_NAME).notFound();
+    }
+
+    return this.profileService.docToDto(profile);
+  }
+
+  @Get(':profileId/card')
   @ApiOperation({
     summary: '프로필 피넛 카드 조회',
   })
-  async getMyFeanutCard(
+  async getFeanutCard(
     @Req() req,
-    @Param('id') profileId: string,
+    @Param('profileId') profileId: string,
   ): Promise<FeanutCardDto> {
     return await this.profileService.findMyFeanutCard(profileId);
+  }
+
+  @Patch(':profileId')
+  @ApiOperation({
+    summary: '프로필 정보 수정',
+    description: `수정원하는 컬럼만 요청`,
+  })
+  async patchProfile(
+    @Req() req,
+    @Param('profileId') profileId: string,
+    @Body() body: UpdateProfileDto,
+  ) {
+    if (profileId !== req.user.id) {
+      throw new WrappedError(PROFILE_MODULE_NAME).unauthorized();
+    }
+
+    await this.profileService.updateById(profileId, body);
   }
 }
