@@ -8,6 +8,18 @@ export class WrappedError {
     private _status?: number,
   ) {}
 
+  // 존재하지않는 데이터 접근
+  notFound() {
+    this._status = HttpStatus.NOT_FOUND;
+    return this;
+  }
+
+  // 이미 존재하는 데이터
+  alreadyExist() {
+    this._status = HttpStatus.CONFLICT;
+    return this;
+  }
+
   // 요청 처리 거부
   reject() {
     this._status = HttpStatus.FORBIDDEN;

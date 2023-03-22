@@ -1,41 +1,22 @@
-import {
-    Controller,
-    Get,
-    NotFoundException,
-    Req,
-} from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOkResponse,
-    ApiOperation,
-    ApiTags,
-    ApiResponse,
-} from '@nestjs/swagger';
+import { Controller, Get, Param, Req } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ProfilesService } from './profiles.service';
 import { FeanutCardDto } from './dtos';
-import { UsersService } from 'src/users/users.service';
 
 @ApiTags('Profile')
 @Controller('profiles')
 @ApiBearerAuth()
 export class ProfilesController {
-    constructor(
-        private readonly profileService: ProfilesService,
-        private readonly usersService: UsersService,
-    ) {}
+  constructor(private readonly profileService: ProfilesService) {}
 
-    @Get('feanutcard')
-    @ApiOperation({
-      summary: '나의 피넛 카드 조회',
-    })
-    async getMyFeanutCard(@Req() req): Promise<FeanutCardDto> {
-      console.log(req);
-      const user = await this.usersService.findActiveUserById(req.user.id);
-      if (!user) {
-        throw new NotFoundException('');
-      }
-  
-      return await this.profileService.findMyFeanutCard(user.profileId);
-    }
+  @Get(':id/feanutcard')
+  @ApiOperation({
+    summary: '프로필 피넛 카드 조회',
+  })
+  async getMyFeanutCard(
+    @Req() req,
+    @Param('id') profileId: string,
+  ): Promise<FeanutCardDto> {
+    return await this.profileService.findMyFeanutCard(profileId);
+  }
 }

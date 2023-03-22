@@ -4,16 +4,21 @@ import { AUTH_MODULE_NAME } from '../auth.constant';
 
 export type AuthDocument = HydratedDocument<Auth>;
 
-// 인증코드 관리
+// 회원가입 인증 관리
 @Schema({ collection: AUTH_MODULE_NAME, timestamps: true })
 export class Auth {
-  // 인증 휴대폰번호
-  @Prop({ lowercase: true })
-  phoneNumber: string;
+  // hashedPhoneNumber
+  @Prop({ required: true })
+  hashedPhoneNumber: string;
 
   // verification code (6 digit)
   @Prop({ required: true })
   code: string;
+
+  // ["","",""].join("\n")
+  // newline concat
+  @Prop({ required: true })
+  payload: string;
 
   // used state
   @Prop({})

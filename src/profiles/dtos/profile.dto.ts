@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  Length,
+} from 'class-validator';
 import { Gender } from '../enums';
 
 export class ProfileDto {
@@ -9,14 +15,12 @@ export class ProfileDto {
 
   @ApiProperty({ description: '성별', enum: Gender })
   @IsEnum(Gender)
+  @IsOptional()
   gender: Gender;
 
-  @ApiProperty({ description: '출생년도' })
-  @IsNumber()
-  @Min(1900)
-  @Max(2030)
-  birthYear: number;
-
-  @ApiProperty({ description: '이름' })
-  mobile: string;
+  @ApiProperty({ description: '생년월일' })
+  @IsOptional()
+  @IsNumberString()
+  @Length(8)
+  birth: string;
 }

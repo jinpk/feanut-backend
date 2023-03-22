@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
+import { Gender } from 'src/profiles/enums';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 
@@ -42,11 +43,19 @@ export class UsersService {
   }
 
   // 호출전에 hashedPhoneNumber와 username 존재여부 확인
-  async create(username: string, hashedPhoneNumber: string): Promise<string> {
+  async create(
+    username: string,
+    hashedPhoneNumber: string,
+    name: string,
+    gender: Gender,
+    birth: string,
+  ): Promise<string> {
     const user = await new this.userModel({
       username,
       hashedPhoneNumber,
     }).save();
+
+    // 프로필 맵핑 or 생성 필요
 
     return user._id.toHexString();
   }

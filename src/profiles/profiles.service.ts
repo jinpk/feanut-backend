@@ -16,18 +16,7 @@ export class ProfilesService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async hasByKakaoUserId(kakaoUserId: string): Promise<boolean> {
-    const doc = await this.profileModel.findOne({
-      kakaoUserId,
-    });
-
-    if (!doc) {
-      return false;
-    }
-
-    return false;
-  }
-
+  /*
   async createWithKakaoProfile(
     kakaoUserId: string,
     name: string,
@@ -81,13 +70,7 @@ export class ProfilesService {
     }
 
     await doc.save();
-  }
-
-  async getByKakaoUserId(kakaoUserId: string): Promise<Profile | null> {
-    const doc = await this.profileModel.findOne({ kakaoUserId });
-
-    return doc;
-  }
+  }*/
 
   async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
     // const myReceive = await this.pollingModel.find({profileId: profile_id})

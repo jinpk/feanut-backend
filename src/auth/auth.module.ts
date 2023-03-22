@@ -5,7 +5,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './schemas/auth.schema';
-import { AuthEventListener } from './auth.listener';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AdminModule } from 'src/admin/admin.module';
 
@@ -21,7 +20,7 @@ import { AdminModule } from 'src/admin/admin.module';
     UsersModule,
     AdminModule,
   ],
-  providers: [AuthService, AuthEventListener, JwtStrategy],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

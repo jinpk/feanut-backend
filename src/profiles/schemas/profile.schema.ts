@@ -1,24 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+import { File } from 'src/files/schemas/files.schema';
+import { User } from 'src/users/schemas/user.schema';
 import { Gender } from '../enums';
-import { SCHEMA_NAME } from '../profiles.constant';
+import { PROFILE_SCHEMA_NAME } from '../profiles.constant';
 
 export type ProfileDocument = HydratedDocument<Profile>;
 
-@Schema({ collection: SCHEMA_NAME, timestamps: true })
+@Schema({ collection: PROFILE_SCHEMA_NAME, timestamps: true })
 export class Profile {
   // pk
   id: string;
-
-  // // 카카오 사용자 ID
-  // @Prop({})
-  // kakaoUserId: string;
 
   // 이름
   @Prop({ required: true })
   name: string;
 
-  // 카카오톡 생일
+  // 생년월일
   // format: YYYYMMDD
   @Prop({ maxlength: 8, required: true })
   birth?: string;
@@ -27,14 +25,17 @@ export class Profile {
   @Prop({ enum: Gender, required: true })
   gender?: Gender;
 
-  @Prop()
-  mobile?: string;
+  // hashed 전화번호
+  @Prop({ required: true })
+  hashedPhoneNumber?: string;
 
-  @Prop()
-  profileImageURL?: string;
+  // 프로필이미지 ID
+  @Prop({ type: Types.ObjectId, ref: File.name })
+  imageFileId?: Types.ObjectId;
 
-  @Prop()
-  thumbnailURL?: string;
+  // 프로필 Owner User
+  @Prop({ type: Types.ObjectId, ref: User.name })
+  ownerId?: Types.ObjectId;
 
   // 생성시간
   @Prop()

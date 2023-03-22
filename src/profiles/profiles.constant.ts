@@ -1,2 +1,2 @@
-export const MODULE_NAME = 'profiles';
-export const SCHEMA_NAME = MODULE_NAME;
+export const PROFILE_MODULE_NAME = 'profiles';
+export const PROFILE_SCHEMA_NAME = PROFILE_MODULE_NAME;
