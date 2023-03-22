@@ -11,6 +11,7 @@ import {
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
+import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
 import {
@@ -35,9 +36,9 @@ import { UserRoundDto } from './dtos/userround.dto';
 export class PollingsService {
   constructor(
     @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
-    @InjectModel(UserRound.name)
-    private userroundModel: Model<UserRoundDocument>,
+    @InjectModel(UserRound.name) private userroundModel: Model<UserRoundDocument>,
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
+    @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
     private profilesService: ProfilesService,
     private userService: UsersService,
     private coinService: CoinsService,
@@ -227,15 +228,52 @@ export class PollingsService {
   }
 
   // userRound
-  async createUserRound(user_id: string): Promise<UserRoundDto> {
+  async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
+    // userrounds에서 roundId 추출
+    var completeRoundIds = []
+    userrounds.data.forEach(element => {
+      completeRoundIds.push(element.roundId)
+    });
+
+    // roundModel에서 enable, startedAt, endedAt 조건 roundId
+    var enbaleRoundIds = []
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    const enbaleRounds = await this.roundModel.find(
+      {
+        enabled: true,
+        startedAt: {$gte: today},
+        endedAt: {$lt: today || null},
+      }
+    )
+    enbaleRounds.forEach(element => {
+      enbaleRoundIds.push(element._id.toString())
+    });
+
+    console.log(enbaleRounds)
+
+    // roundModel중 userrounds roundId들 삭제.
+    for(var i = 0; i < enbaleRoundIds.length; i++){
+      for (var j=0; j < completeRoundIds.length; j++){
+        if (enbaleRoundIds.includes(completeRoundIds[j])) { 
+          enbaleRoundIds.splice(i, 1); 
+          i--; 
+        }
+      }
+    }
+
+    // 남은 것 중 랜덤으로 하나의 라운드 아이디 선정
+    const randomIndex = Math.floor(Math.random() * enbaleRoundIds.length);
+    const RandomRoundId = enbaleRoundIds[randomIndex];
+
     var userround = new UserRoundDto();
     userround = {
       userId: user_id,
-      roundId: '',
+      roundId: RandomRoundId,
       pollIds: [],
-    };
+    }
     await new this.userroundModel(userround).save();
-    return userround;
+    return userround
   }
 
   async findUserRound(user_id: string) {

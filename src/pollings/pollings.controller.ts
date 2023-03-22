@@ -29,6 +29,7 @@ import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListPollingDto, GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { ProfileFriends } from 'src/friends/schemas/profile-friends.schema';
 import { UserRoundDto, PayUserRoundDto } from './dtos/userround.dto';
+import { WrappedError } from '../common/errors';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -97,7 +98,13 @@ export class PollingsController {
       type: UserRoundDto,
   })
   async postUserRound(@Request() req) {
-    return await this.pollingsService.createUserRound(req.user.id);
+    var rounds = await this.pollingsService.findUserRound(req.user.id);
+    if (rounds.todayCount >= 2) {
+      throw new WrappedError(
+        "일일 투표횟수 초과",
+      ).reject();
+    }
+    return await this.pollingsService.createUserRound(req.user.id, rounds);
   }
 
   @Get('userround')

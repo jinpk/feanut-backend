@@ -4,6 +4,7 @@ import { Polling, PollingSchema } from './schemas/polling.schema';
 import { UserRound, UserRoundSchema } from './schemas/userround.schema';
 import { Coin, CoinSchema } from '../coins/schemas/coin.schema';
 import { Poll, PollSchema } from '../polls/schemas/poll.schema';
+import { Round, RoundSchema } from '../polls/schemas/round.schema';
 import { Friend, FriendSchema } from '../friends/schemas/friend.schema';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { PollingsService } from './pollings.service';
@@ -19,6 +20,7 @@ import { FriendsModule } from 'src/friends/friends.module';
     MongooseModule.forFeature([{ name: Friend.name, schema: FriendSchema }]),
     MongooseModule.forFeature([{ name: UserRound.name, schema: UserRoundSchema }]),
     MongooseModule.forFeature([{ name: Poll.name, schema: PollSchema }]),
+    MongooseModule.forFeature([{ name: Round.name, schema: RoundSchema }]),
     ProfilesModule,
     UsersModule,
     CoinsModule,
