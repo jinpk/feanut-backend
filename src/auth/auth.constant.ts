@@ -6,4 +6,4 @@ export const AUTH_ERROR_INVALID_CODE = 3;
 export const AUTH_ERROR_VERIFICATION_TIMEOUT = 4;
 export const AUTH_ERROR_INVALID_LOGIN = 5;
 export const AUTH_ERROR_NOT_FOUND_USERNAME = 6;
-
+export const AUTH_ERROR_COOL_TIME = 7;

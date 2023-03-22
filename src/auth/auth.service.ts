@@ -10,10 +10,13 @@ import {
   TokenDto,
   SignUpVerificationDto,
   SignUpDto,
+  ResetPasswordVerificationDto,
+  ResetPasswordDto,
 } from './dtos';
 import { AdminService } from 'src/admin/admin.service';
 import { WrappedError } from 'src/common/errors';
 import {
+  AUTH_ERROR_COOL_TIME,
   AUTH_ERROR_EXIST_PHONE_NUMBER,
   AUTH_ERROR_EXIST_USERNAME,
   AUTH_ERROR_INVALID_CODE,
@@ -24,6 +27,7 @@ import {
 } from './auth.constant';
 import { Gender } from 'src/profiles/enums';
 import * as bcrypt from 'bcrypt';
+import { AuthPurpose } from './enums';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +38,92 @@ export class AuthService {
     private adminService: AdminService,
   ) {}
 
+  // 비밀번호 초기화 인증 요청
+  async resetPasswordVerification(
+    dto: ResetPasswordVerificationDto,
+  ): Promise<string> {
+    const user = await this.usersService.findActiveUserOne({
+      username: dto.username,
+    });
+
+    if (!user || !bcrypt.compareSync(dto.phoneNumber, user.hashedPhoneNumber)) {
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    }
+
+    // 3분 쿨타임
+    await this.require3MCoolTime(user.hashedPhoneNumber);
+
+    // 인증코드 처리
+    const code = this.genAuthCode();
+    const doc = await new this.authModel({
+      code,
+      payload: dto.username,
+      purpose: AuthPurpose.ResetPassword,
+    }).save();
+
+    // 인증코드 전송
+    this.sendResetPasswordSMS(dto.phoneNumber, code);
+
+    return doc._id.toHexString();
+  }
+
+  // 비밀번호 초기화
+  async resetPassword(dto: ResetPasswordDto) {
+    const auth = await this.authModel.findById(dto.authId);
+    if (!auth) {
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    }
+
+    if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_VERIFICATION_TIMEOUT,
+      ).reject();
+    }
+
+    if (dto.code !== auth.code) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVALID_CODE,
+      ).badRequest();
+    }
+
+    const user = await this.usersService.findActiveUserOne({
+      username: auth.payload,
+    });
+    await this.usersService.updatePasswordById(user._id, dto.password);
+
+    auth.used = true;
+    auth.usedAt = dayjs().toDate();
+    auth.save();
+  }
+
+  // 로그인
+  async validate(username: string, password: string): Promise<string> {
+    // 아이디 검증
+    if (!(await this.usersService.hasUsername(username))) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_USERNAME,
+      ).notFound();
+    }
+
+    const user = await this.usersService.findActiveUserOne({
+      username,
+    });
+
+    // 비밀번호 검증
+    if (!user.password || !this.comparePassword(password, user.password)) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVALID_LOGIN,
+      ).unauthorized();
+    }
+
+    return user._id.toHexString();
+  }
+
+  // 사용자 로그인후 토큰 발급
   async userLogin(sub: string): Promise<TokenDto> {
     const payload = { sub, isAdmin: false };
     return {
@@ -41,6 +131,7 @@ export class AuthService {
     };
   }
 
+  // 관리자 로그인
   async adminLogin(body: AdminLoginDto): Promise<TokenDto> {
     const sub = await this.adminService.validateAdmin(
       body.username,
@@ -52,6 +143,7 @@ export class AuthService {
     };
   }
 
+  // 회원가입 인증 요청
   async signUpVerification(dto: SignUpVerificationDto): Promise<string> {
     // username 검증
     if (await this.usersService.hasUsername(dto.username)) {
@@ -72,6 +164,9 @@ export class AuthService {
       ).alreadyExist();
     }
 
+    // 3분 쿨타임
+    await this.require3MCoolTime(hashedPhoneNumber);
+
     // 인증코드 처리
     const code = this.genAuthCode();
     const payload = this.genSignUpPayload(
@@ -84,6 +179,7 @@ export class AuthService {
     const doc = await new this.authModel({
       code,
       payload,
+      purpose: AuthPurpose.SignUp,
     }).save();
 
     // 인증코드 전송
@@ -92,6 +188,7 @@ export class AuthService {
     return doc._id.toHexString();
   }
 
+  // 회원가입
   async signUp(dto: SignUpDto) {
     const auth = await this.authModel.findById(dto.authId);
     if (!auth) {
@@ -137,40 +234,19 @@ export class AuthService {
     return await this.userLogin(sub);
   }
 
-  async validate(username: string, password: string): Promise<string> {
-    // 아이디 검증
-    if (!(await this.usersService.hasUsername(username))) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_NOT_FOUND_USERNAME,
-      ).notFound();
-    }
-
-    const user = await this.usersService.findActiveUserOne({
-      username,
-    });
-
-    // 비밀번호 검증
-    if (!user.password || !this.comparePassword(password, user.password)) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_INVALID_LOGIN,
-      ).unauthorized();
-    }
-
-    return user._id.toHexString();
-  }
-
-  async checkAuthCoolTime(phoneNumber: string): Promise<boolean> {
+  // 3분 이내 데이터 있는 경우 throw Excepction
+  async require3MCoolTime(hashedPhoneNumber: string) {
     if (
       await this.findAuthIn3MByField({
-        hashedPhoneNumber: this.hashPhoneNumber(phoneNumber),
+        hashedPhoneNumber,
       })
     ) {
-      return false;
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_COOL_TIME,
+        '잠시후 다시 시도해 주세요.',
+      );
     }
-
-    return true;
   }
 
   async findAuthIn3MByField(
@@ -185,7 +261,15 @@ export class AuthService {
 
   // no error handling
   async sendSignUpSMS(phoneNumber: string, code: string) {
-    console.log('send sns to: ', phoneNumber + '. code: ' + code);
+    console.log('send sign-up sms to: ', phoneNumber + '. code: ' + code);
+    return phoneNumber;
+  }
+
+  async sendResetPasswordSMS(phoneNumber: string, code: string) {
+    console.log(
+      'send reset-password sms to: ',
+      phoneNumber + '. code: ' + code,
+    );
     return phoneNumber;
   }
 

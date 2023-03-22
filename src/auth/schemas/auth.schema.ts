@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { AUTH_MODULE_NAME } from '../auth.constant';
+import { AuthPurpose } from '../enums';
 
 export type AuthDocument = HydratedDocument<Auth>;
 
@@ -15,7 +16,10 @@ export class Auth {
   @Prop({ required: true })
   code: string;
 
-  // `${username}\n${name}\n${birth}\n${gender}}`
+  @Prop({ required: true, enum: AuthPurpose })
+  purpose: string;
+
+  // purpose payload
   @Prop({ required: true })
   payload: string;
 

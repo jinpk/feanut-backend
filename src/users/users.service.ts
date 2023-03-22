@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Gender } from 'src/profiles/enums';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
-
+import * as bcrybt from 'bcrypt';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
@@ -40,6 +40,14 @@ export class UsersService {
     }
 
     return user.toObject();
+  }
+
+  async updatePasswordById(id: string | Types.ObjectId, password: string) {
+    await this.userModel.findByIdAndUpdate(id, {
+      $set: {
+        password: bcrybt.hashSync(password, 10),
+      },
+    });
   }
 
   // 호출전에 hashedPhoneNumber와 username 존재여부 확인

@@ -23,6 +23,8 @@ import {
   SignUpDto,
   SignUpVerificationDto,
   LoginDto,
+  ResetPasswordDto,
+  ResetPasswordVerificationDto,
 } from './auth/dtos';
 
 @Controller()
@@ -66,7 +68,7 @@ export class AppController {
     \nresponse된 authId와 사용자가 입력한 인증코드를 입력하여 /signup API 호출필요
   `,
   })
-  @ApiOkResponse({ type: String })
+  @ApiOkResponse({ type: String, description: 'authId' })
   async signUpVerification(@Body() body: SignUpVerificationDto) {
     return await this.authService.signUpVerification(body);
   }
@@ -81,6 +83,26 @@ export class AppController {
   @ApiCreatedResponse({ type: TokenDto })
   async signUp(@Body() body: SignUpDto) {
     return await this.authService.signUp(body);
+  }
+
+  @Post('resetpassword/verification')
+  @Public()
+  @ApiOperation({
+    summary: '비밀번호 재설정 인증코드 전송(요청)',
+  })
+  @ApiOkResponse({ type: String, description: 'authId' })
+  async resetPasswordVerification(@Body() body: ResetPasswordVerificationDto) {
+    return await this.authService.resetPasswordVerification(body);
+  }
+
+  @Post('resetpassword')
+  @Public()
+  @ApiOperation({
+    summary: '비밀번호 재설정 (완료)',
+    description: `인증코드 전송(요청)에서 입력했던 feanutId의 비밀번호가 변경됩니다.`,
+  })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    return await this.authService.resetPassword(body);
   }
 
   @Get()
