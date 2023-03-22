@@ -52,31 +52,36 @@ export class PollingsService {
     isopened = { isOpened: false, useCoinId: null}
 
     // userround의 pollIds에 추가 되지 않은 pollId sorting
-
+    const round = await this.roundModel.findById(userround.roundId);
     
-    // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(
-      // **{user.profileId 사용안함 profile이 userId가짐}
-      //user.profileId.toString()
-      '',
-    );
-    const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
-    // polling friendlist 갱신
-    var newIds = [];
-    for (const friend of temp_arr) {
-      newIds.push(friend.profileId);
+    var newPollId = 'dd'
+    for (var i=0; i < round.pollIds.length; i++) {
+      if (userround.pollIds.includes(round.pollIds[i])) {
+      } else {
+        newPollId = round.pollIds[i];
+        // userround에 pollId추가
+        await this.userroundModel.findByIdAndUpdate(userround._id, {
+          $set: { pollIds: userround.pollIds.push(newPollId)},
+        });
+        break;
+      }
     }
 
-    // userround에 pollId추가
+    // 친구목록 불러오기/셔플
+    const friendList = await this.friendShipsService.listFriend(user_id);
+    const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
 
-    // 친구목록에서 4명 선정
+    var friendIds = [];
+    for (const friend of temp_arr) {
+      friendIds.push(friend.profileId);
+    }
 
     var polling = new Polling();
     polling = {
       userId: user_id,
       roundId: userround.roundId,
-      pollId: 'werwqerw',
-      friendIds: [],
+      pollId: newPollId,
+      friendIds: friendIds,
       opened: isopened,
     }
 
