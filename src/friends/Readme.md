@@ -2,17 +2,16 @@
 
 ## Schema
 
-### `ProfileFriends`
+### `UserFriends`
 
-1개의 프로필은 1개의 친구 목록 도큐먼트를 가짐
-
-프로필 생성시점에 interface.initProfileFriendsById 호출하여 도큐먼트 초기화
+사용자는 N개의 친구 리스트를 가지는 1개의 친구 목록 도큐먼트를 가짐
+사용자 회원가입 시점에 interface.initUserFriendsById 호출하여 도큐먼트 초기화
 
 ### Type
 
 ```bash
 # 사용자 ID
-profileId : `ObjectId`
+userId : `ObjectId`
 # 친구목록
 friends: : `Friends`
 ```
@@ -28,4 +27,6 @@ friends: : `Friends`
 profileId : `ObjectId`
 # 친구 숨김 여부
 hidden: : `Boolean`
+# 사용자가 설정한 친구 display Name
+name: : `String`
 ```

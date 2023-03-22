@@ -3,7 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Profile, ProfileSchema } from './schemas/profile.schema';
 import { ProfilesController } from './profiles.controller';
 import { ProfilesService } from './profiles.service';
-import { ProfilesEventListener } from './profiles.listener';
 import { FriendsModule } from 'src/friends/friends.module';
 import { Polling, PollingSchema } from '../pollings/schemas/polling.schema';
 import { FilesModule } from 'src/files/files.module';
@@ -16,7 +15,7 @@ import { FilesModule } from 'src/files/files.module';
     FilesModule,
   ],
   controllers: [ProfilesController],
-  providers: [ProfilesService, ProfilesEventListener],
+  providers: [ProfilesService],
   exports: [ProfilesService],
 })
 export class ProfilesModule {}

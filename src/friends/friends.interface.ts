@@ -1,21 +1,32 @@
+import { Types } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 
 export interface FriendsServiceInterface {
-  // 친구 문서 생성
-  initProfileFriendsById(profileId: string): Promise<void>;
+  // 친구 문서 초기화
+  initUserFriendsById(userId: string | Types.ObjectId): Promise<void>;
 
   // 친구추가
-  addFriendToList(profileId: string, friendProfileId: string): Promise<void>;
+  addFriendToList(
+    userId: string | Types.ObjectId,
+    friendProfileId: string | Types.ObjectId,
+    name: string,
+  ): Promise<void>;
 
   // 친구숨김
-  hideFriend(profileId: string, friendProfileId: string): Promise<void>;
+  hideFriend(
+    userId: string | Types.ObjectId,
+    friendProfileId: string | Types.ObjectId,
+  ): Promise<void>;
 
   // 친구숨김해제
-  unHideFriend(profileId: string, friendProfileId: string): Promise<void>;
+  unHideFriend(
+    userId: string | Types.ObjectId,
+    friendProfileId: string | Types.ObjectId,
+  ): Promise<void>;
 
   // 전체 친구 목록 조회 - 숨김처리하지않은
-  listFriend(profileId: string): Promise<Friend[]>;
+  listFriend(userId: string | Types.ObjectId): Promise<Friend[]>;
 
   // 숨김 친구 목록 조회 - 숨김처리하지않은
-  listHiddenFriend(profileId: string): Promise<Friend[]>;
+  listHiddenFriend(userId: string | Types.ObjectId): Promise<Friend[]>;
 }

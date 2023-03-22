@@ -1,15 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  Model,
-  PipelineStage,
-  ProjectionFields,
-  FilterQuery,
-  Types,
-} from 'mongoose';
+import { Model, PipelineStage, FilterQuery, Types } from 'mongoose';
 import { Gender } from './enums';
-import { ProfileCreatedEvent } from './events';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
 import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
@@ -23,33 +15,51 @@ export class ProfilesService {
     private filesService: FilesService,
   ) {}
 
-  /*
-  async createWithKakaoProfile(
-    kakaoUserId: string,
-    name: string,
+  // 소유권지정
+  async makeOwnerShipById(
+    profileId: Types.ObjectId,
+    ownerId: Types.ObjectId,
+    name?: string,
     gender?: Gender,
     birth?: string,
-    profileImageURL?: string,
-    thumbnailURL?: string,
+  ) {
+    await this.profileModel.findByIdAndUpdate(profileId, {
+      $set: { ownerId, name: name || '', gender, birth },
+    });
+  }
+
+  // 아직 소유권없는 프로필 조회
+  async getOwnerLessProfileByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<Types.ObjectId | null> {
+    const profile = await this.profileModel.findOne({
+      phoneNumber,
+      ownerId: { $exists: false },
+    });
+    if (profile) {
+      return profile._id;
+    }
+
+    return null;
+  }
+
+  async create(
+    ownerId: Types.ObjectId,
+    name?: string,
+    gender?: Gender,
+    birth?: string,
   ): Promise<string> {
     const doc = await new this.profileModel({
-      kakaoUserId,
+      ownerId,
       name,
       gender,
       birth,
-      profileImageURL,
-      thumbnailURL,
     }).save();
     const id = doc._id.toHexString();
 
-    this.eventEmitter.emit(
-      ProfileCreatedEvent.name,
-      new ProfileCreatedEvent(id),
-    );
-
     return id;
   }
-*/
+
   async updateById(id: string | Types.ObjectId, dto: UpdateProfileDto) {
     const profile = await this.profileModel.findById(id);
 

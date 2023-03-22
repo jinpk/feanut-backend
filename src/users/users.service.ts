@@ -5,9 +5,16 @@ import { Gender } from 'src/profiles/enums';
 import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 import * as bcrybt from 'bcrypt';
+import { ProfilesService } from 'src/profiles/profiles.service';
+import { FriendsService } from 'src/friends/friends.service';
+
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private profilesService: ProfilesService,
+    private friendsService: FriendsService,
+  ) {}
 
   // 이미 사용중인 feanutId가 존재하는지 확인
   async hasUsername(username: string): Promise<boolean> {
@@ -74,7 +81,24 @@ export class UsersService {
       phoneNumber,
     }).save();
 
-    // 프로필 맵핑 or 생성 필요
+    const profileId =
+      await this.profilesService.getOwnerLessProfileByPhoneNumber(phoneNumber);
+
+    // 프로필 정보 맵핑 | 생성
+    if (profileId) {
+      await this.profilesService.makeOwnerShipById(
+        profileId,
+        user._id,
+        name,
+        gender,
+        birth,
+      );
+    } else {
+      await this.profilesService.create(user._id, name, gender, birth);
+    }
+
+    // 친구목록 초기화
+    await this.friendsService.initUserFriendsById(user._id);
 
     return user._id.toHexString();
   }

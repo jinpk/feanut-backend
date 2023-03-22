@@ -1,3 +1,3 @@
-export const MODULE_NAME = 'friends';
+export const FRIENDS_MODULE_NAME = 'friends';
 
-export const SCHEMA_NAME = 'profile_friends';
+export const SCHEMA_NAME = 'user_friends';
