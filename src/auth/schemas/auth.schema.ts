@@ -15,8 +15,7 @@ export class Auth {
   @Prop({ required: true })
   code: string;
 
-  // ["","",""].join("\n")
-  // newline concat
+  // `${username}\n${name}\n${birth}\n${gender}}`
   @Prop({ required: true })
   payload: string;
 

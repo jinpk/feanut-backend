@@ -23,6 +23,7 @@ import {
   AUTH_MODULE_NAME,
 } from './auth.constant';
 import { Gender } from 'src/profiles/enums';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -78,7 +79,6 @@ export class AuthService {
       dto.gender as Gender,
       dto.name,
       dto.username,
-      hashedPhoneNumber,
     );
 
     const doc = await new this.authModel({
@@ -124,7 +124,7 @@ export class AuthService {
 
     const sub = await this.usersService.create(
       payload.username,
-      payload.hashedPhoneNumber,
+      auth.hashedPhoneNumber,
       payload.name,
       payload.gender,
       payload.birth,
@@ -151,10 +151,7 @@ export class AuthService {
     });
 
     // 비밀번호 검증
-    if (
-      !user.password ||
-      !(await this.comparePassword(password, user.password))
-    ) {
+    if (!user.password || !this.comparePassword(password, user.password)) {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_INVALID_LOGIN,
@@ -186,17 +183,18 @@ export class AuthService {
     });
   }
 
-  async comparePassword(input: string, hashed: string): Promise<boolean> {
-    return true;
-  }
   // no error handling
   async sendSignUpSMS(phoneNumber: string, code: string) {
     console.log('send sns to: ', phoneNumber + '. code: ' + code);
     return phoneNumber;
   }
 
+  comparePassword(input: string, hashed: string): boolean {
+    return bcrypt.compareSync(input, hashed);
+  }
+
   hashPhoneNumber(phoneNumber: string): string {
-    return phoneNumber;
+    return bcrypt.hashSync(phoneNumber, 10);
   }
 
   genAuthCode(): string {
@@ -216,9 +214,8 @@ export class AuthService {
     gender: Gender,
     name: string,
     username: string,
-    hashedPhoneNumber: string,
   ) {
-    return `${username}\n${name}\n${birth}\n${gender}\n${hashedPhoneNumber}`;
+    return `${username}\n${name}\n${birth}\n${gender}}`;
   }
 
   parseSignUpPayload(payload: string): {
@@ -226,16 +223,13 @@ export class AuthService {
     gender: Gender;
     name: string;
     username: string;
-    hashedPhoneNumber: string;
   } {
-    const [username, name, birth, gender, hashedPhoneNumber] =
-      payload.split('\n');
+    const [username, name, birth, gender] = payload.split('\n');
     return {
       birth,
       gender: gender as Gender,
       name,
       username,
-      hashedPhoneNumber,
     };
   }
 }
