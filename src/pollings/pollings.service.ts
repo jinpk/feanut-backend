@@ -17,7 +17,6 @@ import { UserRound, UserRoundDocument } from './schemas/userround.schema';
 import {
   PollingDto,
   PollingOpenDto,
-  PollingRefreshDto,
   Opened,
 } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
@@ -92,7 +91,6 @@ export class PollingsService {
   async updateRefreshedPollingById(
     user_id,
     polling_id: string,
-    body: PollingRefreshDto,
   ): Promise<Polling | String> {
     //userId 사용하여 get profileId
     const user = await this.userService.findActiveUserById(user_id);
@@ -102,30 +100,11 @@ export class PollingsService {
 
     // 3번째 친구 새로고침인지 확인
     if (polling.refreshCount < 2) {
-    } else if (body.amount != 0) {
-      const usercoin = await this.coinService.findUserCoin(user_id);
-
-      if (usercoin.total < 5) {
-        return 'Lack of total feanut amount';
-      } else {
-        var usecoin: UseCoinDto = new UseCoinDto();
-        usecoin = {
-          userId: user_id,
-          useType: UseType.Refresh,
-          amount: UseType.Refresh,
-        };
-        await this.coinService.createUseCoin(usecoin);
-        await this.coinService.updateCoinAccum(user_id, -5);
-      }
     } else {
       return 'Exceed your free refresh count';
     }
     // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(
-      // **{user.profileId 사용안함 profile이 userId가짐}
-      //user.profileId.toString()
-      '',
-    );
+    const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
     // polling friendlist 갱신
     var newIds = [];
@@ -170,10 +149,13 @@ export class PollingsService {
   }
 
   async findListPollingByProfileId(
+    user_id: string,
     query: GetListReceivePollingDto,
   ): Promise<PagingResDto<PollingDto>> {
+    const profile = await this.profilesService.getByUserId(user_id);
+
     var filter: FilterQuery<PollingDocument> = {
-      selectedProfileId: query.profileId,
+      selectedProfileId: profile._id,
     };
 
     const projection: ProjectionFields<PollingDto> = {
@@ -225,14 +207,19 @@ export class PollingsService {
   }
 
   // 피넛을 소모. 수신투표 열기.
-  async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto) {
-    //userId 사용하여 get profileId
-    const user = await this.userService.findActiveUserById(user_id);
+  async updatePollingOpen(
+    user_id, polling_id: string,
+    body: PollingOpenDto) {
 
-    // user_id의 feanut 개수 체크, 차감
+    var opened = new Opened();
+
+    //userId 사용하여 get profile
+    const profile = await this.profilesService.getByUserId(user_id);
+
+    // user_id의 feanut 개수 체크/차감
     const usercoin = await this.coinService.findUserCoin(user_id);
 
-    if (usercoin.total < 10) {
+    if (usercoin.total < 5) {
       return 'Lack of total feanut amount';
     } else {
       var usecoin: UseCoinDto = new UseCoinDto();
@@ -241,19 +228,24 @@ export class PollingsService {
         useType: body.useType,
         amount: body.amount,
       };
-      await this.coinService.createUseCoin(usecoin);
+
+      const usecoin_result = await this.coinService.createUseCoin(usecoin);
       await this.coinService.updateCoinAccum(user_id, -1 * body.amount);
+
+      // polling isOpened 상태 업데이트
+      opened = {
+        isOpened: true,
+        useCoinId: usecoin_result
+      }
     }
 
-    // polling isOpened 상태 업데이트
     const result = await this.pollingModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(polling_id),
-        // **{user.profileId 사용안함 profile이 userId가짐}
-        // selectedProfileId: user.profileId,
+        selectedProfileId: profile._id,
       },
       {
-        $set: { isOpened: true, updatedAt: now() },
+        $set: { opened: opened, updatedAt: now() },
       },
     );
 

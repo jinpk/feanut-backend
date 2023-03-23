@@ -91,7 +91,7 @@ export class CoinsService {
 
   async createBuyCoin(user_id: string, body:BuyCoinDto) {
     // 앱스토어: productId = ''
-    if (body.productId == '') {
+    if (!body.productId) {
       const validate_result = await this.purchaseService.validateIOSPurchase(body.token)
     } else {
       const validate_result = await this.purchaseService.validateGooglePurchase(body.productId, body.token);
