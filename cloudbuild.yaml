@@ -7,3 +7,5 @@ steps:
         'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA',
         '.',
       ]
+images:
+  - 'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA'
