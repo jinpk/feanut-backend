@@ -4,8 +4,8 @@ steps:
       [
         'build',
         '-t',
-        'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA$_BUILD_ENV',
+        'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$_BUILG_TAG',
         '.',
       ]
 images:
-  - 'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA$_BUILD_ENV'
+  - 'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$_BUILG_TAG'
