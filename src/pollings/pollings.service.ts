@@ -54,7 +54,7 @@ export class PollingsService {
     // userround의 pollIds에 추가 되지 않은 pollId sorting
     const round = await this.roundModel.findById(userround.roundId);
     
-    var newPollId = 'dd'
+    var newPollId: string = ''
     for (var i=0; i < round.pollIds.length; i++) {
       if (userround.pollIds.includes(round.pollIds[i])) {
       } else {

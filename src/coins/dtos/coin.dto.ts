@@ -21,6 +21,12 @@ export class BuyCoinDto {
   @ApiProperty({})
   buyType: BuyType;
 
+  @ApiProperty({required: true})
+  productId: string;
+
+  @ApiProperty({required: true})
+  token: string;
+
   @ApiProperty({})
   amount: number;
 }
