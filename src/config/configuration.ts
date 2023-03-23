@@ -1,7 +1,7 @@
 export default () => ({
   host: process.env.HOST,
 
-  port: parseInt(process.env.PORT, 10) || 3001,
+  port: parseInt(process.env.PORT, 10) || 3000,
 
   mongoURI: process.env.MONGO_URI || '',
 
