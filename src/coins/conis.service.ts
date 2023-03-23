@@ -16,7 +16,7 @@ import { BuyCoin, BuyCoinDocument } from './schemas/buycoin.schema';
 import { UseCoin, UseCoinDocument } from './schemas/usecoin.schema';
 import { GetUseCoinDto, GetBuyCoinDto } from './dtos/get-coin.dto';
 import { UpdateCoinDto } from './dtos/update-coin.dto';
-import { UtilsService } from 'src/common/providers';
+import { UtilsService, PurchaseService } from 'src/common/providers';
 
 @Injectable()
 export class CoinsService {
@@ -26,6 +26,7 @@ export class CoinsService {
     @InjectModel(Coin.name) private usecoinModel: Model<BuyCoinDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
+    private purchaseService: PurchaseService,
   ) {}
 
   async findUserCoin(user_id: string): Promise<Coin> {
@@ -89,10 +90,19 @@ export class CoinsService {
   }
 
   async createBuyCoin(user_id: string, body:BuyCoinDto) {
-    const result = await new this.buycoinModel(body).save()
+    // 앱스토어: productId = ''
+    if (body.productId == '') {
+      const validate_result = await this.purchaseService.validateIOSPurchase(body.token)
+    } else {
+      const validate_result = await this.purchaseService.validateGooglePurchase(body.productId, body.token);
 
-    await this.updateCoinAccum(user_id, body.amount)
-    return result._id.toString()
+      if (validate_result.isSuccessful) {
+        const result = await new this.buycoinModel(body).save()
+
+        await this.updateCoinAccum(user_id, body.amount)
+        return result._id.toString()
+      }
+    }
   }
 
   async createUseCoin(params:UseCoinDto) {
