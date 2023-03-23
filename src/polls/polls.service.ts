@@ -17,6 +17,7 @@ import { Round, RoundDocument } from './schemas/round.schema';
 import { UpdatePollDto, UpdateRoundDto, UpdatePollIdsDto } from './dtos/update-poll.dto';
 import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto'
 import { UtilsService } from 'src/common/providers';
+import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 @Injectable()
 export class PollsService {
@@ -28,7 +29,7 @@ export class PollsService {
   ) {}
 
   async createPoll(body: PollDto): Promise<string> {
-    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    const krtime = new Date(now().getTime() + KR_TIME_DIFF)
     body.createdAt = krtime;
 
     const result = await new this.pollModel(body).save()
@@ -36,7 +37,7 @@ export class PollsService {
   }
 
   async createRound(body: RoundDto): Promise<string> {
-    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    const krtime = new Date(now().getTime() + KR_TIME_DIFF)
     body.createdAt = krtime;
 
     // pollids가 12개 이하이면 비활성화
@@ -44,12 +45,17 @@ export class PollsService {
       body.enabled = false;
     }
 
+    if (!body.endedAt) {
+      const start  = new Date(body.startedAt)
+      body.endedAt = new Date(start.getTime() + (365 * 24 * 60 * 60 * 1000))
+    }
+
     const result = await new this.roundModel(body).save()
     return result._id.toString()
   }
 
   async updatePoll(poll_id: string, poll: Poll, body) {
-    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    const krtime = new Date(now().getTime() + KR_TIME_DIFF)
 
     const result = await this.pollModel.findByIdAndUpdate( poll_id, { 
       $set: {
@@ -62,7 +68,7 @@ export class PollsService {
   }
 
   async updateRound(round_id: string, round: Round, body: UpdateRoundDto) {
-    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    const krtime = new Date(now().getTime() + KR_TIME_DIFF)
 
     // pollids가 12개 이하이면 우선 비활성화
     if (body.pollIds.length < 12) {
