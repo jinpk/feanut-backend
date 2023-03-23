@@ -4,8 +4,8 @@ steps:
       [
         'build',
         '-t',
-        'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA-$REF_NAME',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME:$SHORT_SHA-$REF_NAME',
         '.',
       ]
 images:
-  - 'asia-northeast3-docker.pkg.dev/feanut/feanut-backend:$SHORT_SHA-$REF_NAME'
+  - '$LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME:$SHORT_SHA-$REF_NAME'
