@@ -43,11 +43,10 @@ export class CoinsController {
         type: Coin
     })
     async getUsecoin(@Request() req) {
-        console.log(req.isAdmin)
       return await this.coinsService.findUserCoin(req.user.id);
     }
 
-    @Get('usecoins/list')
+    @Get('usecoins')
     @ApiOperation({
         summary: '(ADMIN) 사용자 사용내역 조회',
         description: 'userId 미입력 시 전체조회',
@@ -62,28 +61,30 @@ export class CoinsController {
             return await this.coinsService.findListUsecoin(query);
     }
   
-    @Get('buycoins/list')
+    @Get('buycoins')
     @ApiOperation({
-        summary: '(ADMIN) 결제내역 조회',
-        description: 'userId 미입력 시 전체조회',
+        summary: '결제내역 조회',
+        description: 'userId 미입력 시 조회X',
     })
     @ApiOkResponsePaginated(BuyCoin)
-    async getBuycoinList(@Query() query: GetBuyCoinDto) {
-      return await this.coinsService.findListBuycoin(query);
+    async getBuycoinList(
+        @Query() query: GetBuyCoinDto,
+        @Request() req) {
+            if (req.user.id == query.userId) {
+                return await this.coinsService.findListBuycoin(query);
+            }
     }
 
-    @Post('buycoin')
-    @ApiBody({
-        type: BuyCoinDto,
+    @Post('buycoins')
+    @ApiOperation({
+        summary: '인앱 결제',
+        description: 'token, productId 필수',
     })
     @ApiResponse({
         status: 200,
         type: String,
     })
-    async postBuyCoin(@Query() body, @Request() req) {
-        if (!req.user.isAdmin) {
-            throw new UnauthorizedException('Not an Admin')
-        }
+    async postBuyCoin(@Body() body: BuyCoinDto, @Request() req) {
         return await this.coinsService.createBuyCoin(req.user.id, body);
     }
 
