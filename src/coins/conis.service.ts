@@ -92,15 +92,17 @@ export class CoinsService {
   async createBuyCoin(user_id: string, body:BuyCoinDto) {
     // 앱스토어: productId = ''
     if (body.productId == '') {
-      await this.purchaseService.validateIOSPurchase(body.token)
+      const validate_result = await this.purchaseService.validateIOSPurchase(body.token)
     } else {
-      await this.purchaseService.validateGooglePurchase(body.productId, body.token);
+      const validate_result = await this.purchaseService.validateGooglePurchase(body.productId, body.token);
+
+      if (validate_result.isSuccessful) {
+        const result = await new this.buycoinModel(body).save()
+
+        await this.updateCoinAccum(user_id, body.amount)
+        return result._id.toString()
+      }
     }
-
-    const result = await new this.buycoinModel(body).save()
-
-    await this.updateCoinAccum(user_id, body.amount)
-    return result._id.toString()
   }
 
   async createUseCoin(params:UseCoinDto) {
