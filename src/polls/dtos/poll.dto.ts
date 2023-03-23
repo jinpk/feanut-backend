@@ -13,4 +13,7 @@ export class PollDto {
   
   @ApiProperty({})
   isOpenedCount: number;
+
+  @ApiProperty({})
+  createdAt?: Date;
 }

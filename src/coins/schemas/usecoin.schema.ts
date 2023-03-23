@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
 import { USECOIN_NAME } from '../coins.constant';
+import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 export type UseCoinDocument = HydratedDocument<UseCoin>;
 
@@ -23,9 +24,7 @@ export class UseCoin {
   amount: number[];
 
   // 생성시간
-  @Prop({
-    default: now(),
-  })
+  @Prop({})
   createdAt?: Date;
 }
 

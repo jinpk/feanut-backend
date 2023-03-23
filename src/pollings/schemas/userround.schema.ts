@@ -31,7 +31,7 @@ export class UserRound {
   completedAt?: Date;
 
   // 생성시간
-  @Prop({default: now()})
+  @Prop({})
   createdAt?: Date;
 }
 

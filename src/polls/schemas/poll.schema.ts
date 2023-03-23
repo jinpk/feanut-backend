@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
 import { Emotion } from '../enums';
 import { POLL_MODULE_NAME } from '../../polls/polls.constant';
+import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 export type PollDocument = HydratedDocument<Poll>;
 
@@ -25,9 +26,7 @@ export class Poll {
   isOpenedCount: number;
 
   // 생성시간
-  @Prop({
-    default: now(),
-  })
+  @Prop({})
   createdAt?: Date;
 }
 

@@ -47,6 +47,8 @@ export class PollingsService {
   ) {}
 
   async createPolling(user_id: string, userround) {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+
     var isopened = new Opened();
     isopened = { isOpened: false, useCoinId: null}
 
@@ -82,6 +84,7 @@ export class PollingsService {
       pollId: newPollId,
       friendIds: friendIds,
       opened: isopened,
+      createdAt: krtime,
     }
 
     const result = await new this.pollingModel(polling).save();
@@ -92,8 +95,7 @@ export class PollingsService {
     user_id,
     polling_id: string,
   ): Promise<Polling | String> {
-    //userId 사용하여 get profileId
-    const user = await this.userService.findActiveUserById(user_id);
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
 
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
@@ -259,6 +261,8 @@ export class PollingsService {
 
   // userRound
   async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+
     // userrounds에서 roundId 추출
     var completeRoundIds = []
     userrounds.data.forEach(element => {
@@ -302,11 +306,12 @@ export class PollingsService {
       }
     });
 
-    var userround = new UserRoundDto();
+    var userround = new UserRound();
     userround = {
       userId: user_id,
       roundId: RandomRoundId,
       pollIds: polls.slice(0, 12),
+      createdAt: krtime,
     }
     await new this.userroundModel(userround).save();
     return userround

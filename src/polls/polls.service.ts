@@ -28,31 +28,42 @@ export class PollsService {
   ) {}
 
   async createPoll(body: PollDto): Promise<string> {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    body.createdAt = krtime;
+
     const result = await new this.pollModel(body).save()
     return result._id.toString()
   }
 
   async createRound(body: RoundDto): Promise<string> {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+    body.createdAt = krtime;
+
     // pollids가 12개 이하이면 비활성화
     if (body.pollIds.length < 12) {
       body.enabled = false;
     }
+
     const result = await new this.roundModel(body).save()
     return result._id.toString()
   }
 
   async updatePoll(poll_id: string, poll: Poll, body) {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+
     const result = await this.pollModel.findByIdAndUpdate( poll_id, { 
       $set: {
         emotion: body.emotion,
         emoji: body.emoji,
         contentText: body.contentText,
-        updatedAt: now()}
+        updatedAt: krtime}
     });
     return result._id.toString()
   }
 
   async updateRound(round_id: string, round: Round, body: UpdateRoundDto) {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+
     // pollids가 12개 이하이면 우선 비활성화
     if (body.pollIds.length < 12) {
       body.enabled = false;
@@ -64,7 +75,7 @@ export class PollsService {
         pollIds: body.pollIds,
         startedAt: body.startedAt,
         endedAt: body.endedAt,
-        updatedAt: now()}
+        updatedAt: krtime}
     });
     return result._id.toString()
   }
