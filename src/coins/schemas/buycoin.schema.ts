@@ -8,16 +8,21 @@ export type BuyCoinDocument = HydratedDocument<BuyCoin>;
 // Buy Coin
 @Schema({ collection: BUYCOIN_NAME, timestamps: true })
 export class BuyCoin {
-  // pk
-  id: string;
-
-  // profileId
+  // userId
   @Prop({})
-  progileId: string;
+  userId: string;
 
   // feanut 결제 Type
   @Prop({})
   buyType: BuyType;
+
+  // productId
+  @Prop({})
+  productId: string;
+
+  // token
+  @Prop({})
+  token: string;
 
   // feanut 결제 개수
   @Prop({})

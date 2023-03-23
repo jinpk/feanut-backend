@@ -91,7 +91,7 @@ export class CoinsService {
   async createBuyCoin(user_id: string, body:BuyCoinDto) {
     const result = await new this.buycoinModel(body).save()
 
-    await this.updateCoinAccum(body.userId, body.amount)
+    await this.updateCoinAccum(user_id, body.amount)
     return result._id.toString()
   }
 
