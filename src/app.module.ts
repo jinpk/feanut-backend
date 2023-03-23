@@ -25,6 +25,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+      envFilePath: ['.env', '/secret/.env', 'secret/.env'],
       validationSchema,
     }),
     MongooseModule.forRootAsync({
