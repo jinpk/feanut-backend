@@ -164,8 +164,8 @@ export class AuthService {
   async userLogin(sub: string): Promise<TokenDto> {
     const payload = { sub, isAdmin: false };
 
-    const accessToken = this.genToken(payload, '30m');
-    const refreshToken = this.genToken({}, '2w');
+    const accessToken = this.genToken(payload, '1h');
+    const refreshToken = this.genToken({}, '30d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);
     return {

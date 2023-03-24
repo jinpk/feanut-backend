@@ -28,7 +28,11 @@ export class AligoProvider {
       user_id: this.userId,
       receiver,
       msg,
-      testmode_yn: this.configService.get('env') !== 'production' ? 'Y' : 'N',
+      testmode_yn:
+        this.configService.get('env') !== 'production' &&
+        this.configService.get('env') !== 'development'
+          ? 'Y'
+          : 'N',
     };
 
     const form = new FormData();

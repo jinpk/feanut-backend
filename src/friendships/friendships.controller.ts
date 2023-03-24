@@ -17,7 +17,7 @@ export class FriendsController {
   constructor(private friendShipsService: FriendShipsService) {}
 
   @Post(':userId/friends')
-  @ApiOperation({ summary: '로그인 계정의 친구추가', description: `` })
+  @ApiOperation({ summary: '전화번호로 친구등록', description: `` })
   @ApiCreatedResponse({ description: '친구등록 완료' })
   async addFriend(
     @Request() req,
