@@ -1,8 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as qs from 'querystring';
 import { AligoResponse } from '../interfaces';
+import * as FormData from 'form-data';
+
+const ALIGO_URL = 'https://apis.aligo.in/send/';
 
 @Injectable()
 export class AligoProvider {
@@ -21,22 +23,33 @@ export class AligoProvider {
   }
 
   async sendSMS(receiver: string, msg: string) {
-    const data = qs.stringify({
-      key: this.key,
-      user_id: this.userId,
+    const data = {
       sender: this.sender,
+      user_id: this.userId,
       receiver,
       msg,
-      testmode_yn: this.configService.get('env') !== 'production' ? 'Y' : 'N',
+      testmode_yn:
+        this.configService.get('env') !== 'production' &&
+        this.configService.get('env') !== 'development'
+          ? 'Y'
+          : 'N',
+    };
+
+    const form = new FormData();
+
+    Object.keys(data).map((key) => {
+      form.append(key, data[key]);
     });
+
+    form.append('key', this.key);
 
     this.logger.log(`aligo request: ${JSON.stringify(data)}`);
 
     const res = await this.httpService.axiosRef.post<AligoResponse>(
-      `https://apis.aligo.in/send`,
-      data,
+      ALIGO_URL,
+      form,
       {
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        headers: { ...form.getHeaders() },
       },
     );
 

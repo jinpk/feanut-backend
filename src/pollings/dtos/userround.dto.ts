@@ -16,6 +16,9 @@ export class UserRoundDto {
   pollIds: string[];
 
   @ApiProperty({})
+  pollingIds: string[];
+
+  @ApiProperty({})
   skipCount?: number;
 
   // complete

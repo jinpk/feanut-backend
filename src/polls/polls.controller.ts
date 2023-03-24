@@ -38,6 +38,7 @@ export class PollsController {
   @Post('rounds')
   @ApiOperation({
     summary: '(ADMIN) New 라운드 등록',
+    description: 'startedAt: 시작 날짜 00시00분, endedAt: 종료 날짜 23시 59분.\n\nendedAt이 없을 시 기본 1년'
   })
   @ApiBody({
     type: RoundDto,

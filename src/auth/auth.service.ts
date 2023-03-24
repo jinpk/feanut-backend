@@ -47,7 +47,7 @@ export class AuthService {
 
     const user = await this.usersService.findActiveUserOne({ refreshToken });
     if (!user) {
-      throw new WrappedError(AUTH_MODULE_NAME).unauthorized();
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
     }
 
     return this.userLogin(user._id.toHexString());
@@ -154,7 +154,7 @@ export class AuthService {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_INVALID_LOGIN,
-      ).unauthorized();
+      ).reject();
     }
 
     return user._id.toHexString();
@@ -164,8 +164,8 @@ export class AuthService {
   async userLogin(sub: string): Promise<TokenDto> {
     const payload = { sub, isAdmin: false };
 
-    const accessToken = this.genToken(payload, '30m');
-    const refreshToken = this.genToken({}, '2w');
+    const accessToken = this.genToken(payload, '1h');
+    const refreshToken = this.genToken({}, '30d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);
     return {

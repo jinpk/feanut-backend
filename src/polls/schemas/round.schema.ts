@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
 import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
+import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 export type RoundDocument = HydratedDocument<Round>;
 
@@ -17,7 +18,7 @@ export class Round {
   pollIds: string[];
 
   // round 활성화 시작 시간
-  @Prop({default: now()})
+  @Prop({})
   startedAt?: Date;
 
   // round 활성화 끝 시간
@@ -25,9 +26,7 @@ export class Round {
   endedAt?: Date;
 
   // 생성시간
-  @Prop({
-    default: now(),
-  })
+  @Prop({})
   createdAt?: Date;
 }
 

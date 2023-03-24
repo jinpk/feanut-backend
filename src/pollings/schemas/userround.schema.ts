@@ -19,6 +19,10 @@ export class UserRound {
   @Prop({})
   pollIds: string[];
 
+  // polling 목록
+  @Prop({})
+  pollingIds: string[];
+
   // skipCount
   @Prop({default: 0})
   skipCount?: number;
@@ -31,7 +35,7 @@ export class UserRound {
   completedAt?: Date;
 
   // 생성시간
-  @Prop({default: now()})
+  @Prop({})
   createdAt?: Date;
 }
 

@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Emotion } from '../enums'
+import { Emotion } from '../../polls/enums'
 
-export class PollDto {
-  @ApiProperty({ description: 'poll emotion' })
+export class EmojiDto {
+  @ApiProperty({ description: 'emotion' })
   emotion: Emotion;
 
-  @ApiProperty({ description: 'poll emoji index' })
-  emoji: number;
+  @ApiProperty({})
+  emojiFilePath: number;
 
   @ApiProperty({ description: 'contentText' })
   contentText: string;
   
   @ApiProperty({})
-  isOpenedCount: number;
+  isDeleted: boolean;
 
   @ApiProperty({})
   createdAt?: Date;

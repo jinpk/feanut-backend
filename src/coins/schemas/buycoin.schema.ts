@@ -29,9 +29,7 @@ export class BuyCoin {
   amount: number;
 
   // 생성시간
-  @Prop({
-    default: now(),
-  })
+  @Prop({})
   createdAt?: Date;
 }
 

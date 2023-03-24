@@ -9,12 +9,7 @@ export class GetListPollingDto extends PagingReqDto {
   userId: string;
 }
 
-export class GetListReceivePollingDto extends PagingReqDto {
-  @ApiProperty({ 
-    description: 'profileId',
-  })
-  profileId: string;
-}
+export class GetListReceivePollingDto extends PagingReqDto {}
 
 export class GetPollingDto {
   @ApiProperty({ 

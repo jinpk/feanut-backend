@@ -26,7 +26,7 @@ export class Polling {
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
-  selectedOwnerId?: string;
+  selectedProfileId?: string;
 
   @Prop({defaul:0})
   refreshCount?: number;
@@ -40,7 +40,7 @@ export class Polling {
   opened?: Opened;
 
   // 생성시간
-  @Prop({default:now()})
+  @Prop({})
   createdAt?: Date;
 }
 

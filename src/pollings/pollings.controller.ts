@@ -25,7 +25,6 @@ import { PollingsService } from './pollings.service';
 import {
   PollingDto,
   PollingOpenDto,
-  PollingRefreshDto,
 } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema';
 import { UserRound } from './schemas/userround.schema';
@@ -46,7 +45,7 @@ export class PollingsController {
   @Get('')
   @ApiOperation({
     summary: '(ADMIN) 투표 리스트 조회',
-    description: 'profiledId 미입력 시 전체조회',
+    description: 'userId 미입력 시 전체조회',
   })
   @ApiOkResponsePaginated(Polling)
   async getPollingList(@Query() query: GetListPollingDto) {
@@ -58,20 +57,31 @@ export class PollingsController {
     summary: '나의 수신 리스트 조회',
   })
   @ApiOkResponsePaginated(Polling)
-  async getMyPollingList(@Query() query: GetListReceivePollingDto) {
-    return await this.pollingsService.findListPollingByProfileId(query);
+  async getMyPollingList(
+    @Query() query: GetListReceivePollingDto,
+    @Request() req) {
+    return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
   @Get(':pollingId')
   @ApiOperation({
     summary: 'Polling 상세내역 조회',
+    description: 'Polling userId = 요청 userId가 동일해야 response',
   })
   @ApiOkResponse({
     status: 200,
     type: Polling,
   })
-  async getMyPollingDetail(@Param('pollingId') pollingId: string) {
-    return await this.pollingsService.findPollingById(pollingId);
+  async getMyPollingDetail(
+    @Param('pollingId') pollingId: string,
+    @Request() req) {
+      const result = await this.pollingsService.findPollingById(pollingId);
+      if (req.isAdmin) {
+      } else if (req.user.id != result.userId) {
+        throw new WrappedError('권한이 없습니다.').reject();
+      }
+
+      return result
   }
 
   @Post('receive/:pollingId/open')
@@ -117,7 +127,7 @@ export class PollingsController {
   @Post('')
   @ApiOperation({
     summary: 'New Polling 생성',
-    description: 'userRound 생성 시 기본 12개 생성. 이후 1개씩 추가. 라운드당 촤대 5번 건너뛰기 가능.',
+    description: 'userRound 생성 시 기본 12개 생성. 이후 1개씩 추가. 라운드당 최대 5번 건너뛰기 가능.',
   })
   @ApiResponse({
     status: 200,
@@ -148,10 +158,7 @@ export class PollingsController {
   @ApiOperation({
     summary: 'polling 친구 새로고침',
     description:
-      'refreshCount < 2이면 pass. 아니면 amount를 0 이상의 숫자인지 확인하여 feanut소모.',
-  })
-  @ApiBody({
-    type: PollingRefreshDto,
+      'refreshCount < 2이면 pass.',
   })
   @ApiResponse({
     status: 200,
@@ -159,13 +166,11 @@ export class PollingsController {
   })
   async putRefreshPolling(
     @Param('pollingId') pollingId: string,
-    @Body() body,
     @Request() req,
   ) {
     return await this.pollingsService.updateRefreshedPollingById(
       req.user.id,
       pollingId,
-      body,
     );
   }
 }

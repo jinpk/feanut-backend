@@ -58,13 +58,3 @@ export class PollingOpenDto extends OmitType(UseCoinDto, [
   })
   profileId: string;
 }
-
-export class PollingRefreshDto extends OmitType(UseCoinDto, [
-  'userId'
-]) {
-  @ApiProperty({
-      description: 'profileId',
-      required: true,
-  })
-  profileId: string;
-}
