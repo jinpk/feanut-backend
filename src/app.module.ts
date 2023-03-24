@@ -19,6 +19,7 @@ import { FilesModule } from './files/files.module';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { AdminModule } from './admin/admin.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { EmojisModule } from './emojis/emojis.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     PollsModule,
     AdminModule,
     SchedulerModule,
+    EmojisModule,
   ],
   controllers: [AppController],
   providers: [

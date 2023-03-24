@@ -29,6 +29,7 @@ async function bootstrap() {
       .addTag('FriendShip', '친구 API')
       .addTag('Polling', '투표 API')
       .addTag('Poll', 'poll&round API')
+      .addTag('Emoji', '이모지 관리 API')
       .addTag('Notification', '알림 API')
       .addTag('Coin', '코인 API')
       .addTag('File', '파일 API')
