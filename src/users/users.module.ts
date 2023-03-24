@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { FriendsModule } from 'src/friendships/friendships.module';
+import { UsersExistenceController } from './users-existence.controller';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { FriendsModule } from 'src/friendships/friendships.module';
     FriendsModule,
   ],
   providers: [UsersService],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersExistenceController],
   exports: [UsersService],
 })
 export class UsersModule {}
