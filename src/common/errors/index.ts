@@ -9,6 +9,7 @@ export class WrappedError {
   ) {}
 
   // 인증/인가 실패
+  // 이 코드는 되도록 사용하지 마십시오.
   unauthorized() {
     this._status = HttpStatus.UNAUTHORIZED;
     return this;

@@ -47,7 +47,7 @@ export class AuthService {
 
     const user = await this.usersService.findActiveUserOne({ refreshToken });
     if (!user) {
-      throw new WrappedError(AUTH_MODULE_NAME).unauthorized();
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
     }
 
     return this.userLogin(user._id.toHexString());
@@ -154,7 +154,7 @@ export class AuthService {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_INVALID_LOGIN,
-      ).unauthorized();
+      ).reject();
     }
 
     return user._id.toHexString();
