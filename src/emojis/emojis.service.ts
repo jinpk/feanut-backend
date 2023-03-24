@@ -23,8 +23,8 @@ export class EmojisService {
         private filesService: FilesService,
     ) {}
 
-    async existFile(file_path: string){
-
+    async existFile(fileId: string){
+        
     }
 
     async createEmoji(body: EmojiDto) {

@@ -60,10 +60,6 @@ export class PollingsService {
       if (userround.pollIds.includes(round.pollIds[i])) {
       } else {
         newPollId = round.pollIds[i];
-        // userround에 pollId추가
-        await this.userroundModel.findByIdAndUpdate(userround._id, {
-          $set: { pollIds: userround.pollIds.push(newPollId)},
-        });
         break;
       }
     }
@@ -88,6 +84,15 @@ export class PollingsService {
     }
 
     const result = await new this.pollingModel(polling).save();
+
+    // userround에 pollId추가
+    await this.userroundModel.findByIdAndUpdate(userround._id, {
+      $set: {
+        pollIds: userround.pollIds.push(newPollId),
+        pollingIds: userround.pollingIds.push(result._id.toString()),
+      },
+    });
+
     return result._id.toString();
   }
 
@@ -306,11 +311,15 @@ export class PollingsService {
       }
     });
 
+    // pollId에 매핑 된 polling 12개 생성
+    const pollings = await this.createFirstDozen(user_id, RandomRoundId, polls)
+
     var userround = new UserRound();
     userround = {
       userId: user_id,
       roundId: RandomRoundId,
       pollIds: polls.slice(0, 12),
+      pollingIds: pollings,
       createdAt: krtime,
     }
     await new this.userroundModel(userround).save();
@@ -357,5 +366,40 @@ export class PollingsService {
     );
 
     return result._id.toString();
+  }
+
+  async createFirstDozen(user_id, round_id: string, polls: string[]) {
+    const krtime = new Date(now().getTime() + (9 * 60 * 60 * 1000))
+
+    var pollingIds: string[] = [];
+    var polling = new Polling();
+    var isopened = new Opened();
+    isopened = { isOpened: false, useCoinId: null}
+
+    const friendList = await this.friendShipsService.listFriend(user_id);
+
+    polls.forEach(async (poll_id) => {
+      // 친구목록 불러오기/셔플
+      const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
+
+      var friendIds = [];
+      for (const friend of temp_arr) {
+        friendIds.push(friend.profileId);
+      }
+
+      polling = {
+        userId: user_id,
+        roundId: round_id,
+        pollId: poll_id,
+        friendIds: friendIds,
+        opened: isopened,
+        createdAt: krtime,
+      }
+
+      var savepolling = await new this.pollingModel(polling).save();
+      pollingIds.push(savepolling._id.toString())
+
+    });
+    return pollingIds;
   }
 }
