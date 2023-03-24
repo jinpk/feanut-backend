@@ -26,6 +26,7 @@ import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { UpdateEmojiDto } from './dtos/update-emoji.dto';
 import { Emoji } from './schemas/emoji.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
+import { WrappedError } from 'src/common/errors';
 
 @ApiTags('Emoji')
 @Controller('emojis')
@@ -41,10 +42,13 @@ export class EmojisController {
     type: String,
   })
   async postEmoji(
-    @Body() body,
+    @Body() body: Emoji,
     @Request() req) {
         if (!req.user.isAdmin) {
             throw new UnauthorizedException('Not an Admin')
+        }
+        if (!(await this.emojisService.existFile(body.fileId))) {
+            throw new WrappedError('존재하지 않는 fileId입니다.').reject()
         }
 
         return await this.emojisService.createEmoji(body);
@@ -54,20 +58,20 @@ export class EmojisController {
   @ApiOperation({
     summary: '(ADMIN) Emoji 수정',
   })
-  @ApiBody({
-    type: UpdateEmojiDto,
-  })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
-  async putRound(
+  async putEmoji(
     @Param('emojiId') emojiId: string,
-    @Body() body,
+    @Body() body: UpdateEmojiDto,
     @Request() req) {
       if (!req.user.isAdmin) {
         throw new UnauthorizedException('Not an Admin')
       }
+      if (!(await this.emojisService.existFile(body.fileId))) {
+        throw new WrappedError('존재하지 않는 fileId입니다.').reject()
+        }
 
       const [exist, emoji] = await this.emojisService.existEmoji(emojiId)
       if (!exist) {
@@ -113,17 +117,17 @@ export class EmojisController {
 }
 
 @ApiTags('Emoji')
-@Controller('public')
+@Controller('emojis')
 export class PublicEmojisController {
   constructor(private readonly emojisService: EmojisService) {}
 
-  @Get('')
+  @Get('public')
   @Public()
   @ApiOperation({
     summary: '(PUBLIC) emoji 리스트 조회',
   })
   @ApiOkResponsePaginated(EmojiDto)
-  async getListPublicPoll(@Query() query: GetListEmojiDto,
+  async getListPublicEmoji(@Query() query: GetListEmojiDto,
   ) {
       return await this.emojisService.findListEmoji(query);
   }

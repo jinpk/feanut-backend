@@ -6,14 +6,5 @@ export class EmojiDto {
   emotion: Emotion;
 
   @ApiProperty({})
-  emojiFilePath: number;
-
-  @ApiProperty({ description: 'contentText' })
-  contentText: string;
-  
-  @ApiProperty({})
-  isDeleted: boolean;
-
-  @ApiProperty({})
-  createdAt?: Date;
+  assetKey: string;
 }
