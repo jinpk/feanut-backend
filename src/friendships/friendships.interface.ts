@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { PagingResDto } from 'src/common/dtos';
 import { Friend } from './schemas/friend.schema';
 
 export interface FriendShipsServiceInterface {
@@ -25,8 +26,16 @@ export interface FriendShipsServiceInterface {
   ): Promise<void>;
 
   // 전체 친구 목록 조회 - 숨김처리하지않은
-  listFriend(userId: string | Types.ObjectId): Promise<Friend[]>;
+  listFriend(
+    userId: string | Types.ObjectId,
+    page: number,
+    limit: number,
+  ): Promise<PagingResDto<Friend>>;
 
   // 숨김 친구 목록 조회 - 숨김처리하지않은
-  listHiddenFriend(userId: string | Types.ObjectId): Promise<Friend[]>;
+  listHiddenFriend(
+    userId: string | Types.ObjectId,
+    page?: number,
+    limit?: number,
+  ): Promise<PagingResDto<Friend>>;
 }

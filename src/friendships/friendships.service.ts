@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, FilterQuery } from 'mongoose';
+import {
+  Model,
+  Types,
+  FilterQuery,
+  PipelineStage,
+  ProjectionFields,
+} from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { FriendShip, FriendShipDocument } from './schemas/friendships.schema';
 import { FriendShipsServiceInterface } from './friendships.interface';
-import { AddFriendDto } from './dtos';
+import { AddFriendDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
 import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
+import { UtilsService } from 'src/common/providers';
+import { PagingResDto } from 'src/common/dtos';
 
 @Injectable()
 export class FriendShipsService implements FriendShipsServiceInterface {
@@ -15,6 +23,7 @@ export class FriendShipsService implements FriendShipsServiceInterface {
     @InjectModel(FriendShip.name)
     private friendShipModel: Model<FriendShipDocument>,
     private profilesService: ProfilesService,
+    private utilsService: UtilsService,
   ) {}
 
   async initFriendShip(userId: string | Types.ObjectId) {
@@ -86,7 +95,22 @@ export class FriendShipsService implements FriendShipsServiceInterface {
 
   async unHideFriend(userId: string, friendProfileId: string) {}
 
-  async listFriend(userId: string | Types.ObjectId): Promise<Friend[]> {
+  async hasFriends(userId: string | Types.ObjectId) {
+    const doc = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    if (!doc.friends.length) {
+      return false;
+    }
+    return true;
+  }
+
+  async listFriend(
+    userId: string | Types.ObjectId,
+    page?: number,
+    limit?: number,
+  ): Promise<PagingResDto<Friend>> {
+    const paging = page && limit;
     const filter: FilterQuery<FriendShip> = {
       userId: new Types.ObjectId(userId),
     };
@@ -95,21 +119,52 @@ export class FriendShipsService implements FriendShipsServiceInterface {
       hidden: { $ne: true },
     };
 
-    const doc = await this.friendShipModel.aggregate<Friend>([
+    const projection: ProjectionFields<Friend> = {
+      friendshipId: '$_id',
+      id: '$friends._id',
+      hidden: '$friends.hidden',
+      name: '$friends.name',
+      profileId: '$friends.profileId',
+    };
+
+    const pipeline: PipelineStage[] = [
       // 친구 도큐먼트 조회
       { $match: filter },
       // 친구목록 언와인딩
       {
         $unwind: { path: '$friends' },
       },
+      { $project: projection },
       // 숨김친구 필터링
       { $match: friendFilter },
-    ]);
+      { $sort: { name: 1 } },
+    ];
 
-    return doc;
+    if (paging) {
+      pipeline.push(this.utilsService.getCommonMongooseFacet({ page, limit }));
+      const cursor = await this.friendShipModel.aggregate(pipeline);
+      const metdata = cursor[0].metadata;
+      const data = cursor[0].data;
+      return {
+        total: metdata[0]?.total || 0,
+        data: data,
+      };
+    } else {
+      const doc = await this.friendShipModel.aggregate<Friend>(pipeline);
+      return {
+        total: doc.length,
+        data: doc,
+      };
+    }
   }
 
-  async listHiddenFriend(userId: string | Types.ObjectId): Promise<Friend[]> {
+  async listHiddenFriend(
+    userId: string | Types.ObjectId,
+    page?: number,
+    limit?: number,
+  ): Promise<PagingResDto<Friend>> {
+    const paging = page && limit;
+
     const filter: FilterQuery<FriendShip> = {
       userId: new Types.ObjectId(userId),
     };
@@ -118,17 +173,49 @@ export class FriendShipsService implements FriendShipsServiceInterface {
       hidden: true,
     };
 
-    const doc = await this.friendShipModel.aggregate<Friend>([
+    const projection: ProjectionFields<Friend> = {
+      friendshipId: '$_id',
+      id: '$friends._id',
+      hidden: '$friends.hidden',
+      name: '$friends.name',
+      profileId: '$friends.profileId',
+    };
+
+    const pipeline: PipelineStage[] = [
       // 친구 도큐먼트 조회
       { $match: filter },
       // 친구목록 언와인딩
       {
         $unwind: { path: '$friends' },
       },
+      { $project: projection },
       // 숨김친구 필터링
       { $match: friendFilter },
-    ]);
+      { $sort: { name: 1 } },
+    ];
 
-    return doc;
+    if (paging) {
+      pipeline.push(this.utilsService.getCommonMongooseFacet({ page, limit }));
+      const cursor = await this.friendShipModel.aggregate(pipeline);
+      const metdata = cursor[0].metadata;
+      const data = cursor[0].data;
+      return {
+        total: metdata[0]?.total || 0,
+        data: data,
+      };
+    } else {
+      const doc = await this.friendShipModel.aggregate<Friend>(pipeline);
+      return {
+        total: doc.length,
+        data: doc,
+      };
+    }
+  }
+
+  _friendDocToDto(friend: Friend): FriendDto {
+    const dto = new FriendDto();
+    dto.name = friend.name;
+    dto.profileId = friend.profileId.toHexString();
+    return dto;
   }
 }

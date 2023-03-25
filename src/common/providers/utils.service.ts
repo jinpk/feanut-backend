@@ -20,9 +20,9 @@ export class UtilsService {
     return {
       $facet: {
         metadata: [{ $count: 'total' }],
-        data:[
-            { $skip: (parseInt(query.page) - 1) * parseInt(query.limit) },
-            { $limit: parseInt(query.limit) },
+        data: [
+          { $skip: (parseInt(query.page) - 1) * parseInt(query.limit) },
+          { $limit: parseInt(query.limit) },
         ],
       },
     };
