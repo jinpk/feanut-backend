@@ -21,20 +21,25 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators';
 import { EmojisService } from './emojis.service';
-import { EmojiDto } from './dtos/emoji.dto';
+import { EmojiDto, PublicEmojiDto } from './dtos/emoji.dto';
 import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { UpdateEmojiDto } from './dtos/update-emoji.dto';
 import { Emoji } from './schemas/emoji.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
+import { WrappedError } from 'src/common/errors';
 
 @ApiTags('Emoji')
 @Controller('emojis')
+@ApiBearerAuth()
 export class EmojisController {
     constructor(private readonly emojisService: EmojisService) {}
 
   @Post('')
   @ApiOperation({
     summary: '(ADMIN) New 이모지 등록',
+  })
+  @ApiBody({
+    type: EmojiDto,
   })
   @ApiOkResponse({
     status: 200,
@@ -46,32 +51,35 @@ export class EmojisController {
         if (!req.user.isAdmin) {
             throw new UnauthorizedException('Not an Admin')
         }
+        if (!(await this.emojisService.existFile(body.fileId))) {
+            throw new WrappedError('존재하지 않는 fileId입니다.').reject()
+        }
 
         return await this.emojisService.createEmoji(body);
   }
 
-  @Put(':roundId/update')
+  @Put(':emojiId/update')
   @ApiOperation({
     summary: '(ADMIN) Emoji 수정',
-  })
-  @ApiBody({
-    type: UpdateEmojiDto,
   })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
-  async putRound(
+  async putEmoji(
     @Param('emojiId') emojiId: string,
-    @Body() body,
+    @Body() body: UpdateEmojiDto,
     @Request() req) {
       if (!req.user.isAdmin) {
         throw new UnauthorizedException('Not an Admin')
       }
+      if (!(await this.emojisService.existFile(body.fileId))) {
+        throw new WrappedError('존재하지 않는 fileId입니다.').reject()
+        }
 
       const [exist, emoji] = await this.emojisService.existEmoji(emojiId)
       if (!exist) {
-        throw new NotFoundException('not found round')
+        throw new NotFoundException('not found emoji')
       }
 
       return await this.emojisService.updateEmoji(emojiId, emoji, body)
@@ -113,7 +121,7 @@ export class EmojisController {
 }
 
 @ApiTags('Emoji')
-@Controller('public')
+@Controller('public/emojis')
 export class PublicEmojisController {
   constructor(private readonly emojisService: EmojisService) {}
 
@@ -122,8 +130,8 @@ export class PublicEmojisController {
   @ApiOperation({
     summary: '(PUBLIC) emoji 리스트 조회',
   })
-  @ApiOkResponsePaginated(EmojiDto)
-  async getListPublicPoll(@Query() query: GetListEmojiDto,
+  @ApiOkResponsePaginated(PublicEmojiDto)
+  async getListPublicEmoji(@Query() query: GetListEmojiDto,
   ) {
       return await this.emojisService.findListEmoji(query);
   }

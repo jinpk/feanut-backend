@@ -138,7 +138,6 @@ export class ProfilesService {
   }
 
   async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
-    // const myReceive = await this.pollingModel.find({profileId: profile_id})
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
     };

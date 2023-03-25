@@ -1,13 +1,6 @@
-import { Injectable, Body } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  now,
-  FilterQuery,
-  Model,
-  PipelineStage,
-  ProjectionFields,
-  Types,
-} from 'mongoose';
+import { now, FilterQuery, Model, ProjectionFields, Types } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
@@ -25,7 +18,6 @@ import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
-import { UseType } from 'src/coins/enums/usetype.enum';
 import { UserRoundDto } from './dtos/userround.dto';
 
 @Injectable()
@@ -105,9 +97,14 @@ export class PollingsService {
     const polling = await this.pollingModel.findById(polling_id);
 
     // 3번째 친구 새로고침인지 확인
-    if (polling.refreshCount < 2) {
+    if (!polling.refreshCount) {
+      polling.refreshCount = 1;
     } else {
-      return 'Exceed your free refresh count';
+      if (polling.refreshCount < 2) {
+        polling.refreshCount += 1;
+      } else {
+        return 'Exceed your free refresh count';
+      }
     }
     // 친구목록 불러오기/셔플
     const friendList = await this.FriendshipsService.listFriend(user_id);
@@ -341,8 +338,10 @@ export class PollingsService {
 
     const rounds = await this.userroundModel.find({
       userId: user_id,
-      completedAt: { $gte: start, $lt: end },
+      createdAt: { $gte: start, $lt: end },
     });
+
+    console.log(rounds);
 
     var result = {
       todayCount: rounds.length,
@@ -352,10 +351,10 @@ export class PollingsService {
     return result;
   }
 
-  async updateComplete(user_id: string) {
+  async updateComplete(user_id, userround_id: string) {
     const result = await this.userroundModel.findOneAndUpdate(
       {
-        _id: new Types.ObjectId(''),
+        _id: new Types.ObjectId(userround_id),
         userId: user_id,
       },
       {

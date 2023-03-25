@@ -60,10 +60,12 @@ export class PollingsController {
   async getMyPollingList(
     @Query() query: GetListReceivePollingDto,
     @Request() req) {
+      console.log("112221111")
+      console.log(req.user.id)
     return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
-  @Get(':pollingId')
+  @Get(':pollingId/detail')
   @ApiOperation({
     summary: 'Polling 상세내역 조회',
     description: 'Polling userId = 요청 userId가 동일해야 response',
@@ -144,7 +146,7 @@ export class PollingsController {
   @Get('userround')
   @ApiOperation({
     summary: '사용자 userround조회',
-    description: '생성 전 GET userRound 조회. todayCount=0|1|2 반환.',
+    description: 'GET userRound 조회. todayCount=0|1|2 반환.',
   })
   @ApiOkResponse({
     status: 200,
@@ -154,7 +156,7 @@ export class PollingsController {
     return await this.pollingsService.findUserRound(req.user.id);
   }
 
-  @Put(':pollingId')
+  @Put(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
     description:
@@ -168,9 +170,37 @@ export class PollingsController {
     @Param('pollingId') pollingId: string,
     @Request() req,
   ) {
+    const exist = await this.pollingsService.findPollingById(pollingId);
+    if (exist.userId != req.user.id) {
+      throw new WrappedError('권한이 없습니다')
+    }
+
     return await this.pollingsService.updateRefreshedPollingById(
       req.user.id,
       pollingId,
+    );
+  }
+
+  @Put(':pollingId/select')
+  @ApiOperation({
+    summary: 'polling 친구 선택',
+  })
+  @ApiResponse({
+    status: 200,
+    type: Polling,
+  })
+  async putSelectPolling(
+    @Param('pollingId') pollingId: string,
+    @Body() body: UpdatePollingDto,
+    @Request() req,
+  ) {
+    const exist = await this.pollingsService.findPollingById(pollingId);
+    if (exist.userId != req.user.id) {
+      throw new WrappedError('권한이 없습니다')
+    }
+    return await this.pollingsService.updateSelectedProfile(
+      pollingId,
+      body.selectedProfileId,
     );
   }
 }

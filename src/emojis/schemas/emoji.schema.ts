@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
+import { HydratedDocument, now, Types } from 'mongoose';
 import { EMOJI_MODULE_NAME } from '../emojis.constant';
 import { Emotion } from '../../polls/enums'
+import { File } from 'src/files/schemas/files.schema';
 
 export type EmojiDocument = HydratedDocument<Emoji>;
 
@@ -12,9 +13,9 @@ export class Emoji {
     @Prop({})
     emotion: Emotion;
 
-    // emoji filepath
-    @Prop({})
-    emojiFilePath: string;
+    // fileId
+    @Prop({type: Types.ObjectId, ref: File.name, default: null})
+    fileId: Types.ObjectId;
 
     // isDeleted
     @Prop({default: false})
