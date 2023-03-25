@@ -56,14 +56,8 @@ export class PollingsController {
   @ApiOkResponsePaginated(Polling)
   async getMyPollingList(
     @Query() query: GetListReceivePollingDto,
-    @Request() req,
-  ) {
-    console.log('112221111');
-    console.log(req.user.id);
-    return await this.pollingsService.findListPollingByProfileId(
-      req.user.id,
-      query,
-    );
+    @Request() req) {
+    return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
   @Get(':pollingId/detail')
@@ -143,6 +137,7 @@ export class PollingsController {
       req.user.id,
     );
     if (userround.pollIds.length >= 17) {
+      await this.pollingsService.updateComplete(req.user.id, userround._id.toString())
       throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
     }
     return await this.pollingsService.createPolling(req.user.id, userround);
@@ -203,6 +198,7 @@ export class PollingsController {
       throw new WrappedError('권한이 없습니다');
     }
     return await this.pollingsService.updateSelectedProfile(
+      req.user.id,
       pollingId,
       body.selectedProfileId,
     );

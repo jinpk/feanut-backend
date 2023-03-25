@@ -7,20 +7,17 @@ export type CoinDocument = HydratedDocument<Coin>;
 // Coin
 @Schema({ collection: COIN_MODULE_NAME, timestamps: true })
 export class Coin {
-  // pk
-  id: string;
-
-  // profileId
+  // userId
   @Prop({})
-  progileId: string;
+  userId: string;
 
   // Feanut 총 수량
-  @Prop({})
-  total: number;
+  @Prop({default:0})
+  total?: number;
 
   // feanut 적립 로그
-  @Prop({})
-  accumLogs: number[];
+  @Prop({default: []})
+  accumLogs?: number[];
 
   // 생성시간
   @Prop({

@@ -19,6 +19,7 @@ import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
 import { UserRoundDto } from './dtos/userround.dto';
+import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 @Injectable()
 export class PollingsService {
@@ -31,21 +32,21 @@ export class PollingsService {
     private profilesService: ProfilesService,
     private userService: UsersService,
     private coinService: CoinsService,
-    private FriendshipsService: FriendshipsService,
+    private friendShipsService: FriendshipsService,
     private utilsService: UtilsService,
   ) {}
 
   async createPolling(user_id: string, userround) {
     const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
 
-    let isopened = new Opened();
+    var isopened = new Opened();
     isopened = { isOpened: false, useCoinId: null };
 
     // userround의 pollIds에 추가 되지 않은 pollId sorting
     const round = await this.roundModel.findById(userround.roundId);
 
-    let newPollId = '';
-    for (let i = 0; i < round.pollIds.length; i++) {
+    var newPollId: string = '';
+    for (var i = 0; i < round.pollIds.length; i++) {
       if (userround.pollIds.includes(round.pollIds[i])) {
       } else {
         newPollId = round.pollIds[i];
@@ -54,7 +55,7 @@ export class PollingsService {
     }
 
     // 친구목록 불러오기/셔플
-    const friendList = await this.FriendshipsService.listFriend(user_id);
+    const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -90,7 +91,7 @@ export class PollingsService {
   async updateRefreshedPollingById(
     user_id,
     polling_id: string,
-  ): Promise<Polling | string> {
+  ): Promise<Polling | String> {
     const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
 
     // polling 가져오기.
@@ -107,7 +108,7 @@ export class PollingsService {
       }
     }
     // 친구목록 불러오기/셔플
-    const friendList = await this.FriendshipsService.listFriend(user_id);
+    const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -201,19 +202,59 @@ export class PollingsService {
     return result._id.toString();
   }
 
-  async updateSelectedProfile(polling_id, profile_id: string) {
+  async updateSelectedProfile(user_id, polling_id, profile_id: string) {
     const result = await this.pollingModel.findByIdAndUpdate(polling_id, {
       $set: {
         selectedProfileId: new Types.ObjectId(profile_id),
         updatedAt: now(),
       },
     });
-    return result._id.toString();
+
+    const userround = await this.userroundModel
+      .findOne({
+        userId: user_id,
+      })
+      .sort({ createdAt: -1 });
+
+    const count = await this.checkUserroundComplete(user_id, userround);
+
+    var completed = false;
+    if (count >= 12) {
+      completed = true;
+      await this.updateComplete(user_id, userround._id.toString());
+    }
+
+    const res = {
+      userroundId: userround._id.toString(),
+      userroundCompleted: completed,
+      pollingId: result._id.toString(),
+    };
+
+    return res;
+  }
+
+  async checkUserroundComplete(user_id: string, userround) {
+    const round = await this.userroundModel
+      .findOne({
+        userId: user_id,
+      })
+      .sort({ createdAt: -1 });
+
+    const result = await this.pollingModel.find({ $in: userround.pollingIds });
+
+    var selecteCount = 0;
+    for (const value of result) {
+      if (value.selectedProfileId) {
+        selecteCount += 1;
+      }
+    }
+
+    return selecteCount;
   }
 
   // 피넛을 소모. 수신투표 열기.
   async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto) {
-    let opened = new Opened();
+    var opened = new Opened();
 
     //userId 사용하여 get profile
     const profile = await this.profilesService.getByUserId(user_id);
@@ -221,18 +262,18 @@ export class PollingsService {
     // user_id의 feanut 개수 체크/차감
     const usercoin = await this.coinService.findUserCoin(user_id);
 
-    if (usercoin.total < 5) {
+    if (usercoin.total < 3) {
       return 'Lack of total feanut amount';
     } else {
       let usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
         userId: user_id,
         useType: body.useType,
-        amount: body.amount,
+        amount: 3,
       };
 
       const usecoin_result = await this.coinService.createUseCoin(usecoin);
-      await this.coinService.updateCoinAccum(user_id, -1 * body.amount);
+      await this.coinService.updateCoinAccum(user_id, -1 * 3);
 
       // polling isOpened 상태 업데이트
       opened = {
@@ -261,18 +302,19 @@ export class PollingsService {
 
   // userRound
   async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
+    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
 
     // userrounds에서 roundId 추출
-    const completeRoundIds = [];
+    var completeRoundIds = [];
     userrounds.data.forEach((element) => {
       completeRoundIds.push(element.roundId);
     });
 
     // roundModel에서 enable, startedAt, endedAt 조건 roundId
-    const enbaleRoundIds = [];
-    const today = new Date();
+    var enbaleRoundIds = [];
+    var today = new Date();
     today.setHours(0, 0, 0, 0);
+    today.setTime(today.getTime() + KR_TIME_DIFF);
     const enbaleRounds = await this.roundModel.find({
       enabled: true,
       startedAt: { $lte: today },
@@ -283,8 +325,8 @@ export class PollingsService {
     });
 
     // roundModel중 userrounds roundId들 삭제.
-    for (let i = 0; i < enbaleRoundIds.length; i++) {
-      for (let j = 0; j < completeRoundIds.length; j++) {
+    for (var i = 0; i < enbaleRoundIds.length; i++) {
+      for (var j = 0; j < completeRoundIds.length; j++) {
         if (enbaleRoundIds.includes(completeRoundIds[j])) {
           enbaleRoundIds.splice(i, 1);
           i--;
@@ -297,10 +339,12 @@ export class PollingsService {
     const RandomRoundId = enbaleRoundIds[randomIndex];
 
     // 해당 라운드에 속한 pollId 12개 생성
-    let polls = [];
+    var polls = [];
     enbaleRounds.forEach((element) => {
       if (element._id.toString() == RandomRoundId) {
-        polls = element.pollIds.sort(() => Math.random() - 0.5);
+        var temp = [];
+        temp = element.pollIds.sort(() => Math.random() - 0.5);
+        polls = temp.slice(-12);
       }
     });
 
@@ -319,7 +363,7 @@ export class PollingsService {
     return userround;
   }
 
-  async findRecentUserRound(user_id: string): Promise<UserRound> {
+  async findRecentUserRound(user_id: string) {
     const round = await this.userroundModel
       .findOne({
         userId: user_id,
@@ -330,18 +374,19 @@ export class PollingsService {
   }
 
   async findUserRound(user_id: string) {
-    const start = new Date();
+    var start = new Date();
     start.setHours(0, 0, 0, 0);
-
-    const end = new Date();
+    start.setTime(start.getTime() + KR_TIME_DIFF);
+    var end = new Date();
     end.setHours(23, 59, 59, 999);
+    end.setTime(end.getTime() + KR_TIME_DIFF);
 
-    const rounds = await this.userroundModel.find({
-      userId: user_id,
-      createdAt: { $gte: start, $lt: end },
-    });
-
-    console.log(rounds);
+    const rounds = await this.userroundModel
+      .find({
+        userId: user_id,
+        createdAt: { $gte: start, $lt: end },
+      })
+      .sort({ createdAt: -1 });
 
     const result = {
       todayCount: rounds.length,
@@ -362,20 +407,22 @@ export class PollingsService {
       },
     );
 
+    // 투표 완료: 코인 획득
+    await this.coinService.updateCoinAccum(user_id, 2);
     return result._id.toString();
   }
 
   async createFirstDozen(user_id, round_id: string, polls: string[]) {
     const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
 
-    const pollingIds: string[] = [];
-    let polling = new Polling();
-    let isopened = new Opened();
+    var polling = new Polling();
+    var isopened = new Opened();
     isopened = { isOpened: false, useCoinId: null };
 
-    const friendList = await this.FriendshipsService.listFriend(user_id);
+    const friendList = await this.friendShipsService.listFriend(user_id);
 
-    polls.forEach(async (poll_id) => {
+    var pollingIds = [];
+    for (const poll_id of polls) {
       // 친구목록 불러오기/셔플
       const temp_arr = friendList.data
         .sort(() => Math.random() - 0.5)
@@ -395,9 +442,9 @@ export class PollingsService {
         createdAt: krtime,
       };
 
-      const savepolling = await new this.pollingModel(polling).save();
-      pollingIds.push(savepolling._id.toString());
-    });
+      var savepolling = await new this.pollingModel(polling).save();
+      await pollingIds.push(savepolling._id);
+    }
     return pollingIds;
   }
 }
