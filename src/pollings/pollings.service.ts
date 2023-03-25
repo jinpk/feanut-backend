@@ -413,6 +413,8 @@ export class PollingsService {
       },
     );
 
+    // 투표 완료: 코인 획득
+    await this.coinService.updateCoinAccum(user_id, 2);
     return result._id.toString();
   }
 

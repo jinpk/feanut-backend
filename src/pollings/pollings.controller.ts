@@ -60,8 +60,6 @@ export class PollingsController {
   async getMyPollingList(
     @Query() query: GetListReceivePollingDto,
     @Request() req) {
-      console.log("112221111")
-      console.log(req.user.id)
     return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
