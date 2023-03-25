@@ -2,7 +2,7 @@
 
 ## Schema
 
-### `FriendShip`
+### `Friendship`
 
 사용자는 N개의 친구 리스트를 가지는 1개의 친구 목록 도큐먼트를 가짐
 사용자 회원가입 시점에 interface.initFriendShip 호출하여 도큐먼트 초기화

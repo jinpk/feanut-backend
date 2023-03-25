@@ -4,10 +4,10 @@ import { User } from 'src/users/schemas/user.schema';
 import { SCHEMA_NAME } from '../friendships.constant';
 import { FriendSchema, Friend } from './friend.schema';
 
-export type FriendShipDocument = HydratedDocument<FriendShip>;
+export type FriendShipDocument = HydratedDocument<Friendship>;
 
 @Schema({ collection: SCHEMA_NAME, timestamps: true })
-export class FriendShip {
+export class Friendship {
   // pk
   _id: Types.ObjectId;
 
@@ -22,4 +22,4 @@ export class FriendShip {
   friends: Friend[];
 }
 
-export const FriendShipSchema = SchemaFactory.createForClass(FriendShip);
+export const FriendShipSchema = SchemaFactory.createForClass(Friendship);

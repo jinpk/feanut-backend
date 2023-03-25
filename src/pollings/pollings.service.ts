@@ -23,7 +23,7 @@ import {
 import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
-import { FriendShipsService } from 'src/friendships/friendships.service';
+import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
 import { UseType } from 'src/coins/enums/usetype.enum';
 import { UserRoundDto } from './dtos/userround.dto';
@@ -39,7 +39,7 @@ export class PollingsService {
     private profilesService: ProfilesService,
     private userService: UsersService,
     private coinService: CoinsService,
-    private friendShipsService: FriendShipsService,
+    private FriendshipsService: FriendshipsService,
     private utilsService: UtilsService,
   ) {}
 
@@ -62,7 +62,7 @@ export class PollingsService {
     }
 
     // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    const friendList = await this.FriendshipsService.listFriend(user_id);
     const temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -110,7 +110,7 @@ export class PollingsService {
       return 'Exceed your free refresh count';
     }
     // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    const friendList = await this.FriendshipsService.listFriend(user_id);
     const temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -374,7 +374,7 @@ export class PollingsService {
     var isopened = new Opened();
     isopened = { isOpened: false, useCoinId: null };
 
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    const friendList = await this.FriendshipsService.listFriend(user_id);
 
     polls.forEach(async (poll_id) => {
       // 친구목록 불러오기/셔플

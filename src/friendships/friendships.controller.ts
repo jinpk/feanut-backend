@@ -18,13 +18,13 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
 import { AddFriendDto, FriendDto, GetFriendsDto } from './dtos';
 import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
-import { FriendShipsService } from './friendships.service';
+import { FriendshipsService } from './friendships.service';
 
-@ApiTags('FriendShip')
+@ApiTags('Friendship')
 @Controller(FRIENDSHIPS_MODULE_NAME)
 @ApiBearerAuth()
-export class FriendsController {
-  constructor(private friendShipsService: FriendShipsService) {}
+export class FriendshipsController {
+  constructor(private FriendshipsService: FriendshipsService) {}
 
   @Get(':userId/friends/has')
   @ApiOperation({
@@ -39,7 +39,7 @@ export class FriendsController {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
 
-    return await this.friendShipsService.hasFriends(userId);
+    return await this.FriendshipsService.hasFriends(userId);
   }
 
   @Get(':userId/friends')
@@ -59,12 +59,12 @@ export class FriendsController {
 
     const { total, data } =
       query.hidden === '1'
-        ? await this.friendShipsService.listHiddenFriend(
+        ? await this.FriendshipsService.listHiddenFriend(
             userId,
             query.page,
             query.limit,
           )
-        : await this.friendShipsService.listFriend(
+        : await this.FriendshipsService.listFriend(
             userId,
             query.page,
             query.limit,
@@ -72,7 +72,7 @@ export class FriendsController {
 
     const dtoData: FriendDto[] = [];
     data.forEach((x, i) => {
-      dtoData.push(this.friendShipsService._friendDocToDto(x));
+      dtoData.push(this.FriendshipsService._friendDocToDto(x));
     });
 
     return {
@@ -92,6 +92,6 @@ export class FriendsController {
     if (req.user.id !== userId) {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
-    await this.friendShipsService.addFriendWithCheck(userId, body);
+    await this.FriendshipsService.addFriendWithCheck(userId, body);
   }
 }

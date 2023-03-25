@@ -8,7 +8,7 @@ import {
   ProjectionFields,
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
-import { FriendShip, FriendShipDocument } from './schemas/friendships.schema';
+import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
 import { FriendShipsServiceInterface } from './friendships.interface';
 import { AddFriendDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
@@ -18,9 +18,9 @@ import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
 
 @Injectable()
-export class FriendShipsService implements FriendShipsServiceInterface {
+export class FriendshipsService implements FriendShipsServiceInterface {
   constructor(
-    @InjectModel(FriendShip.name)
+    @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
@@ -111,7 +111,7 @@ export class FriendShipsService implements FriendShipsServiceInterface {
     limit?: number,
   ): Promise<PagingResDto<Friend>> {
     const paging = page && limit;
-    const filter: FilterQuery<FriendShip> = {
+    const filter: FilterQuery<Friendship> = {
       userId: new Types.ObjectId(userId),
     };
 
@@ -165,7 +165,7 @@ export class FriendShipsService implements FriendShipsServiceInterface {
   ): Promise<PagingResDto<Friend>> {
     const paging = page && limit;
 
-    const filter: FilterQuery<FriendShip> = {
+    const filter: FilterQuery<Friendship> = {
       userId: new Types.ObjectId(userId),
     };
 
