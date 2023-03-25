@@ -6,6 +6,7 @@ import {
   Param,
   Get,
   Query,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -16,8 +17,16 @@ import {
 } from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
-import { AddFriendDto, FriendDto, GetFriendsDto } from './dtos';
-import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
+import {
+  AddFriendDto,
+  FriendDto,
+  GetFriendsDto,
+  HiddenFriendDto,
+} from './dtos';
+import {
+  FRIENDSHIPS_MODULE_NAME,
+  FRIENDS_ERROR_NON_EXIST_FRIEND,
+} from './friendships.constant';
 import { FriendshipsService } from './friendships.service';
 
 @ApiTags('Friendship')
@@ -25,6 +34,34 @@ import { FriendshipsService } from './friendships.service';
 @ApiBearerAuth()
 export class FriendshipsController {
   constructor(private FriendshipsService: FriendshipsService) {}
+
+  @Patch(':userId/friends/hidden')
+  @ApiOperation({
+    summary: '친구 숨김',
+  })
+  async hiddenFrind(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Body() body: HiddenFriendDto,
+  ) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+
+    const isSucceed = body.hidden
+      ? await this.FriendshipsService.hideFriend(userId, body.friendProfileIdId)
+      : await this.FriendshipsService.unHideFriend(
+          userId,
+          body.friendProfileIdId,
+        );
+
+    if (!isSucceed) {
+      throw new WrappedError(
+        FRIENDSHIPS_MODULE_NAME,
+        FRIENDS_ERROR_NON_EXIST_FRIEND,
+      ).notFound();
+    }
+  }
 
   @Get(':userId/friends/has')
   @ApiOperation({

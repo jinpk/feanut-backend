@@ -14,16 +14,18 @@ export interface FriendShipsServiceInterface {
   ): Promise<void>;
 
   // 친구숨김
+  // 친구없으면 false 반환
   hideFriend(
     userId: string | Types.ObjectId,
     friendProfileId: string | Types.ObjectId,
-  ): Promise<void>;
+  ): Promise<boolean>;
 
   // 친구숨김해제
+  // 친구없으면 false 반환
   unHideFriend(
     userId: string | Types.ObjectId,
     friendProfileId: string | Types.ObjectId,
-  ): Promise<void>;
+  ): Promise<boolean>;
 
   // 전체 친구 목록 조회 - 숨김처리하지않은
   listFriend(

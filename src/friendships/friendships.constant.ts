@@ -1,3 +1,5 @@
 export const FRIENDSHIPS_MODULE_NAME = 'friendships';
 
 export const SCHEMA_NAME = FRIENDSHIPS_MODULE_NAME;
+
+export const FRIENDS_ERROR_NON_EXIST_FRIEND = 1;

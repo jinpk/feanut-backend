@@ -13,7 +13,10 @@ import { FriendShipsServiceInterface } from './friendships.interface';
 import { AddFriendDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
-import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
+import {
+  FRIENDSHIPS_MODULE_NAME,
+  FRIENDS_ERROR_NON_EXIST_FRIEND,
+} from './friendships.constant';
 import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
 
@@ -91,9 +94,41 @@ export class FriendshipsService implements FriendShipsServiceInterface {
     return false;
   }
 
-  async hideFriend(userId: string, friendProfileId: string) {}
+  async hideFriend(userId: string, friendProfileId: string): Promise<boolean> {
+    const doc = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    const index = doc.friends.findIndex((x) =>
+      x.profileId.equals(friendProfileId),
+    );
+    if (index < 0) {
+      return false;
+    }
 
-  async unHideFriend(userId: string, friendProfileId: string) {}
+    doc.friends[index].hidden = true;
+
+    await doc.save();
+
+    return true;
+  }
+
+  async unHideFriend(userId: string, friendProfileId: string) {
+    const doc = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    const index = doc.friends.findIndex((x) =>
+      x.profileId.equals(friendProfileId),
+    );
+    if (index < 0) {
+      return false;
+    }
+
+    doc.friends[index].hidden = false;
+
+    await doc.save();
+
+    return true;
+  }
 
   async hasFriends(userId: string | Types.ObjectId) {
     const doc = await this.friendShipModel.findOne({
