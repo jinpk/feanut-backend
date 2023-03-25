@@ -106,10 +106,15 @@ export class PollingsService {
     const polling = await this.pollingModel.findById(polling_id);
 
     // 3번째 친구 새로고침인지 확인
-    if (polling.refreshCount < 2) {
+    if (!polling.refreshCount) {
+      polling.refreshCount = 1;
     } else {
-      return 'Exceed your free refresh count';
-    }
+      if (polling.refreshCount < 2) {
+        polling.refreshCount += 1;
+      } else {
+        return 'Exceed your free refresh count';
+      }
+    };
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.sort(() => Math.random() - 0.5).slice(0, 4);
@@ -345,7 +350,7 @@ export class PollingsService {
       userId: user_id,
       createdAt: { $gte: start, $lt: end },
     });
-    
+
     console.log(rounds)
 
     var result = {
