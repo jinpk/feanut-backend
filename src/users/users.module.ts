@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { FriendsModule } from 'src/friendships/friendships.module';
+import { CoinsModule } from 'src/coins/coins.module';
 import { UsersExistenceController } from './users-existence.controller';
 
 @Module({
@@ -12,6 +13,7 @@ import { UsersExistenceController } from './users-existence.controller';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     ProfilesModule,
     FriendsModule,
+    CoinsModule,
   ],
   providers: [UsersService],
   controllers: [UsersController, UsersExistenceController],

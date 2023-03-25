@@ -40,7 +40,7 @@ export class CoinsController {
         summary: '사용자 feanut(coin) 조회',
     })
     @ApiOkResponse({
-        type: Coin
+        type: CoinDto,
     })
     async getUsecoin(@Request() req) {
       return await this.coinsService.findUserCoin(req.user.id);
@@ -99,7 +99,7 @@ export class CoinsController {
     async patchCoin(@Param('coinId') coinId: string, @Body() body, @Request() req){
         const coin = await this.coinsService.getCoinById(coinId, req.user.id);
         if (!coin) {
-            throw new NotFoundException('');
+            throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');
         }
 
         return await this.coinsService.updateCoin(coinId, req.user.id, body);

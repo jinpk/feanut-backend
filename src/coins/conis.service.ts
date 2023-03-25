@@ -22,19 +22,26 @@ import { UtilsService, PurchaseService } from 'src/common/providers';
 export class CoinsService {
   constructor(
     @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
-    @InjectModel(Coin.name) private buycoinModel: Model<UseCoinDocument>,
-    @InjectModel(Coin.name) private usecoinModel: Model<BuyCoinDocument>,
+    @InjectModel(UseCoin.name) private buycoinModel: Model<UseCoinDocument>,
+    @InjectModel(BuyCoin.name) private usecoinModel: Model<BuyCoinDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
     private purchaseService: PurchaseService,
   ) {}
 
-  async findUserCoin(user_id: string): Promise<Coin> {
+  async findUserCoin(user_id: string): Promise<CoinDto> {
     const result = await this.coinModel.findOne(
       {userId: user_id}
     );
 
-    return result
+    var coin = new CoinDto()
+    coin = {
+      userId: result.userId,
+      total: result.total,
+      accumLogs: result.accumLogs,
+    }
+
+    return coin
   }
 
   async findListUsecoin(query:GetUseCoinDto): Promise<PagingResDto<UseCoinDto>> {
@@ -110,6 +117,14 @@ export class CoinsService {
 
     await this.updateCoinAccum(params.userId, (-1)*params.amount)
     return result._id.toString()
+  }
+
+  async createCoin(user_id: string) {
+    var coin = new Coin();
+    coin = {
+      userId: user_id,
+    }
+    await new this.coinModel(coin).save()
   }
 
   async updateCoinAccum(user_id: string, amount: number) {
