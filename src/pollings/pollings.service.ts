@@ -343,8 +343,10 @@ export class PollingsService {
 
     const rounds = await this.userroundModel.find({
       userId: user_id,
-      completedAt: { $gte: start, $lt: end },
+      createdAt: { $gte: start, $lt: end },
     });
+    
+    console.log(rounds)
 
     var result = {
       todayCount: rounds.length,
@@ -354,10 +356,10 @@ export class PollingsService {
     return result;
   }
 
-  async updateComplete(user_id: string) {
+  async updateComplete(user_id, userround_id: string) {
     const result = await this.userroundModel.findOneAndUpdate(
       {
-        _id: new Types.ObjectId(''),
+        _id: new Types.ObjectId(userround_id),
         userId: user_id,
       },
       {
@@ -398,7 +400,6 @@ export class PollingsService {
 
       var savepolling = await new this.pollingModel(polling).save();
       pollingIds.push(savepolling._id.toString())
-
     });
     return pollingIds;
   }

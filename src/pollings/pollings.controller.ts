@@ -60,10 +60,12 @@ export class PollingsController {
   async getMyPollingList(
     @Query() query: GetListReceivePollingDto,
     @Request() req) {
+      console.log("112221111")
+      console.log(req.user.id)
     return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
-  @Get(':pollingId')
+  @Get(':pollingId/detail')
   @ApiOperation({
     summary: 'Polling 상세내역 조회',
     description: 'Polling userId = 요청 userId가 동일해야 response',
@@ -144,7 +146,7 @@ export class PollingsController {
   @Get('userround')
   @ApiOperation({
     summary: '사용자 userround조회',
-    description: '생성 전 GET userRound 조회. todayCount=0|1|2 반환.',
+    description: 'GET userRound 조회. todayCount=0|1|2 반환.',
   })
   @ApiOkResponse({
     status: 200,
