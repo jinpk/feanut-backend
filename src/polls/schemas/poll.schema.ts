@@ -14,8 +14,8 @@ export class Poll {
   emotion: Emotion;
 
   // emoji
-  @Prop({ default: 0 })
-  emoji: number;
+  @Prop({ default: null })
+  emojiId: string;
 
   // 본문
   @Prop({})

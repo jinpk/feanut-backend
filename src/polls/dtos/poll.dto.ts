@@ -5,8 +5,8 @@ export class PollDto {
   @ApiProperty({ description: 'poll emotion' })
   emotion: Emotion;
 
-  @ApiProperty({ description: 'poll emoji index' })
-  emoji: number;
+  @ApiProperty({ description: 'poll emoji' })
+  emojiId: string;
 
   @ApiProperty({ description: 'contentText' })
   contentText: string;

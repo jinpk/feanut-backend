@@ -60,7 +60,7 @@ export class PollsService {
     const result = await this.pollModel.findByIdAndUpdate( poll_id, { 
       $set: {
         emotion: body.emotion,
-        emoji: body.emoji,
+        emojiId: body.emojiId,
         contentText: body.contentText,
         updatedAt: krtime}
     });
@@ -175,7 +175,7 @@ export class PollsService {
     const projection: ProjectionFields<PollDto> = {
       _id: 1,
       emotion: 1,
-      emoji: 1,
+      emojiId: 1,
       isOpenedCount: 1,
       contentText: 1,
       createdAt: 1,

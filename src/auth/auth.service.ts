@@ -162,7 +162,10 @@ export class AuthService {
 
   // 사용자 로그인후 토큰 발급
   async userLogin(sub: string): Promise<TokenDto> {
-    const payload = { sub, isAdmin: false };
+    const payload = {
+      sub,
+      isAdmin: false,
+    };
 
     const accessToken = this.genToken(payload, '1h');
     const refreshToken = this.genToken({}, '30d');

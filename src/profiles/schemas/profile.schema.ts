@@ -12,22 +12,22 @@ export class Profile {
   // pk
   _id: Types.ObjectId;
 
-  // 이름
+  // 전화번호
   @Prop({ required: true })
-  name: string;
+  phoneNumber: string;
+
+  // 이름
+  @Prop({})
+  name?: string;
 
   // 생년월일
   // format: YYYYMMDD
-  @Prop({ maxlength: 8, required: true })
+  @Prop({ maxlength: 8 })
   birth?: string;
 
   // 성별
-  @Prop({ enum: Gender, required: true })
+  @Prop({ enum: Gender })
   gender?: Gender;
-
-  // 전화번호
-  @Prop({ required: true })
-  phoneNumber?: string;
 
   // 프로필이미지 ID
   @Prop({ type: Types.ObjectId, ref: File.name })
