@@ -57,7 +57,7 @@ export class PollsController {
   @Post('')
   @ApiOperation({
     summary: '(ADMIN) New Poll 등록',
-    description: 'emoji 컬럼: 특정 emoji를 등록하려면 emoji index 입력. default: 0인 경우 emotion에 따라 랜덤',
+    description: 'emojiId 컬럼: 특정 emoji를 등록하려면 emojiId 입력. default: null인 경우 emotion에 따라 랜덤',
   })
   @ApiBody({
     type: PollDto,
