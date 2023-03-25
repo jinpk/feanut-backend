@@ -15,7 +15,7 @@ export class Emoji {
 
     // fileId
     @Prop({type: Types.ObjectId, ref: File.name, default: null})
-    fileId: string;
+    fileId: Types.ObjectId;
 
     // isDeleted
     @Prop({default: false})

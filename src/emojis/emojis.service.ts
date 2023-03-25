@@ -29,7 +29,13 @@ export class EmojisService {
     }
 
     async createEmoji(body: EmojiDto) {
-        const result = await new this.emojiModel(body).save()
+        var emoji = new Emoji();
+        emoji = {
+            emotion: body.emotion,
+            fileId: new Types.ObjectId(body.fileId),
+            isDeleted: false,
+        }
+        const result = await new this.emojiModel(emoji).save()
 
         return result._id.toString();
     }
@@ -74,7 +80,7 @@ export class EmojisService {
               $lookup: {
                 from: 'files',
                 localField: 'fileId',
-                foreignField: '_id'.toString(),
+                foreignField: '_id',
                 as: 'files',
               },
             },
