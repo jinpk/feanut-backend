@@ -9,7 +9,7 @@ import {
   Types,
 } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
-import { EmojiDto } from './dtos/emoji.dto';
+import { EmojiDto, PublicEmojiDto } from './dtos/emoji.dto';
 import { Emoji, EmojiDocument } from './schemas/emoji.schema';
 import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { UtilsService } from 'src/common/providers';
@@ -28,7 +28,7 @@ export class EmojisService {
         return await this.filesService.hasById(fileId);
     }
 
-    async createEmoji(body: Emoji) {
+    async createEmoji(body: EmojiDto) {
         const result = await new this.emojiModel(body).save()
 
         return result._id.toString();
@@ -48,7 +48,8 @@ export class EmojisService {
         emoji_id:string,
         emoji: Emoji,
         body: UpdateEmojiDto) {
-            await this.emojiModel.findByIdAndUpdate({emoji_id},{
+            console.log(emoji_id)
+            await this.emojiModel.findByIdAndUpdate(emoji_id,{
                 $set: {
                     emotion: body.emotion,
                     fileId: body.fileId,
@@ -59,17 +60,21 @@ export class EmojisService {
 
     async findListEmoji(
         query: GetListEmojiDto,
-    ): Promise<PagingResDto<EmojiDto>> {
+    ): Promise<PagingResDto<PublicEmojiDto>> {
         var filter: FilterQuery<EmojiDocument> = {
-            isDeleted: true,
+            isDeleted: false,
         };
+
+        if (query.emotion != undefined) {
+            filter.emotion = query.emotion;
+        }
 
         const lookups: PipelineStage[] = [
             {
               $lookup: {
                 from: 'files',
                 localField: 'fileId',
-                foreignField: '_id',
+                foreignField: '_id'.toString(),
                 as: 'files',
               },
             },
@@ -92,6 +97,7 @@ export class EmojisService {
     
         const cursor = await this.emojiModel.aggregate([
           { $match: filter },
+          ...lookups,
           { $project: projection },
           { $sort: { createdAt: -1 } },
           this.utilsService.getCommonMongooseFacet(query),
@@ -113,7 +119,7 @@ export class EmojisService {
     }
 
     async removeEmojiById(emoji_id: string) {
-        const result = await this.emojiModel.findByIdAndUpdate({emoji_id},{
+        const result = await this.emojiModel.findByIdAndUpdate(emoji_id,{
             $set: {
                 isDeleted: true,
             }

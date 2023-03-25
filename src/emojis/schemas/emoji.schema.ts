@@ -14,7 +14,7 @@ export class Emoji {
     emotion: Emotion;
 
     // fileId
-    @Prop({type: Types.ObjectId, ref: File.name})
+    @Prop({type: Types.ObjectId, ref: File.name, default: null})
     fileId: string;
 
     // isDeleted

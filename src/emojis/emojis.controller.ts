@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators';
 import { EmojisService } from './emojis.service';
-import { EmojiDto } from './dtos/emoji.dto';
+import { EmojiDto, PublicEmojiDto } from './dtos/emoji.dto';
 import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { UpdateEmojiDto } from './dtos/update-emoji.dto';
 import { Emoji } from './schemas/emoji.schema';
@@ -30,6 +30,7 @@ import { WrappedError } from 'src/common/errors';
 
 @ApiTags('Emoji')
 @Controller('emojis')
+@ApiBearerAuth()
 export class EmojisController {
     constructor(private readonly emojisService: EmojisService) {}
 
@@ -37,12 +38,15 @@ export class EmojisController {
   @ApiOperation({
     summary: '(ADMIN) New 이모지 등록',
   })
+  @ApiBody({
+    type: EmojiDto,
+  })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
   async postEmoji(
-    @Body() body: Emoji,
+    @Body() body,
     @Request() req) {
         if (!req.user.isAdmin) {
             throw new UnauthorizedException('Not an Admin')
@@ -54,7 +58,7 @@ export class EmojisController {
         return await this.emojisService.createEmoji(body);
   }
 
-  @Put(':roundId/update')
+  @Put(':emojiId/update')
   @ApiOperation({
     summary: '(ADMIN) Emoji 수정',
   })
@@ -75,7 +79,7 @@ export class EmojisController {
 
       const [exist, emoji] = await this.emojisService.existEmoji(emojiId)
       if (!exist) {
-        throw new NotFoundException('not found round')
+        throw new NotFoundException('not found emoji')
       }
 
       return await this.emojisService.updateEmoji(emojiId, emoji, body)
@@ -117,16 +121,16 @@ export class EmojisController {
 }
 
 @ApiTags('Emoji')
-@Controller('emojis')
+@Controller('public/emojis')
 export class PublicEmojisController {
   constructor(private readonly emojisService: EmojisService) {}
 
-  @Get('public')
+  @Get('')
   @Public()
   @ApiOperation({
     summary: '(PUBLIC) emoji 리스트 조회',
   })
-  @ApiOkResponsePaginated(EmojiDto)
+  @ApiOkResponsePaginated(PublicEmojiDto)
   async getListPublicEmoji(@Query() query: GetListEmojiDto,
   ) {
       return await this.emojisService.findListEmoji(query);
