@@ -37,6 +37,10 @@ export class Profile {
   @Prop({ maxlength: 50 })
   statusMessage?: string;
 
+  // 연동 인스타그램 계정
+  @Prop({})
+  instagram?: string;
+
   // 프로필 Owner User
   @Prop({ type: Types.ObjectId, ref: User.name })
   ownerId?: Types.ObjectId;

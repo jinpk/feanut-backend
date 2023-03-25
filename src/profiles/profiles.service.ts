@@ -197,6 +197,7 @@ export class ProfilesService {
     dto.gender = doc.gender || null;
     dto.name = doc.name || '';
     dto.statusMessage = doc.statusMessage || '';
+    dto.instagram = doc.instagram || '';
     return dto;
   }
 }
