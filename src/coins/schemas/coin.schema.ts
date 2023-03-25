@@ -12,11 +12,11 @@ export class Coin {
   userId: string;
 
   // Feanut 총 수량
-  @Prop({default:0})
+  @Prop({ default: 0 })
   total?: number;
 
   // feanut 적립 로그
-  @Prop({default: []})
+  @Prop({ default: [] })
   accumLogs?: number[];
 
   // 생성시간
