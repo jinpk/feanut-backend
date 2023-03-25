@@ -123,6 +123,8 @@ export class CoinsService {
     var coin = new Coin();
     coin = {
       userId: user_id,
+      total: 3,
+      accumLogs: [3]
     }
     await new this.coinModel(coin).save()
   }

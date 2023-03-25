@@ -155,19 +155,6 @@ export class PollingsController {
     return await this.pollingsService.findUserRound(req.user.id);
   }
 
-  @Get('teststes')
-  @ApiOperation({
-    summary: '사용자 TEst',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: UserRound,
-  })
-  async getTest(@Request() req) {
-    const userround = await this.pollingsService.findRecentUserRound(req.user.id);
-    return await this.pollingsService.checkUserroundComplete(req.user.id, userround);
-  }
-
   @Put(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',

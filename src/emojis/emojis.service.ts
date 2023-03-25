@@ -54,7 +54,6 @@ export class EmojisService {
         emoji_id:string,
         emoji: Emoji,
         body: UpdateEmojiDto) {
-            console.log(emoji_id)
             await this.emojiModel.findByIdAndUpdate(emoji_id,{
                 $set: {
                     emotion: body.emotion,

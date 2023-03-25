@@ -270,18 +270,18 @@ export class PollingsService {
     // user_id의 feanut 개수 체크/차감
     const usercoin = await this.coinService.findUserCoin(user_id);
 
-    if (usercoin.total < 5) {
+    if (usercoin.total < 3) {
       return 'Lack of total feanut amount';
     } else {
       var usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
         userId: user_id,
         useType: body.useType,
-        amount: body.amount,
+        amount: 3,
       };
 
       const usecoin_result = await this.coinService.createUseCoin(usecoin);
-      await this.coinService.updateCoinAccum(user_id, -1 * body.amount);
+      await this.coinService.updateCoinAccum(user_id, -1 * 3);
 
       // polling isOpened 상태 업데이트
       opened = {
