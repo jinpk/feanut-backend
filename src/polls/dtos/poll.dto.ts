@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Emotion } from '../enums'
+import { Emotion } from '../enums';
 
 export class PollDto {
   @ApiProperty({ description: 'poll emotion' })
@@ -10,7 +10,7 @@ export class PollDto {
 
   @ApiProperty({ description: 'contentText' })
   contentText: string;
-  
+
   @ApiProperty({})
   isOpenedCount: number;
 

@@ -40,8 +40,8 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  Logger.log(`Running server on port: ${port}`)
-  Logger.log(`Running server with env: ${env}`)
+  Logger.log(`Running server on port: ${port}`);
+  Logger.log(`Running server with env: ${env}`);
   Logger.log(`OpenAPI: ${configService.get('host')}/docs`);
 }
 bootstrap();

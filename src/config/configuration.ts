@@ -24,4 +24,7 @@ export default () => ({
   aligoSender: process.env.ALIGO_SENDER,
 
   appStoreSecret: process.env.APPSTORE_SECRET,
+
+  instagramAppId: process.env.INSTAGRAM_APP_ID,
+  instagramAppSecret: process.env.INSTAGRAM_APP_SECRET,
 });

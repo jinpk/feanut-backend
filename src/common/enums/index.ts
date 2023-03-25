@@ -1,1 +1,1 @@
-export * from './query-boolean.enum'
+export * from './query-boolean.enum';

@@ -9,34 +9,34 @@ export type PollingDocument = HydratedDocument<Polling>;
 @Schema({ collection: POLLING_MODULE_NAME, timestamps: true })
 export class Polling {
   // userId
-  @Prop({required: true})
+  @Prop({ required: true })
   userId: string;
 
   // roundId
-  @Prop({required: true})
+  @Prop({ required: true })
   roundId: string;
 
   // pollId
-  @Prop({required: true})
+  @Prop({ required: true })
   pollId: string;
 
   // friendList
-  @Prop({required: true})
+  @Prop({ required: true })
   friendIds: Types.ObjectId[];
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
   selectedProfileId?: string;
 
-  @Prop({defaul:0})
+  @Prop({ defaul: 0 })
   refreshCount?: number;
 
   // selectedAt
-  @Prop({defaul:null})
+  @Prop({ defaul: null })
   selectedAt?: Date;
 
   // isOpened
-  @Prop({default: Opened})
+  @Prop({ default: Opened })
   opened?: Opened;
 
   // 생성시간

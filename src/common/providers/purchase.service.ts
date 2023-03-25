@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import GoogleReceiptVerify from "google-play-billing-validator";
-import { ANDROID_PACKAGE_NAME, IOS_BUNDLE_ID } from '../common.constant'
+import GoogleReceiptVerify from 'google-play-billing-validator';
+import { ANDROID_PACKAGE_NAME, IOS_BUNDLE_ID } from '../common.constant';
 import { request } from 'http';
-import iap from "iap";
+import iap from 'iap';
 
 @Injectable()
 export class PurchaseService {
-    private readonly email: string;
-    private readonly playkey: string;
-    private readonly appstorekey: string;
+  private readonly email: string;
+  private readonly playkey: string;
+  private readonly appstorekey: string;
 
   constructor(
     private configService: ConfigService,
@@ -22,18 +22,18 @@ export class PurchaseService {
   }
 
   async validateGooglePurchase(product_id: string, token: string) {
-      const googleReceiptVerify = new GoogleReceiptVerify({
-        email: this.email,
-        key: this.playkey
-      });
+    const googleReceiptVerify = new GoogleReceiptVerify({
+      email: this.email,
+      key: this.playkey,
+    });
 
-      const response = await googleReceiptVerify.verifySub({
-        packageName: ANDROID_PACKAGE_NAME,
-        productId: product_id,
-        purchaseToken: token,
-      });
+    const response = await googleReceiptVerify.verifySub({
+      packageName: ANDROID_PACKAGE_NAME,
+      productId: product_id,
+      purchaseToken: token,
+    });
 
-      return response
+    return response;
   }
 
   async validateIOSPurchase(token: string) {
@@ -59,10 +59,10 @@ export class PurchaseService {
 
     const platform = 'apple';
     const payment = {
-        receipt: token, // always required
-        packageName: IOS_BUNDLE_ID,
-        secret: this.appstorekey,
-        excludeOldTransactions: true
+      receipt: token, // always required
+      packageName: IOS_BUNDLE_ID,
+      secret: this.appstorekey,
+      excludeOldTransactions: true,
     };
     return await iap.verifyPayment(platform, payment);
   }

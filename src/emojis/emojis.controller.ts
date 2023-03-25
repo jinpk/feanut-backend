@@ -1,23 +1,23 @@
 import {
-    Controller,
-    Get,
-    Param,
-    Delete,
-    Patch,
-    Put,
-    Post,
-    Query,
-    NotFoundException,
-    UnauthorizedException,
-    Body,
-    Request,
+  Controller,
+  Get,
+  Param,
+  Delete,
+  Patch,
+  Put,
+  Post,
+  Query,
+  NotFoundException,
+  UnauthorizedException,
+  Body,
+  Request,
 } from '@nestjs/common';
 import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOkResponse,
-    ApiOperation,
-    ApiTags,
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators';
 import { EmojisService } from './emojis.service';
@@ -32,7 +32,7 @@ import { WrappedError } from 'src/common/errors';
 @Controller('emojis')
 @ApiBearerAuth()
 export class EmojisController {
-    constructor(private readonly emojisService: EmojisService) {}
+  constructor(private readonly emojisService: EmojisService) {}
 
   @Post('')
   @ApiOperation({
@@ -45,17 +45,15 @@ export class EmojisController {
     status: 200,
     type: String,
   })
-  async postEmoji(
-    @Body() body,
-    @Request() req) {
-        if (!req.user.isAdmin) {
-            throw new UnauthorizedException('Not an Admin')
-        }
-        if (!(await this.emojisService.existFile(body.fileId))) {
-            throw new WrappedError('존재하지 않는 fileId입니다.').reject()
-        }
+  async postEmoji(@Body() body, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin');
+    }
+    if (!(await this.emojisService.existFile(body.fileId))) {
+      throw new WrappedError('존재하지 않는 fileId입니다.').reject();
+    }
 
-        return await this.emojisService.createEmoji(body);
+    return await this.emojisService.createEmoji(body);
   }
 
   @Put(':emojiId/update')
@@ -69,20 +67,21 @@ export class EmojisController {
   async putEmoji(
     @Param('emojiId') emojiId: string,
     @Body() body: UpdateEmojiDto,
-    @Request() req) {
-      if (!req.user.isAdmin) {
-        throw new UnauthorizedException('Not an Admin')
-      }
-      if (!(await this.emojisService.existFile(body.fileId))) {
-        throw new WrappedError('존재하지 않는 fileId입니다.').reject()
-        }
+    @Request() req,
+  ) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin');
+    }
+    if (!(await this.emojisService.existFile(body.fileId))) {
+      throw new WrappedError('존재하지 않는 fileId입니다.').reject();
+    }
 
-      const [exist, emoji] = await this.emojisService.existEmoji(emojiId)
-      if (!exist) {
-        throw new NotFoundException('not found emoji')
-      }
+    const [exist, emoji] = await this.emojisService.existEmoji(emojiId);
+    if (!exist) {
+      throw new NotFoundException('not found emoji');
+    }
 
-      return await this.emojisService.updateEmoji(emojiId, emoji, body)
+    return await this.emojisService.updateEmoji(emojiId, emoji, body);
   }
 
   @Get(':emojiId')
@@ -93,13 +92,11 @@ export class EmojisController {
     status: 200,
     type: Emoji,
   })
-  async getEmojiDetail(
-    @Param('emojiId') emojiId: string,
-    @Request() req) {
-      if (!req.user.isAdmin) {
-        throw new UnauthorizedException('Not an Admin')
-      }
-      return await this.emojisService.findEmojiById(emojiId)
+  async getEmojiDetail(@Param('emojiId') emojiId: string, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin');
+    }
+    return await this.emojisService.findEmojiById(emojiId);
   }
 
   @Put(':emojiId/delete')
@@ -110,13 +107,11 @@ export class EmojisController {
     status: 200,
     type: String,
   })
-  async deleteEmoji(
-    @Param('emojiId') emojiId: string,
-    @Request() req) {
-      if (!req.user.isAdmin) {
-        throw new UnauthorizedException('Not an Admin')
-      }
-      return await this.emojisService.removeEmojiById(emojiId)
+  async deleteEmoji(@Param('emojiId') emojiId: string, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin');
+    }
+    return await this.emojisService.removeEmojiById(emojiId);
   }
 }
 
@@ -131,8 +126,7 @@ export class PublicEmojisController {
     summary: '(PUBLIC) emoji 리스트 조회',
   })
   @ApiOkResponsePaginated(PublicEmojiDto)
-  async getListPublicEmoji(@Query() query: GetListEmojiDto,
-  ) {
-      return await this.emojisService.findListEmoji(query);
+  async getListPublicEmoji(@Query() query: GetListEmojiDto) {
+    return await this.emojisService.findListEmoji(query);
   }
 }

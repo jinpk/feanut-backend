@@ -20,7 +20,9 @@ export class FirebaseService {
       credential: admin.credential.cert({
         projectId: this.configService.get('firebaseProjectId'),
         clientEmail: this.configService.get('firebaseClientEmail'),
-        privateKey: this.configService.get('firebasePrivateKey').replace(/\\n/g, '\n'),
+        privateKey: this.configService
+          .get('firebasePrivateKey')
+          .replace(/\\n/g, '\n'),
       }),
     });
   }

@@ -11,7 +11,7 @@ export class Round {
   // pk
   id: string;
 
-  @Prop({default: false})
+  @Prop({ default: false })
   enabled: boolean;
 
   @Prop({})
@@ -22,7 +22,7 @@ export class Round {
   startedAt?: Date;
 
   // round 활성화 끝 시간
-  @Prop({default: null})
+  @Prop({ default: null })
   endedAt?: Date;
 
   // 생성시간

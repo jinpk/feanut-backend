@@ -22,14 +22,14 @@ export class UserRoundDto {
   skipCount?: number;
 
   // complete
-  @ApiProperty({default: false})
+  @ApiProperty({ default: false })
   complete?: boolean;
-  
+
   // completedAt
   @ApiProperty({})
   completedAt?: Date;
 }
 
 export class PayUserRoundDto extends OmitType(UseCoinDto, [
-    'userId'
-] as const){}
+  'userId',
+] as const) {}

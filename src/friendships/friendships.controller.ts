@@ -20,6 +20,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   AddFriendDto,
   FriendDto,
+  FriendshipStatusDto,
   GetFriendsDto,
   HiddenFriendDto,
 } from './dtos';
@@ -33,7 +34,25 @@ import { FriendshipsService } from './friendships.service';
 @Controller(FRIENDSHIPS_MODULE_NAME)
 @ApiBearerAuth()
 export class FriendshipsController {
-  constructor(private FriendshipsService: FriendshipsService) {}
+  constructor(private friendshipsService: FriendshipsService) {}
+
+  @Patch(':userId/status')
+  @ApiOperation({
+    summary: 'Friendship 조회',
+  })
+  @ApiOkResponse({ type: FriendshipStatusDto })
+  async friendShipStatus(
+    @Request() req,
+    @Param('userId') userId: string,
+  ): Promise<FriendshipStatusDto> {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+
+    return {
+      friendsCount: await this.friendshipsService.getFriendsCount(userId),
+    };
+  }
 
   @Patch(':userId/friends/hidden')
   @ApiOperation({
@@ -49,8 +68,8 @@ export class FriendshipsController {
     }
 
     const isSucceed = body.hidden
-      ? await this.FriendshipsService.hideFriend(userId, body.friendProfileIdId)
-      : await this.FriendshipsService.unHideFriend(
+      ? await this.friendshipsService.hideFriend(userId, body.friendProfileIdId)
+      : await this.friendshipsService.unHideFriend(
           userId,
           body.friendProfileIdId,
         );
@@ -76,7 +95,7 @@ export class FriendshipsController {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
 
-    return await this.FriendshipsService.hasFriends(userId);
+    return await this.friendshipsService.hasFriends(userId);
   }
 
   @Get(':userId/friends')
@@ -96,12 +115,12 @@ export class FriendshipsController {
 
     const { total, data } =
       query.hidden === '1'
-        ? await this.FriendshipsService.listHiddenFriend(
+        ? await this.friendshipsService.listHiddenFriend(
             userId,
             query.page,
             query.limit,
           )
-        : await this.FriendshipsService.listFriend(
+        : await this.friendshipsService.listFriend(
             userId,
             query.page,
             query.limit,
@@ -109,7 +128,7 @@ export class FriendshipsController {
 
     const dtoData: FriendDto[] = [];
     data.forEach((x, i) => {
-      dtoData.push(this.FriendshipsService._friendDocToDto(x));
+      dtoData.push(this.friendshipsService._friendDocToDto(x));
     });
 
     return {
@@ -129,6 +148,6 @@ export class FriendshipsController {
     if (req.user.id !== userId) {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
-    await this.FriendshipsService.addFriendWithCheck(userId, body);
+    await this.friendshipsService.addFriendWithCheck(userId, body);
   }
 }

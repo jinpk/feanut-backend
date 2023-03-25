@@ -21,10 +21,10 @@ export class BuyCoinDto {
   @ApiProperty({})
   buyType: BuyType;
 
-  @ApiProperty({required: true})
+  @ApiProperty({ required: true })
   productId: string;
 
-  @ApiProperty({required: true})
+  @ApiProperty({ required: true })
   token: string;
 
   @ApiProperty({})

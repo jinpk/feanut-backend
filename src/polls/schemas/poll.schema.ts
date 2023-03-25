@@ -19,10 +19,10 @@ export class Poll {
 
   // 본문
   @Prop({})
-  contentText: string;  
+  contentText: string;
 
   // openedCount
-  @Prop({default: 0})
+  @Prop({ default: 0 })
   isOpenedCount: number;
 
   // 생성시간

@@ -23,6 +23,6 @@ export class ProfileDto {
   @ApiProperty({ title: '인스타그램 username' })
   instagram: string;
 
-  @ApiProperty({ title: 'active 친구수' })
-  friendsCount: number;
+  @ApiProperty({ title: 'ownerUserId' })
+  ownerId: string;
 }

@@ -34,6 +34,7 @@ export class ProfilesController {
         profile.imageFileId,
       );
     }
+
     return dto;
   }
 
