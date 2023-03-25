@@ -32,13 +32,14 @@ export class FriendshipsService implements FriendShipsServiceInterface {
         userId: new Types.ObjectId(userId),
       },
       {
+        friends: 1,
         count: {
           $size: {
             $filter: {
               input: '$friends',
               as: 'friends',
               cond: {
-                $ne: ['$hidden', true],
+                $ne: ['$$friends.hidden', true],
               },
             },
           },

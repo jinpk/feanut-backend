@@ -30,18 +30,16 @@ export class CoinsService {
   ) {}
 
   async findUserCoin(user_id: string): Promise<CoinDto> {
-    const result = await this.coinModel.findOne(
-      {userId: user_id}
-    );
+    const result = await this.coinModel.findOne({ userId: user_id });
 
-    var coin = new CoinDto()
+    let coin = new CoinDto();
     coin = {
       userId: result.userId,
       total: result.total,
       accumLogs: result.accumLogs,
-    }
+    };
 
-    return coin
+    return coin;
   }
 
   async findListUsecoin(
@@ -129,13 +127,13 @@ export class CoinsService {
   }
 
   async createCoin(user_id: string) {
-    var coin = new Coin();
+    let coin = new Coin();
     coin = {
       userId: user_id,
       total: 3,
-      accumLogs: [3]
-    }
-    await new this.coinModel(coin).save()
+      accumLogs: [3],
+    };
+    await new this.coinModel(coin).save();
   }
 
   async updateCoinAccum(user_id: string, amount: number) {
