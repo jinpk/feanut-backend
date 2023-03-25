@@ -22,4 +22,7 @@ export const validationSchema = joi.object({
   ALIGO_SENDER: joi.string().required(),
 
   APPSTORE_SECRET: joi.string().required(),
+
+  INSTAGRAM_APP_ID: joi.string().required(),
+  INSTAGRAM_APP_SECRET: joi.string().required(),
 });

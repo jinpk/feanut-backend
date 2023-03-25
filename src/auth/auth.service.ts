@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { UsersService } from 'src/users/users.service';
 import { Auth, AuthDocument } from './schemas/auth.schema';
 import * as dayjs from 'dayjs';
@@ -29,17 +29,39 @@ import {
 import { Gender } from 'src/profiles/enums';
 import * as bcrypt from 'bcrypt';
 import { AuthPurpose } from './enums';
-import { AligoProvider } from './providers';
+import { AligoProvider, InstagramProvider } from './providers';
+import { ProfilesService } from 'src/profiles/profiles.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private usersService: UsersService,
     private jwtService: JwtService,
     private adminService: AdminService,
     private aligoProvider: AligoProvider,
+    private instagramProvider: InstagramProvider,
+    private profilesService: ProfilesService,
   ) {}
+
+  // 인스타그램 로그인 검증 및 username 업데이트
+  async authInstagram(code: string, state: string) {
+    // state 프로필 ID 검증
+    const profileId = new Types.ObjectId(state);
+    if (!(await this.profilesService.getById(profileId))) {
+      throw new WrappedError(AUTH_MODULE_NAME).badRequest();
+    }
+
+    try {
+      const username = await this.instagramProvider.parseCode(code);
+      await this.profilesService.updateInstagramById(profileId, username);
+    } catch (error) {
+      this.logger.error('인스타그램 연동 오류', error);
+      throw new WrappedError(AUTH_MODULE_NAME);
+    }
+  }
 
   // 리프레시 토큰 검증 및 token 재발급
   async validateRefreshToken(refreshToken: string): Promise<TokenDto> {

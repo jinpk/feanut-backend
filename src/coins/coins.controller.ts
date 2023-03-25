@@ -1,25 +1,25 @@
 import {
-    Controller,
-    Get,
-    Param,
-    Delete,
-    Patch,
-    Put,
-    Post,
-    Query,
-    NotFoundException,
-    UnauthorizedException,
-    Body,
-    Request,
+  Controller,
+  Get,
+  Param,
+  Delete,
+  Patch,
+  Put,
+  Post,
+  Query,
+  NotFoundException,
+  UnauthorizedException,
+  Body,
+  Request,
 } from '@nestjs/common';
 import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOkResponse,
-    ApiOperation,
-    ApiTags,
-    ApiResponse,
-} from '@nestjs/swagger'
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { CoinsService } from './conis.service';
 import { CoinDto, BuyCoinDto, UseCoinDto } from './dtos/coin.dto';
@@ -33,14 +33,14 @@ import { UseCoin } from './schemas/usecoin.schema';
 @Controller('coins')
 @ApiBearerAuth()
 export class CoinsController {
-    constructor(private readonly coinsService: CoinsService) {}
+  constructor(private readonly coinsService: CoinsService) {}
 
     @Get('me')
     @ApiOperation({
         summary: '사용자 feanut(coin) 조회',
     })
     @ApiOkResponse({
-        type: Coin
+        type: CoinDto,
     })
     async getUsecoin(@Request() req) {
       return await this.coinsService.findUserCoin(req.user.id);
@@ -99,7 +99,7 @@ export class CoinsController {
     async patchCoin(@Param('coinId') coinId: string, @Body() body, @Request() req){
         const coin = await this.coinsService.getCoinById(coinId, req.user.id);
         if (!coin) {
-            throw new NotFoundException('');
+            throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');
         }
 
         return await this.coinsService.updateCoin(coinId, req.user.id, body);

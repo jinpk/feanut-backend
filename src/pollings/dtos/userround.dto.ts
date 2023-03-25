@@ -16,20 +16,20 @@ export class UserRoundDto {
   pollIds: string[];
 
   @ApiProperty({})
-  pollingIds: string[];
+  pollingIds: any[];
 
   @ApiProperty({})
   skipCount?: number;
 
   // complete
-  @ApiProperty({default: false})
+  @ApiProperty({ default: false })
   complete?: boolean;
-  
+
   // completedAt
   @ApiProperty({})
   completedAt?: Date;
 }
 
 export class PayUserRoundDto extends OmitType(UseCoinDto, [
-    'userId'
-] as const){}
+  'userId',
+] as const) {}

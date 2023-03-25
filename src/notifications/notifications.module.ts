@@ -10,7 +10,10 @@ import {
   NotificationSetting,
   NotificationSettingSchema,
 } from './schemas/notification-setting.schema';
-import { Notification, NotificationSchema } from './schemas/notification.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from './schemas/notification.schema';
 
 @Module({
   imports: [

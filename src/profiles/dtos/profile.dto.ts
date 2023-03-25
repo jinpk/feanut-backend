@@ -19,4 +19,10 @@ export class ProfileDto {
 
   @ApiProperty({ title: 'profile Image Key' })
   profileImageKey: string;
+
+  @ApiProperty({ title: '인스타그램 username' })
+  instagram: string;
+
+  @ApiProperty({ title: 'ownerUserId' })
+  ownerId: string;
 }

@@ -4,3 +4,4 @@ export interface FeanutJwtPayload {
 }
 
 export * from './aligo.interface';
+export * from './instagram.interface';

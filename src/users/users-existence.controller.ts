@@ -14,7 +14,7 @@ export class UsersExistenceController {
     summary: '사용자 조회 By Username',
   })
   @ApiResponse({ type: Boolean })
-  async existence(@Param('username') username: string): Promise<Boolean> {
+  async existence(@Param('username') username: string): Promise<boolean> {
     return await this.usersService.hasUsername(username);
   }
 }

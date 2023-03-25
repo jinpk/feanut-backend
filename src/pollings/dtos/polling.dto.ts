@@ -3,11 +3,11 @@ import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class Opened {
   // isOpened
-  @ApiProperty({default: false})
+  @ApiProperty({ default: false })
   isOpened: boolean;
 
   // useCoinId
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   useCoinId: string;
 }
 
@@ -34,7 +34,7 @@ export class PollingDto {
 
   @ApiProperty({})
   refreshCount: number;
-  
+
   // selectedAt
   @ApiProperty({})
   selectedAt: Date;
@@ -48,12 +48,10 @@ export class PollingDto {
   createdAt?: Date;
 }
 
-export class PollingOpenDto extends OmitType(UseCoinDto, [
-  'userId'
-]) {
+export class PollingOpenDto extends OmitType(UseCoinDto, ['userId']) {
   @ApiProperty({
-      description: 'profileId',
-      required: true,
+    description: 'profileId',
+    required: true,
   })
   profileId: string;
 }

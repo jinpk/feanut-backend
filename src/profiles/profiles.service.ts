@@ -86,6 +86,13 @@ export class ProfilesService {
     return id;
   }
 
+  async updateInstagramById(id: string | Types.ObjectId, instagram: string) {
+    const profile = await this.profileModel.findById(id);
+
+    profile.instagram = instagram;
+    await profile.save();
+  }
+
   async updateById(id: string | Types.ObjectId, dto: UpdateProfileDto) {
     const profile = await this.profileModel.findById(id);
 
@@ -197,6 +204,8 @@ export class ProfilesService {
     dto.gender = doc.gender || null;
     dto.name = doc.name || '';
     dto.statusMessage = doc.statusMessage || '';
+    dto.instagram = doc.instagram || '';
+    dto.ownerId = doc.ownerId?.toHexString() || '';
     return dto;
   }
 }

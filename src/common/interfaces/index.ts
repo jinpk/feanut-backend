@@ -1,1 +1,1 @@
-export * from './firebase.interface'
+export * from './firebase.interface';

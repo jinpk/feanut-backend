@@ -13,10 +13,7 @@ import { FriendShipsServiceInterface } from './friendships.interface';
 import { AddFriendDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
-import {
-  FRIENDSHIPS_MODULE_NAME,
-  FRIENDS_ERROR_NON_EXIST_FRIEND,
-} from './friendships.constant';
+import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
 import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
 
@@ -28,6 +25,29 @@ export class FriendshipsService implements FriendShipsServiceInterface {
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
   ) {}
+
+  async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
+    const friendship = await this.friendShipModel.findOne(
+      {
+        userId: new Types.ObjectId(userId),
+      },
+      {
+        count: {
+          $size: {
+            $filter: {
+              input: '$friends',
+              as: 'friends',
+              cond: {
+                $ne: ['$hidden', true],
+              },
+            },
+          },
+        },
+      },
+    );
+
+    return friendship.get('count');
+  }
 
   async initFriendShip(userId: string | Types.ObjectId) {
     await new this.friendShipModel({

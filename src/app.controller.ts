@@ -5,7 +5,10 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
-import { AUTH_ERROR_NOT_FOUND_USERNAME } from './auth/auth.constant';
+import {
+  AUTH_ERROR_NOT_FOUND_USERNAME,
+  INSTAGRAM_AUTH_REDIRECT_PATH,
+} from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
 import { Public } from './auth/decorators';
 import {
@@ -23,6 +26,20 @@ import {
 @Controller()
 export class AppController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get(INSTAGRAM_AUTH_REDIRECT_PATH)
+  @Public()
+  @ApiOperation({
+    summary: '인스타그램 redirect api',
+    description: `요청 완료시 다이나믹 링크 redirect 됩니다.`,
+  })
+  async oauthInstagram(
+    @Query('state') state: string,
+    @Query('code') code: string,
+  ) {
+    await this.authService.authInstagram(code, state);
+    return `<h1>succeed</h1>`;
+  }
 
   @Post('token')
   @Public()

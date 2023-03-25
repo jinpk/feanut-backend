@@ -6,6 +6,7 @@ import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 import * as bcrybt from 'bcrypt';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private profilesService: ProfilesService,
     private FriendshipsService: FriendshipsService,
+    private coinsService: CoinsService,
   ) {}
 
   // 이미 사용중인 feanutId가 존재하는지 확인
@@ -105,6 +107,9 @@ export class UsersService {
 
     // 친구목록 초기화
     await this.FriendshipsService.initFriendShip(user._id);
+
+    // 최초 coin db 초기화
+    await this.coinsService.createCoin(user._id.toString());
 
     return user._id.toHexString();
   }

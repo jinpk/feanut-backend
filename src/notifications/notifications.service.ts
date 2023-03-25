@@ -10,7 +10,10 @@ import {
   NotificationSettingDto,
   UpdateNotificationSettingDto,
 } from './dtos/notification-setting.dto';
-import { CreateNotificationDto, NotificationDto } from './dtos/notification.dto';
+import {
+  CreateNotificationDto,
+  NotificationDto,
+} from './dtos/notification.dto';
 import {
   NotificationConfigTypes,
   NotificationContexts,
@@ -21,8 +24,8 @@ import {
   NotificationConfigDocument,
 } from './schemas/notification-config.schema';
 import {
-    NotificationSetting,
-    NotificationSettingDocument,
+  NotificationSetting,
+  NotificationSettingDocument,
 } from './schemas/notification-setting.schema';
 import {
   Notification,

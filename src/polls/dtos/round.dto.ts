@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DateReqDto } from 'src/common/dtos';
 
-export class RoundDto{
+export class RoundDto {
   id: string;
 
   @ApiProperty({})

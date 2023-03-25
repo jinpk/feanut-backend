@@ -21,17 +21,17 @@ export class UserRound {
 
   // polling 목록
   @Prop({})
-  pollingIds: string[];
+  pollingIds: any[];
 
   // skipCount
-  @Prop({default: 0})
+  @Prop({ default: 0 })
   skipCount?: number;
 
   // complete 여부
   @Prop({ default: false })
   complete?: boolean;
 
-  @Prop({default: null})
+  @Prop({ default: null })
   completedAt?: Date;
 
   // 생성시간

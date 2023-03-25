@@ -22,10 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { PollingsService } from './pollings.service';
-import {
-  PollingDto,
-  PollingOpenDto,
-} from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto } from './dtos/polling.dto';
 import { Polling } from './schemas/polling.schema';
 import { UserRound } from './schemas/userround.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
@@ -60,8 +57,6 @@ export class PollingsController {
   async getMyPollingList(
     @Query() query: GetListReceivePollingDto,
     @Request() req) {
-      console.log("112221111")
-      console.log(req.user.id)
     return await this.pollingsService.findListPollingByProfileId(req.user.id, query);
   }
 
@@ -76,14 +71,15 @@ export class PollingsController {
   })
   async getMyPollingDetail(
     @Param('pollingId') pollingId: string,
-    @Request() req) {
-      const result = await this.pollingsService.findPollingById(pollingId);
-      if (req.isAdmin) {
-      } else if (req.user.id != result.userId) {
-        throw new WrappedError('권한이 없습니다.').reject();
-      }
+    @Request() req,
+  ) {
+    const result = await this.pollingsService.findPollingById(pollingId);
+    if (req.isAdmin) {
+    } else if (req.user.id != result.userId) {
+      throw new WrappedError('권한이 없습니다.').reject();
+    }
 
-      return result
+    return result;
   }
 
   @Post('receive/:pollingId/open')
@@ -119,7 +115,7 @@ export class PollingsController {
     type: UserRoundDto,
   })
   async postUserRound(@Request() req) {
-    var rounds = await this.pollingsService.findUserRound(req.user.id);
+    const rounds = await this.pollingsService.findUserRound(req.user.id);
     if (rounds.todayCount >= 2) {
       throw new WrappedError('일일 투표 횟수 초과').reject();
     }
@@ -129,15 +125,19 @@ export class PollingsController {
   @Post('')
   @ApiOperation({
     summary: 'New Polling 생성',
-    description: 'userRound 생성 시 기본 12개 생성. 이후 1개씩 추가. 라운드당 최대 5번 건너뛰기 가능.',
+    description:
+      'userRound 생성 시 기본 12개 생성. 이후 1개씩 추가. 라운드당 최대 5번 건너뛰기 가능.',
   })
   @ApiResponse({
     status: 200,
     type: PollingDto,
   })
   async postPolling(@Request() req) {
-    const userround = await this.pollingsService.findRecentUserRound(req.user.id);
+    const userround = await this.pollingsService.findRecentUserRound(
+      req.user.id,
+    );
     if (userround.pollIds.length >= 17) {
+      await this.pollingsService.updateComplete(req.user.id, userround._id.toString())
       throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
     }
     return await this.pollingsService.createPolling(req.user.id, userround);
@@ -159,8 +159,7 @@ export class PollingsController {
   @Put(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
-    description:
-      'refreshCount < 2이면 pass.',
+    description: 'refreshCount < 2이면 pass.',
   })
   @ApiResponse({
     status: 200,
@@ -172,7 +171,7 @@ export class PollingsController {
   ) {
     const exist = await this.pollingsService.findPollingById(pollingId);
     if (exist.userId != req.user.id) {
-      throw new WrappedError('권한이 없습니다')
+      throw new WrappedError('권한이 없습니다');
     }
 
     return await this.pollingsService.updateRefreshedPollingById(
@@ -196,9 +195,10 @@ export class PollingsController {
   ) {
     const exist = await this.pollingsService.findPollingById(pollingId);
     if (exist.userId != req.user.id) {
-      throw new WrappedError('권한이 없습니다')
+      throw new WrappedError('권한이 없습니다');
     }
     return await this.pollingsService.updateSelectedProfile(
+      req.user.id,
       pollingId,
       body.selectedProfileId,
     );

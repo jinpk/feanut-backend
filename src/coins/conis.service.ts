@@ -22,23 +22,32 @@ import { UtilsService, PurchaseService } from 'src/common/providers';
 export class CoinsService {
   constructor(
     @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
-    @InjectModel(Coin.name) private buycoinModel: Model<UseCoinDocument>,
-    @InjectModel(Coin.name) private usecoinModel: Model<BuyCoinDocument>,
+    @InjectModel(UseCoin.name) private buycoinModel: Model<UseCoinDocument>,
+    @InjectModel(BuyCoin.name) private usecoinModel: Model<BuyCoinDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
     private purchaseService: PurchaseService,
   ) {}
 
-  async findUserCoin(user_id: string): Promise<Coin> {
+  async findUserCoin(user_id: string): Promise<CoinDto> {
     const result = await this.coinModel.findOne(
       {userId: user_id}
     );
 
-    return result
+    var coin = new CoinDto()
+    coin = {
+      userId: result.userId,
+      total: result.total,
+      accumLogs: result.accumLogs,
+    }
+
+    return coin
   }
 
-  async findListUsecoin(query:GetUseCoinDto): Promise<PagingResDto<UseCoinDto>> {
-    var filter: FilterQuery<UseCoinDocument> = {}
+  async findListUsecoin(
+    query: GetUseCoinDto,
+  ): Promise<PagingResDto<UseCoinDto>> {
+    const filter: FilterQuery<UseCoinDocument> = {};
 
     const projection: ProjectionFields<UseCoinDto> = {
       _id: 1,
@@ -63,8 +72,10 @@ export class CoinsService {
     };
   }
 
-  async findListBuycoin(query:GetBuyCoinDto): Promise<PagingResDto<BuyCoinDto>> {
-    var filter: FilterQuery<BuyCoinDocument> = {}
+  async findListBuycoin(
+    query: GetBuyCoinDto,
+  ): Promise<PagingResDto<BuyCoinDto>> {
+    const filter: FilterQuery<BuyCoinDocument> = {};
 
     const projection: ProjectionFields<BuyCoinDto> = {
       _id: 1,
@@ -89,41 +100,56 @@ export class CoinsService {
     };
   }
 
-  async createBuyCoin(user_id: string, body:BuyCoinDto) {
+  async createBuyCoin(user_id: string, body: BuyCoinDto) {
     // 앱스토어: productId = ''
     if (!body.productId) {
-      const validate_result = await this.purchaseService.validateIOSPurchase(body.token)
+      const validate_result = await this.purchaseService.validateIOSPurchase(
+        body.token,
+      );
     } else {
-      const validate_result = await this.purchaseService.validateGooglePurchase(body.productId, body.token);
+      const validate_result = await this.purchaseService.validateGooglePurchase(
+        body.productId,
+        body.token,
+      );
 
       if (validate_result.isSuccessful) {
-        const result = await new this.buycoinModel(body).save()
+        const result = await new this.buycoinModel(body).save();
 
-        await this.updateCoinAccum(user_id, body.amount)
-        return result._id.toString()
+        await this.updateCoinAccum(user_id, body.amount);
+        return result._id.toString();
       }
     }
   }
 
-  async createUseCoin(params:UseCoinDto) {
-    const result = await new this.usecoinModel(params).save()
+  async createUseCoin(params: UseCoinDto) {
+    const result = await new this.usecoinModel(params).save();
 
-    await this.updateCoinAccum(params.userId, (-1)*params.amount)
-    return result._id.toString()
+    await this.updateCoinAccum(params.userId, -1 * params.amount);
+    return result._id.toString();
+  }
+
+  async createCoin(user_id: string) {
+    var coin = new Coin();
+    coin = {
+      userId: user_id,
+      total: 3,
+      accumLogs: [3]
+    }
+    await new this.coinModel(coin).save()
   }
 
   async updateCoinAccum(user_id: string, amount: number) {
-    const usercoin = await this.coinModel.findOne({userId: user_id});
+    const usercoin = await this.coinModel.findOne({ userId: user_id });
     usercoin.accumLogs.push(amount);
 
-    var total = 0;
+    let total = 0;
     for (const cont of usercoin.accumLogs) {
       total += cont;
     }
 
     usercoin.total = total;
 
-    return usercoin.save()
+    return usercoin.save();
   }
 
   async updateCoin(coin_id, user_id: string, body: UpdateCoinDto) {
@@ -131,19 +157,19 @@ export class CoinsService {
       {
         _id: new Types.ObjectId(coin_id),
         userId: user_id,
-      },{ 
-      $set: {body, updatedAt: now()}
-    });
-    return result._id.toString()
+      },
+      {
+        $set: { body, updatedAt: now() },
+      },
+    );
+    return result._id.toString();
   }
 
   async getCoinById(coin_id, user_id: string) {
-    const result = await this.coinModel.findOne(
-      {
-        _id: new Types.ObjectId(coin_id),
-        userId: user_id,
-      }
-    );
-    return result
+    const result = await this.coinModel.findOne({
+      _id: new Types.ObjectId(coin_id),
+      userId: user_id,
+    });
+    return result;
   }
 }

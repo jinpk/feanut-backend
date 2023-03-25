@@ -9,6 +9,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AdminModule } from 'src/admin/admin.module';
 import { AligoProvider } from './providers/aligo.provider';
 import { HttpModule } from '@nestjs/axios';
+import { InstagramProvider } from './providers';
+import { ProfilesModule } from 'src/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -22,8 +24,9 @@ import { HttpModule } from '@nestjs/axios';
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
     UsersModule,
     AdminModule,
+    ProfilesModule,
   ],
-  providers: [AuthService, JwtStrategy, AligoProvider],
+  providers: [AuthService, JwtStrategy, AligoProvider, InstagramProvider],
   exports: [AuthService],
 })
 export class AuthModule {}

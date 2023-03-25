@@ -18,7 +18,9 @@ import { FriendsModule } from 'src/friendships/friendships.module';
     MongooseModule.forFeature([{ name: Polling.name, schema: PollingSchema }]),
     MongooseModule.forFeature([{ name: Coin.name, schema: CoinSchema }]),
     MongooseModule.forFeature([{ name: Friend.name, schema: FriendSchema }]),
-    MongooseModule.forFeature([{ name: UserRound.name, schema: UserRoundSchema }]),
+    MongooseModule.forFeature([
+      { name: UserRound.name, schema: UserRoundSchema },
+    ]),
     MongooseModule.forFeature([{ name: Poll.name, schema: PollSchema }]),
     MongooseModule.forFeature([{ name: Round.name, schema: RoundSchema }]),
     ProfilesModule,
