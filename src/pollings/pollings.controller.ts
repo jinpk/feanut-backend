@@ -138,6 +138,7 @@ export class PollingsController {
   async postPolling(@Request() req) {
     const userround = await this.pollingsService.findRecentUserRound(req.user.id);
     if (userround.pollIds.length >= 17) {
+      await this.pollingsService.updateComplete(req.user.id, userround._id.toString())
       throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
     }
     return await this.pollingsService.createPolling(req.user.id, userround);
@@ -154,6 +155,19 @@ export class PollingsController {
   })
   async getUserRound(@Request() req) {
     return await this.pollingsService.findUserRound(req.user.id);
+  }
+
+  @Get('teststes')
+  @ApiOperation({
+    summary: '사용자 TEst',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: UserRound,
+  })
+  async getTest(@Request() req) {
+    const userround = await this.pollingsService.findRecentUserRound(req.user.id);
+    return await this.pollingsService.checkUserroundComplete(req.user.id, userround);
   }
 
   @Put(':pollingId/refresh')
@@ -199,6 +213,7 @@ export class PollingsController {
       throw new WrappedError('권한이 없습니다')
     }
     return await this.pollingsService.updateSelectedProfile(
+      req.user.id,
       pollingId,
       body.selectedProfileId,
     );

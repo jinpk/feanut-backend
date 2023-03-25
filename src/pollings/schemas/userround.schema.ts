@@ -21,7 +21,7 @@ export class UserRound {
 
   // polling 목록
   @Prop({})
-  pollingIds: string[];
+  pollingIds: any[];
 
   // skipCount
   @Prop({default: 0})
