@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { USER_NOTIFICATION_NAME } from '../notifications.constant';
+import { NOTIFICATION_USER_CONFIG_SCHEMA_NAME } from '../notifications.constant';
 
 export type NotificationUserConfigDocument =
   HydratedDocument<NotificationUserConfig>;
 
-@Schema({ collection: USER_NOTIFICATION_NAME, timestamps: true })
+@Schema({ collection: NOTIFICATION_USER_CONFIG_SCHEMA_NAME, timestamps: true })
 export class NotificationUserConfig {
   // userId
   @Prop({ required: true })
