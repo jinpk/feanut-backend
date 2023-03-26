@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Request } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -35,8 +35,9 @@ export class NotificationsController {
   async updateUserNotificationSetting(
     @Param('id') id: string,
     @Body() body: UpdateNotificationSettingDto,
+    @Request() req,
   ) {
-    return await this.notificationsService.updateNotificationSetting(id, body);
+    return await this.notificationsService.updateNotificationSetting(req.user.id, body);
   }
 
   @Get('settings')
@@ -46,36 +47,20 @@ export class NotificationsController {
     return await this.notificationsService.getUserNotificationSettings(userId);
   }
 
-  @Put('configs/:id')
-  @ApiOperation({
-    summary: '자동 알림 규칙 수정',
-    description: 'body 값 전부 넣어줘야 함. (default GET)',
-  })
-  @ApiParam({ name: 'id', description: 'configId' })
-  async updateConfig(
-    @Param('id') id: NotificationConfigTypes,
-    @Body() body: UpdateNotificationConfigDto,
-  ) {
-    await this.notificationsService.updateNotificationConfigs(id, body);
-  }
-
   @Get('configs')
-  @ApiOperation({ summary: '자동 알림 규칙 조회' })
+  @ApiOperation({
+    summary: '(ADMIN) 자동 알림 규칙 조회'
+  })
   @ApiOkResponse({ type: [NotificationConfigDto] })
   async getConfigs() {
     return await this.notificationsService.getNotificationConfigs();
   }
 
   @Post('')
-  @ApiOperation({ summary: '알림 등록' })
+  @ApiOperation({
+    summary: '(ADMIN) 알림 등록'
+  })
   async createNotification(@Body() body: CreateNotificationDto) {
     return await this.notificationsService.createNotification(body);
   }
-
-  // @Get('')
-  // @ApiOperation({ summary: '알림 조회' })
-  // @ApiOkResponsePaginated(NotificationDto)
-  // async listNotification(@Query() query: GetNotificationsDto) {
-  //   return await this.notificationsService.getPagingNotifications(query);
-  // }
 }

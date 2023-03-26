@@ -16,7 +16,6 @@ import {
 } from './dtos/notification.dto';
 import {
   NotificationConfigTypes,
-  NotificationContexts,
   NotificationSettingTypes,
 } from './enums';
 import {
@@ -45,12 +44,10 @@ export class NotificationsService {
   ) {}
 
   async updateNotificationSetting(
-    id: string,
+    user_id: string,
     body: UpdateNotificationSettingDto,
   ) {
-    body.remindDays = body.remindDays || '';
-    body.remindTime = body.remindTime || '';
-    await this.notificationSettingModel.findByIdAndUpdate(id, { $set: body });
+    await this.notificationSettingModel.findByIdAndUpdate(user_id, { $set: body });
   }
 
   async getUserNotificationSettings(
@@ -71,7 +68,6 @@ export class NotificationsService {
     const now = new Date();
     const docs = await this.notificationModel.find({
       sent: false,
-      context: { $ne: NotificationContexts.InApp },
       sendAt: { $lte: now },
     });
 
@@ -106,7 +102,6 @@ export class NotificationsService {
 
   async createNotification(body: CreateNotificationDto) {
     const doc = await new this.notificationModel({
-      context: body.context,
       sendAt: body.sendAt,
       imagePath: body.imagePath,
       title: body.title,
@@ -118,10 +113,10 @@ export class NotificationsService {
   async initNotificationConfigs() {
     const configs: NotificationConfig[] = [
       {
-        type: NotificationConfigTypes.Inbox,
+        type: NotificationConfigTypes.Pull,
       },
       {
-        type: NotificationConfigTypes.NewRound,
+        type: NotificationConfigTypes.Poll,
       },
     ];
     for await (const config of configs) {
@@ -135,25 +130,16 @@ export class NotificationsService {
 
     const settings: NotificationSetting[] = [
       {
-        type: NotificationSettingTypes.Promotion,
+        type: NotificationSettingTypes.Pull,
         on: true,
         userId: oid,
-        remindDays: '',
-        remindTime: '',
+        remindTime: [''],
       },
       {
-        type: NotificationSettingTypes.Service,
+        type: NotificationSettingTypes.Poll,
         on: true,
         userId: oid,
-        remindDays: '',
-        remindTime: '',
-      },
-      {
-        type: NotificationSettingTypes.Reminder,
-        on: true,
-        userId: oid,
-        remindDays: '',
-        remindTime: '1230',
+        remindTime: ['0830', '1230', '1830'],
       },
     ];
     await this.notificationSettingModel.deleteMany({ userId: oid });
@@ -166,7 +152,6 @@ export class NotificationsService {
 
   _notificationDocToDto(doc: NotificationDocument): NotificationDto {
     const dto = new NotificationDto();
-    dto.context = doc.context;
     dto.createdAt = doc.createdAt;
     dto.id = doc._id.toString();
     dto.imagePath = doc.imagePath;
@@ -180,7 +165,6 @@ export class NotificationsService {
     doc: NotificationConfigDocument,
   ): NotificationConfigDto {
     const dto = new NotificationConfigDto();
-    dto.context = doc.context;
     dto.day = doc.day;
     dto.id = doc._id.toString();
     dto.message = doc.message;
@@ -195,7 +179,6 @@ export class NotificationsService {
     const dto = new NotificationSettingDto();
     dto.id = doc._id.toString();
     dto.on = doc.on;
-    dto.remindDays = doc.remindDays;
     dto.remindTime = doc.remindTime;
     dto.type = doc.type;
     dto.userId = doc.userId;

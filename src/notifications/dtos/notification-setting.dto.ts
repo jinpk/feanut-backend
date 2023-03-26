@@ -8,5 +8,5 @@ export class NotificationSettingDto extends NotificationSetting {
 
 export class UpdateNotificationSettingDto extends PickType(
   NotificationSetting,
-  ['on', 'remindDays', 'remindTime'],
+  ['type', 'on', 'remindTime'],
 ) {}

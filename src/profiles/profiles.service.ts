@@ -183,7 +183,19 @@ export class ProfilesService {
   }
 
   async findMyFeanutCard(user_id: string, profile_id: Object): Promise<FeanutCardDto> {
-    const myCard = new FeanutCardDto();
+    var myCard = new FeanutCardDto();
+    myCard = {
+      joy: 0,
+      gratitude: 0,
+      serenity: 0,
+      interest: 0,
+      hope: 0,
+      pride: 0,
+      amusement: 0,
+      inspiration: 0,
+      awe: 0,
+      love: 0,
+    }
 
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
