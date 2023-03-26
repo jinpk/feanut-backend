@@ -22,10 +22,9 @@ import {
 } from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { CoinsService } from './conis.service';
-import { CoinDto, BuyCoinDto, UseCoinDto } from './dtos/coin.dto';
+import { CoinDto, PurchaseCoinDto } from './dtos/coin.dto';
 import { UpdateCoinDto } from './dtos/update-coin.dto';
 import { GetBuyCoinDto, GetUseCoinDto } from './dtos/get-coin.dto';
-import { Coin } from './schemas/coin.schema';
 import { BuyCoin } from './schemas/buycoin.schema';
 import { UseCoin } from './schemas/usecoin.schema';
 
@@ -71,16 +70,15 @@ export class CoinsController {
     }
   }
 
-  @Post('buycoins')
+  @Post('purchase')
   @ApiOperation({
-    summary: '인앱 결제',
-    description: 'token, productId 필수',
+    summary: '피넛코인 구매 (iOS, Android IAP)',
   })
   @ApiResponse({
     status: 200,
     type: String,
   })
-  async postBuyCoin(@Body() body: BuyCoinDto, @Request() req) {
+  async postBuyCoin(@Body() body: PurchaseCoinDto, @Request() req) {
     return await this.coinsService.createBuyCoin(req.user.id, body);
   }
 
