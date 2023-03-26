@@ -8,6 +8,7 @@ import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
 import { PROFILE_MODULE_NAME, PROFILE_SCHEMA_NAME } from './profiles.constant';
+import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 
 @Injectable()
 export class ProfilesService {
@@ -31,17 +32,43 @@ export class ProfilesService {
   }
 
   // 휴대폰번호로 프로필 ID 조회
+  // 이미 탈퇴한 사용자도 필터링
   async getIdByPhoneNumber(
     phoneNumber: string,
   ): Promise<Types.ObjectId | null> {
-    const profile = await this.profileModel.findOne({
-      phoneNumber,
-    });
-    if (profile) {
-      return profile._id;
-    }
+    const profiles = await this.profileModel.aggregate<ProfileDocument>([
+      {
+        $match: {
+          phoneNumber,
+        },
+      },
+      {
+        $lookup: {
+          from: USER_SCHEMA_NAME,
+          localField: 'ownerId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true,
+          },
+        },
+      },
+    ]);
 
-    return null;
+    if (profiles.length) {
+      return profiles[0]._id;
+    } else {
+      return null;
+    }
   }
 
   // 아직 소유권없는 프로필 조회

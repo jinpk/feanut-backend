@@ -3,10 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WrappedError } from 'src/common/errors';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, '') {
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private authServices: AuthService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -23,6 +27,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, '') {
       id: payload.sub,
       isAdmin: payload.isAdmin,
     };
+
+    // 탈퇴 회원인지 검증
+    if (!user.isAdmin && !(await this.authServices.isValidUserId(user.id))) {
+      throw new WrappedError(null, null, '권한 없습니다.').unauthorized();
+    }
 
     return user;
   }
