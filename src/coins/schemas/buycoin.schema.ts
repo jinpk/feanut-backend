@@ -17,11 +17,7 @@ export class BuyCoin {
 
   // token
   @Prop({})
-  token: string;
-
-  // feanut 결제 개수
-  @Prop({})
-  amount: number;
+  purchaseReceipt: string;
 
   // 생성시간
   @Prop({})

@@ -17,9 +17,6 @@ export class CoinDto {
 }
 
 export class PurchaseCoinDto {
-  @ApiProperty({ description: 'userId' })
-  userId: string;
-
   @ApiProperty({ required: true })
   productId: string;
 
