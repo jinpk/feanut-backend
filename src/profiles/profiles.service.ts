@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage, FilterQuery, Types } from 'mongoose';
+import { Model, PipelineStage, FilterQuery, Types, ObjectId } from 'mongoose';
 import { Gender } from './enums';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
@@ -182,7 +182,9 @@ export class ProfilesService {
     return profile.toObject();
   }
 
-  async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
+  async findMyFeanutCard(user_id: string, profile_id: Object): Promise<FeanutCardDto> {
+    const myCard = new FeanutCardDto();
+
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
     };
@@ -214,19 +216,20 @@ export class ProfilesService {
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
+      ...lookups,
       { $project: projection },
       // this.utilsService.getCommonMongooseFacet(query),
     ]);
 
-    const data = cursor[0].data;
+    if (cursor[0]) {
+      const data = cursor[0].data;
 
-    const myCard = new FeanutCardDto();
-
-    data.array.forEach((element) => {
-      if (element.emotion == 'joy') {
-        myCard.joy += 1;
-      }
-    });
+      data.array.forEach((element) => {
+        if (element.emotion == 'joy') {
+          myCard.joy += 1;
+        }
+      });
+    }
 
     return myCard;
   }
