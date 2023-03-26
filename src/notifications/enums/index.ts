@@ -1,11 +1,4 @@
-export enum NotificationConfigTypes {
-  Pull = 'pull',
-  Poll = 'poll',
-}
-
-export enum NotificationSettingTypes {
-  Promotion = 'promotion',
-  Service = 'service',
-  Poll = 'poll',
-  Pull = 'pull',
+export enum NotificationAction {
+  Pull = 'pull', // 수신
+  Poll = 'poll', // 신규라운드
 }

@@ -9,6 +9,7 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import * as dayjs from 'dayjs';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +18,7 @@ export class UsersService {
     private profilesService: ProfilesService,
     private FriendshipsService: FriendshipsService,
     private coinsService: CoinsService,
+    private notificationsService: NotificationsService,
   ) {}
 
   // 이미 사용중인 feanutId가 존재하는지 확인
@@ -113,6 +115,9 @@ export class UsersService {
     // 최초 coin db 초기화
     await this.coinsService.createCoin(user._id.toString());
 
+    // 알림설정 초기화
+    await this.notificationsService.initNotificationUserConfig(user._id);
+    
     return user._id.toHexString();
   }
 

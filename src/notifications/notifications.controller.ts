@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Request } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -19,8 +19,12 @@ import { NotificationsService } from './notifications.service';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Put('users/:userId/config')
-  @ApiOperation({ summary: '사용자 알림 설정 수정' })
+  @Patch('users/:userId/config')
+  @ApiOperation({
+    summary: '사용자 알림 설정 수정',
+    description: `변경 원하는 컬럼만 보내면 됨.
+      \nproperties[]: undefiend는 수정처리 되지 않음`,
+  })
   async updateUserNotificationSetting(
     @Param('userId') userId: string,
     @Body() body: UpdateNotificationUserConfigDto,
