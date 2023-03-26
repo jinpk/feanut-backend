@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
 import { BUYCOIN_NAME } from '../coins.constant';
-import { BuyType } from '../enums';
 
 export type BuyCoinDocument = HydratedDocument<BuyCoin>;
 
@@ -12,21 +11,13 @@ export class BuyCoin {
   @Prop({})
   userId: string;
 
-  // feanut 결제 Type
-  @Prop({})
-  buyType: BuyType;
-
   // productId
   @Prop({})
   productId: string;
 
   // token
   @Prop({})
-  token: string;
-
-  // feanut 결제 개수
-  @Prop({})
-  amount: number;
+  purchaseReceipt: string;
 
   // 생성시간
   @Prop({})

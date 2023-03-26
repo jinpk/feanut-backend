@@ -65,7 +65,13 @@ export class CoinsController {
   })
   @ApiOkResponsePaginated(BuyCoin)
   async getBuycoinList(@Query() query: GetBuyCoinDto, @Request() req) {
-    if (req.user.id == query.userId) {
+    if (!req.user.isAdmin) {
+      if (query.userId != req.user.id) {
+        throw new UnauthorizedException('권한이 없습니다.');
+      } else {
+        return await this.coinsService.findListBuycoin(query);
+      }
+    } else {
       return await this.coinsService.findListBuycoin(query);
     }
   }
@@ -80,26 +86,5 @@ export class CoinsController {
   })
   async postBuyCoin(@Body() body: PurchaseCoinDto, @Request() req) {
     return await this.coinsService.createBuyCoin(req.user.id, body);
-  }
-
-  @Put(':coinId')
-  @ApiBody({
-    type: UpdateCoinDto,
-  })
-  @ApiResponse({
-    status: 200,
-    type: String,
-  })
-  async patchCoin(
-    @Param('coinId') coinId: string,
-    @Body() body,
-    @Request() req,
-  ) {
-    const coin = await this.coinsService.getCoinById(coinId, req.user.id);
-    if (!coin) {
-      throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');
-    }
-
-    return await this.coinsService.updateCoin(coinId, req.user.id, body);
   }
 }

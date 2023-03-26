@@ -11,9 +11,9 @@ export class UseCoin {
   // pk
   id: string;
 
-  // profileId
+  // userId
   @Prop({})
-  progileId: string;
+  userId: string;
 
   // feanut 사용 Type
   @Prop({})
@@ -21,7 +21,7 @@ export class UseCoin {
 
   // feanut 사용 개수
   @Prop({})
-  amount: number[];
+  amount: number;
 
   // 생성시간
   @Prop({})

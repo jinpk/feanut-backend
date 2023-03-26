@@ -65,6 +65,8 @@ export class FriendshipsService implements FriendShipsServiceInterface {
 
     // 휴대폰번호로 이미 생성된 프로필 없다면 empty profile 생성
     if (!profileId) {
+      // 탈퇴하지 않은 오너의 프로필만 조회하고 없다면 새롭게 생성
+      // 다음 회원가입하는 휴대폰번호 소유자가 투표를 가져갈 것 임.
       profileId = await this.profilesService.createWithPhoneNumber(
         dto.phoneNumber,
       );

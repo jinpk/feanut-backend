@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage, FilterQuery, Types } from 'mongoose';
+import { Model, PipelineStage, FilterQuery, Types, ObjectId } from 'mongoose';
 import { Gender } from './enums';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
 import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
@@ -8,6 +8,7 @@ import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
 import { PROFILE_MODULE_NAME, PROFILE_SCHEMA_NAME } from './profiles.constant';
+import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 
 @Injectable()
 export class ProfilesService {
@@ -31,17 +32,43 @@ export class ProfilesService {
   }
 
   // 휴대폰번호로 프로필 ID 조회
+  // 이미 탈퇴한 사용자도 필터링
   async getIdByPhoneNumber(
     phoneNumber: string,
   ): Promise<Types.ObjectId | null> {
-    const profile = await this.profileModel.findOne({
-      phoneNumber,
-    });
-    if (profile) {
-      return profile._id;
-    }
+    const profiles = await this.profileModel.aggregate<ProfileDocument>([
+      {
+        $match: {
+          phoneNumber,
+        },
+      },
+      {
+        $lookup: {
+          from: USER_SCHEMA_NAME,
+          localField: 'ownerId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true,
+          },
+        },
+      },
+    ]);
 
-    return null;
+    if (profiles.length) {
+      return profiles[0]._id;
+    } else {
+      return null;
+    }
   }
 
   // 아직 소유권없는 프로필 조회
@@ -155,7 +182,21 @@ export class ProfilesService {
     return profile.toObject();
   }
 
-  async findMyFeanutCard(profile_id): Promise<FeanutCardDto> {
+  async findMyFeanutCard(user_id: string, profile_id: Object): Promise<FeanutCardDto> {
+    var myCard = new FeanutCardDto();
+    myCard = {
+      joy: 0,
+      gratitude: 0,
+      serenity: 0,
+      interest: 0,
+      hope: 0,
+      pride: 0,
+      amusement: 0,
+      inspiration: 0,
+      awe: 0,
+      love: 0,
+    }
+
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
     };
@@ -187,19 +228,20 @@ export class ProfilesService {
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
+      ...lookups,
       { $project: projection },
       // this.utilsService.getCommonMongooseFacet(query),
     ]);
 
-    const data = cursor[0].data;
+    if (cursor[0]) {
+      const data = cursor[0].data;
 
-    const myCard = new FeanutCardDto();
-
-    data.array.forEach((element) => {
-      if (element.emotion == 'joy') {
-        myCard.joy += 1;
-      }
-    });
+      data.array.forEach((element) => {
+        if (element.emotion == 'joy') {
+          myCard.joy += 1;
+        }
+      });
+    }
 
     return myCard;
   }

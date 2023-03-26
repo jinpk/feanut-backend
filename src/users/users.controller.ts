@@ -1,19 +1,21 @@
 import {
   Controller,
+  Delete,
   Get,
   NotFoundException,
-  Param,
+  Query,
   Req,
-  Res,
-  Response,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { WrappedError } from 'src/common/errors';
 import { UserDto } from './dtos';
+import { USER_MODULE_NAME } from './users.constant';
 import { UsersService } from './users.service';
 
 @ApiTags('User')
@@ -21,6 +23,38 @@ import { UsersService } from './users.service';
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Delete('me')
+  @ApiOperation({
+    summary: '계정 탈퇴',
+  })
+  @ApiResponse({ type: UserDto })
+  @ApiQuery({
+    name: 'reason',
+    type: String,
+    description: '탈퇴 사유',
+    required: true,
+  })
+  async deleteMe(@Req() req, @Query('reason') reason: string) {
+    if (!reason) {
+      throw new WrappedError(
+        USER_MODULE_NAME,
+        null,
+        'reason is empty string.',
+      ).badRequest();
+    }
+
+    const user = await this.usersService.findActiveUserById(req.user.id);
+    if (!user) {
+      throw new WrappedError(
+        USER_MODULE_NAME,
+        null,
+        'non exist active user.',
+      ).notFound();
+    }
+
+    await this.usersService.deleteUser(user._id, reason);
+  }
 
   @Get('me')
   @ApiOperation({

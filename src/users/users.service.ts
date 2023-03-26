@@ -8,6 +8,7 @@ import * as bcrybt from 'bcrypt';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class UsersService {
@@ -39,10 +40,11 @@ export class UsersService {
     if (!user) {
       return null;
     }
+
     return user.toObject();
   }
 
-  async findActiveUserById(id: string): Promise<User | null> {
+  async findActiveUserById(id: string | Types.ObjectId): Promise<User | null> {
     const user = await this.userModel.findById(id);
     if (!user || user.isDeleted) {
       return null;
@@ -112,6 +114,21 @@ export class UsersService {
     await this.coinsService.createCoin(user._id.toString());
 
     return user._id.toHexString();
+  }
+
+  // 탈퇴전 userId 검증은 호출하는 함수에서 선행 필요
+  async deleteUser(
+    userId: string | Types.ObjectId,
+    deletionReason: string,
+  ): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, {
+      $set: {
+        deletedAt: dayjs().toDate(),
+        isDeleted: true,
+        deletionReason,
+        refreshToken: undefined,
+      },
+    });
   }
 
   async _userDocToDto(user: User): Promise<UserDto> {

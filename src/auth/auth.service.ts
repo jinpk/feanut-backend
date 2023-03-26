@@ -46,6 +46,14 @@ export class AuthService {
     private profilesService: ProfilesService,
   ) {}
 
+  // 유효한 회원인지 검증
+  async isValidUserId(userId: string | Types.ObjectId): Promise<boolean> {
+    if (await this.usersService.findActiveUserById(userId)) {
+      return true;
+    }
+    return false;
+  }
+
   // 인스타그램 로그인 검증 및 username 업데이트
   async authInstagram(code: string, state: string) {
     // state 프로필 ID 검증
@@ -172,7 +180,11 @@ export class AuthService {
     });
 
     // 비밀번호 검증
-    if (!user.password || !this.comparePassword(password, user.password)) {
+    if (
+      !user ||
+      !user.password ||
+      !this.comparePassword(password, user.password)
+    ) {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_INVALID_LOGIN,

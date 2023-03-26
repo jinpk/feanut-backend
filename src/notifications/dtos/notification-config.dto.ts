@@ -10,5 +10,4 @@ export class UpdateNotificationConfigDto extends PickType(NotificationConfig, [
   'message',
   'day',
   'on',
-  'context',
 ] as const) {}

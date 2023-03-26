@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiOperation,
   ApiBody,
@@ -25,20 +26,38 @@ import {
 
 @Controller()
 export class AppController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @Get(`${INSTAGRAM_AUTH_REDIRECT_PATH}/success`)
+  @Public()
+  @ApiOperation({
+    summary: '인스타그램 계정연동 성공 Redirected',
+    description: `인스타그램 계정연동 완료시 해당 경로로 redirect 됩니다.`,
+  })
+  async oauthInstagramSucceess() {
+    return `You have successfully linked your Instagram account to feanut.`;
+  }
 
   @Get(INSTAGRAM_AUTH_REDIRECT_PATH)
   @Public()
   @ApiOperation({
-    summary: '인스타그램 redirect api',
-    description: `요청 완료시 다이나믹 링크 redirect 됩니다.`,
+    summary: '인스타그램 계정연동 for instagram',
+    description: `연동 완료시 redirect 됩니다.`,
   })
   async oauthInstagram(
     @Query('state') state: string,
     @Query('code') code: string,
+    @Res() res,
   ) {
     await this.authService.authInstagram(code, state);
-    return `<h1>succeed</h1>`;
+    res.redirect(
+      `${this.configService.get(
+        'host',
+      )}${INSTAGRAM_AUTH_REDIRECT_PATH}/success`,
+    );
   }
 
   @Post('token')
