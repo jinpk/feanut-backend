@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { UpdateNotificationUserConfigDto } from './dtos';
 import { GetNotificationsDto } from './dtos/get-notification.dto';
 import {
   NotificationConfigDto,
@@ -14,10 +15,7 @@ import {
   CreateNotificationDto,
   NotificationDto,
 } from './dtos/notification.dto';
-import {
-  NotificationConfigTypes,
-  NotificationSettingTypes,
-} from './enums';
+import { NotificationConfigTypes, NotificationSettingTypes } from './enums';
 import {
   NotificationConfig,
   NotificationConfigDocument,
@@ -26,6 +24,10 @@ import {
   NotificationSetting,
   NotificationSettingDocument,
 } from './schemas/notification-setting.schema';
+import {
+  NotificationUserConfig,
+  NotificationUserConfigDocument,
+} from './schemas/notification-user-config.schema';
 import {
   Notification,
   NotificationDocument,
@@ -41,13 +43,54 @@ export class NotificationsService {
     private notificationConfigModel: mongoose.Model<NotificationConfigDocument>,
     @InjectModel(NotificationSetting.name)
     private notificationSettingModel: mongoose.Model<NotificationSettingDocument>,
+
+    @InjectModel(NotificationUserConfig.name)
+    private notificationUserConfigModel: mongoose.Model<NotificationUserConfigDocument>,
   ) {}
+
+  async updateNotificationUserConfig(
+    userId: string | mongoose.Types.ObjectId,
+    dto: UpdateNotificationUserConfigDto,
+  ) {
+    const config = await this.notificationUserConfigModel.findOneAndUpdate({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+
+    // !== undefined > 프론트에서 수정요청 보낸것만 처리
+    if (dto.fcmToken !== undefined) {
+      if (dto.fcmToken) {
+        config.fcmToken = dto.fcmToken;
+      } else {
+        config.fcmToken = undefined;
+      }
+    }
+
+    if (dto.receivePoll !== undefined) {
+      dto.receivePoll = dto.receivePoll;
+    }
+
+    if (dto.receivePull !== undefined) {
+      dto.receivePull = dto.receivePull;
+    }
+
+    await config.save();
+  }
+
+  async getNotificationUserConfig(userId: string | mongoose.Types.ObjectId) {
+    const config = await this.notificationUserConfigModel.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+
+    return config;
+  }
 
   async updateNotificationSetting(
     user_id: string,
     body: UpdateNotificationSettingDto,
   ) {
-    await this.notificationSettingModel.findByIdAndUpdate(user_id, { $set: body });
+    await this.notificationSettingModel.findByIdAndUpdate(user_id, {
+      $set: body,
+    });
   }
 
   async getUserNotificationSettings(

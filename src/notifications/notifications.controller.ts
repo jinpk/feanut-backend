@@ -1,26 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put, Query, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { ApiOkResponsePaginated } from 'src/common/decorators';
-import { GetNotificationsDto } from './dtos/get-notification.dto';
+import { WrappedError } from 'src/common/errors';
 import {
-  NotificationConfigDto,
-  UpdateNotificationConfigDto,
-} from './dtos/notification-config.dto';
-import {
-  NotificationSettingDto,
-  UpdateNotificationSettingDto,
-} from './dtos/notification-setting.dto';
-import {
-  CreateNotificationDto,
-  NotificationDto,
-} from './dtos/notification.dto';
-import { NotificationConfigTypes } from './enums';
+  NotificationUserConfigDto,
+  UpdateNotificationUserConfigDto,
+} from './dtos';
+import { NOTIFICATION_MODULE_NAME } from './notifications.constant';
 import { NotificationsService } from './notifications.service';
 
 @ApiTags('Notification')
@@ -29,38 +19,27 @@ import { NotificationsService } from './notifications.service';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Put('settings/:id')
+  @Put('users/:userId/config')
   @ApiOperation({ summary: '사용자 알림 설정 수정' })
-  @ApiParam({ name: 'id', description: 'settingId' })
   async updateUserNotificationSetting(
-    @Param('id') id: string,
-    @Body() body: UpdateNotificationSettingDto,
+    @Param('userId') userId: string,
+    @Body() body: UpdateNotificationUserConfigDto,
     @Request() req,
   ) {
-    return await this.notificationsService.updateNotificationSetting(req.user.id, body);
+    if (req.user.id !== userId) {
+      throw new WrappedError(NOTIFICATION_MODULE_NAME).reject();
+    }
+
+    return await this.notificationsService.updateNotificationUserConfig(
+      userId,
+      body,
+    );
   }
 
-  @Get('settings')
+  @Get('users/:userId/config')
   @ApiOperation({ summary: '사용자 알림 설정 조회' })
-  @ApiOkResponse({ type: [NotificationSettingDto] })
-  async getUserNotificationSettings(@Query('userId') userId: string) {
-    return await this.notificationsService.getUserNotificationSettings(userId);
-  }
-
-  @Get('configs')
-  @ApiOperation({
-    summary: '(ADMIN) 자동 알림 규칙 조회'
-  })
-  @ApiOkResponse({ type: [NotificationConfigDto] })
-  async getConfigs() {
-    return await this.notificationsService.getNotificationConfigs();
-  }
-
-  @Post('')
-  @ApiOperation({
-    summary: '(ADMIN) 알림 등록'
-  })
-  async createNotification(@Body() body: CreateNotificationDto) {
-    return await this.notificationsService.createNotification(body);
+  @ApiOkResponse({ type: NotificationUserConfigDto })
+  async getUserNotificationSettings(@Param('userId') userId: string) {
+    return await this.notificationsService.getNotificationUserConfig(userId);
   }
 }

@@ -11,6 +11,10 @@ import {
   NotificationSettingSchema,
 } from './schemas/notification-setting.schema';
 import {
+  NotificationUserConfig,
+  NotificationUserConfigSchema,
+} from './schemas/notification-user-config.schema';
+import {
   Notification,
   NotificationSchema,
 } from './schemas/notification.schema';
@@ -25,6 +29,12 @@ import {
     ]),
     MongooseModule.forFeature([
       { name: NotificationSetting.name, schema: NotificationSettingSchema },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: NotificationUserConfig.name,
+        schema: NotificationUserConfigSchema,
+      },
     ]),
   ],
   controllers: [NotificationsController],
