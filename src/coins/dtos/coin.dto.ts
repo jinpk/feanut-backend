@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { BuyType } from '../enums';
 import { UseType } from '../enums/usetype.enum';
 import { now } from 'mongoose';
+import { OS } from 'src/common/enums';
 
 export class CoinDto {
   @ApiProperty({ description: 'userId' })
@@ -14,21 +15,24 @@ export class CoinDto {
   accumLogs: number[];
 }
 
-export class BuyCoinDto {
+export class PurchaseCoinDto {
   @ApiProperty({ description: 'userId' })
   userId: string;
-
-  @ApiProperty({})
-  buyType: BuyType;
 
   @ApiProperty({ required: true })
   productId: string;
 
-  @ApiProperty({ required: true })
-  token: string;
+  @ApiProperty({
+    required: true,
+    description: 'android - token, ios - receipt',
+  })
+  purchaseReceipt: string;
 
-  @ApiProperty({})
-  amount: number;
+  @ApiProperty({
+    required: true,
+    enum: OS,
+  })
+  os: OS;
 }
 
 export class UseCoinDto {

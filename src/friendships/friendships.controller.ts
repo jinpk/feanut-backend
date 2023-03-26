@@ -36,7 +36,7 @@ import { FriendshipsService } from './friendships.service';
 export class FriendshipsController {
   constructor(private friendshipsService: FriendshipsService) {}
 
-  @Patch(':userId/status')
+  @Get(':userId/status')
   @ApiOperation({
     summary: 'Friendship 조회',
   })

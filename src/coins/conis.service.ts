@@ -10,13 +10,15 @@ import {
 } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
-import { CoinDto, BuyCoinDto, UseCoinDto } from './dtos';
+import { CoinDto, PurchaseCoinDto, UseCoinDto } from './dtos';
 import { Coin, CoinDocument } from './schemas/coin.schema';
 import { BuyCoin, BuyCoinDocument } from './schemas/buycoin.schema';
 import { UseCoin, UseCoinDocument } from './schemas/usecoin.schema';
 import { GetUseCoinDto, GetBuyCoinDto } from './dtos/get-coin.dto';
 import { UpdateCoinDto } from './dtos/update-coin.dto';
-import { UtilsService, PurchaseService } from 'src/common/providers';
+import { UtilsService } from 'src/common/providers';
+import { IAPValidatorProvider } from './providers/iap-validator.provider';
+import { IAP_PURCHASE_ITEM_AMOUNT_MAP } from './coins.constant';
 
 @Injectable()
 export class CoinsService {
@@ -24,9 +26,8 @@ export class CoinsService {
     @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
     @InjectModel(UseCoin.name) private buycoinModel: Model<UseCoinDocument>,
     @InjectModel(BuyCoin.name) private usecoinModel: Model<BuyCoinDocument>,
-    private profilesService: ProfilesService,
+    private iapValidatorProvider: IAPValidatorProvider,
     private utilsService: UtilsService,
-    private purchaseService: PurchaseService,
   ) {}
 
   async findUserCoin(user_id: string): Promise<CoinDto> {
@@ -72,10 +73,10 @@ export class CoinsService {
 
   async findListBuycoin(
     query: GetBuyCoinDto,
-  ): Promise<PagingResDto<BuyCoinDto>> {
+  ): Promise<PagingResDto<PurchaseCoinDto>> {
     const filter: FilterQuery<BuyCoinDocument> = {};
 
-    const projection: ProjectionFields<BuyCoinDto> = {
+    const projection: ProjectionFields<PurchaseCoinDto> = {
       _id: 1,
       userId: 1,
       buyType: 1,
@@ -98,25 +99,25 @@ export class CoinsService {
     };
   }
 
-  async createBuyCoin(user_id: string, body: BuyCoinDto) {
-    // 앱스토어: productId = ''
-    if (!body.productId) {
-      const validate_result = await this.purchaseService.validateIOSPurchase(
-        body.token,
-      );
-    } else {
-      const validate_result = await this.purchaseService.validateGooglePurchase(
-        body.productId,
-        body.token,
-      );
-
-      if (validate_result.isSuccessful) {
-        const result = await new this.buycoinModel(body).save();
-
-        await this.updateCoinAccum(user_id, body.amount);
-        return result._id.toString();
-      }
+  async createBuyCoin(user_id: string, body: PurchaseCoinDto) {
+    const amount = IAP_PURCHASE_ITEM_AMOUNT_MAP[body.productId];
+    if (!amount) {
+      throw new Error('유효하지 않은 productId 입니다.');
     }
+
+    if (body.os === 'ios') {
+      await this.iapValidatorProvider.validateIOSPurchase(body.purchaseReceipt);
+    } else {
+      await this.iapValidatorProvider.validateGooglePurchase(
+        body.productId,
+        body.purchaseReceipt,
+      );
+    }
+
+    const result = await new this.buycoinModel(body).save();
+
+    await this.updateCoinAccum(user_id, amount);
+    return result._id.toString();
   }
 
   async createUseCoin(params: UseCoinDto) {

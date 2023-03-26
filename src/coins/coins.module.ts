@@ -5,17 +5,18 @@ import { BuyCoin, BuyCoinSchema } from './schemas/buycoin.schema';
 import { UseCoin, UseCoinSchema } from './schemas/usecoin.schema';
 import { CoinsController } from './coins.controller';
 import { CoinsService } from './conis.service';
-import { ProfilesModule } from 'src/profiles/profiles.module';
+import { HttpModule } from '@nestjs/axios';
+import { IAPValidatorProvider } from './providers/iap-validator.provider';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Coin.name, schema: CoinSchema }]),
     MongooseModule.forFeature([{ name: BuyCoin.name, schema: BuyCoinSchema }]),
     MongooseModule.forFeature([{ name: UseCoin.name, schema: UseCoinSchema }]),
-    ProfilesModule,
+    HttpModule,
   ],
   controllers: [CoinsController],
-  providers: [CoinsService],
+  providers: [CoinsService, IAPValidatorProvider],
   exports: [CoinsService],
 })
 export class CoinsModule {}
