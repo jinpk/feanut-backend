@@ -38,15 +38,17 @@ export class ProfilesController {
     return dto;
   }
 
-  @Get(':profileId/card')
+  @Get('mycard')
   @ApiOperation({
     summary: '프로필 피넛 카드 조회',
   })
-  async getFeanutCard(
-    @Req() req,
-    @Param('profileId') profileId: string,
-  ): Promise<FeanutCardDto> {
-    return await this.profileService.findMyFeanutCard(profileId);
+  async getFeanutCard(@Req() req): Promise<FeanutCardDto> {
+    const profile = await this.profileService.getByUserId(req.user.id);
+    if (!profile) {
+      throw new WrappedError(PROFILE_MODULE_NAME).notFound();
+    }
+
+    return await this.profileService.findMyFeanutCard(req.user.id, profile._id);
   }
 
   @Patch(':profileId')
