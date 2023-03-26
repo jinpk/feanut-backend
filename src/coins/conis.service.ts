@@ -9,7 +9,6 @@ import {
   Types,
 } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
-import { ProfilesService } from 'src/profiles/profiles.service';
 import { CoinDto, PurchaseCoinDto, UseCoinDto } from './dtos';
 import { Coin, CoinDocument } from './schemas/coin.schema';
 import { BuyCoin, BuyCoinDocument } from './schemas/buycoin.schema';
@@ -24,8 +23,8 @@ import { IAP_PURCHASE_ITEM_AMOUNT_MAP } from './coins.constant';
 export class CoinsService {
   constructor(
     @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
-    @InjectModel(UseCoin.name) private buycoinModel: Model<UseCoinDocument>,
-    @InjectModel(BuyCoin.name) private usecoinModel: Model<BuyCoinDocument>,
+    @InjectModel(BuyCoin.name) private buycoinModel: Model<BuyCoinDocument>,
+    @InjectModel(UseCoin.name) private usecoinModel: Model<UseCoinDocument>,
     private iapValidatorProvider: IAPValidatorProvider,
     private utilsService: UtilsService,
   ) {}
@@ -33,14 +32,7 @@ export class CoinsService {
   async findUserCoin(user_id: string): Promise<CoinDto> {
     const result = await this.coinModel.findOne({ userId: user_id });
 
-    let coin = new CoinDto();
-    coin = {
-      userId: result.userId,
-      total: result.total,
-      accumLogs: result.accumLogs,
-    };
-
-    return coin;
+    return this.docToDto(result);
   }
 
   async findListUsecoin(
@@ -128,13 +120,11 @@ export class CoinsService {
   }
 
   async createCoin(user_id: string) {
-    let coin = new Coin();
-    coin = {
+    await new this.coinModel({
       userId: user_id,
       total: 3,
       accumLogs: [3],
-    };
-    await new this.coinModel(coin).save();
+    }).save();
   }
 
   async updateCoinAccum(user_id: string, amount: number) {
@@ -170,5 +160,15 @@ export class CoinsService {
       userId: user_id,
     });
     return result;
+  }
+
+  docToDto(doc: Coin | CoinDocument): CoinDto {
+    const dto = new CoinDto();
+    dto.id = doc._id.toHexString();
+    dto.userId = doc.userId;
+    dto.total = doc.total;
+    dto.accumLogs = doc.accumLogs;
+
+    return dto;
   }
 }

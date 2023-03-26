@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
+import { HydratedDocument, Types, now } from 'mongoose';
 import { COIN_MODULE_NAME } from '../coins.constant';
 
 export type CoinDocument = HydratedDocument<Coin>;
@@ -7,6 +7,9 @@ export type CoinDocument = HydratedDocument<Coin>;
 // Coin
 @Schema({ collection: COIN_MODULE_NAME, timestamps: true })
 export class Coin {
+  // pk
+  _id: Types.ObjectId;
+
   // userId
   @Prop({})
   userId: string;

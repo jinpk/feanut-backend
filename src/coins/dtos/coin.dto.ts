@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BuyType } from '../enums';
-import { UseType } from '../enums/usetype.enum';
 import { now } from 'mongoose';
 import { OS } from 'src/common/enums';
+import { UseType } from '../enums/usetype.enum';
 
 export class CoinDto {
+  id: string;
+
   @ApiProperty({ description: 'userId' })
   userId: string;
 
