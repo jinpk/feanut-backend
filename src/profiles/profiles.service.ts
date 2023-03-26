@@ -7,7 +7,7 @@ import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
 import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
-import { PROFILE_MODULE_NAME } from './profiles.constant';
+import { PROFILE_MODULE_NAME, PROFILE_SCHEMA_NAME } from './profiles.constant';
 
 @Injectable()
 export class ProfilesService {
@@ -94,6 +94,13 @@ export class ProfilesService {
   }
 
   async updateById(id: string | Types.ObjectId, dto: UpdateProfileDto) {
+    if (!Object.keys(dto).length) {
+      throw new WrappedError(
+        PROFILE_SCHEMA_NAME,
+        null,
+        'zero properties to update',
+      ).badRequest();
+    }
     const profile = await this.profileModel.findById(id);
 
     if (dto.name) {
@@ -102,6 +109,10 @@ export class ProfilesService {
 
     if (dto.statusMessage !== undefined) {
       profile.statusMessage = dto.statusMessage;
+    }
+
+    if (dto.instagram !== undefined && !dto.instagram) {
+      profile.instagram = undefined;
     }
 
     if (dto.imageFileId !== undefined) {
