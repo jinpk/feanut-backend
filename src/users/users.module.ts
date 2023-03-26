@@ -7,6 +7,7 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
 import { FriendsModule } from 'src/friendships/friendships.module';
 import { CoinsModule } from 'src/coins/coins.module';
 import { UsersExistenceController } from './users-existence.controller';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersExistenceController } from './users-existence.controller';
     ProfilesModule,
     FriendsModule,
     CoinsModule,
+    NotificationsModule,
   ],
   providers: [UsersService],
   controllers: [UsersController, UsersExistenceController],

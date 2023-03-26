@@ -43,10 +43,17 @@ export class NotificationsService {
     private notificationConfigModel: mongoose.Model<NotificationConfigDocument>,
     @InjectModel(NotificationSetting.name)
     private notificationSettingModel: mongoose.Model<NotificationSettingDocument>,
-
     @InjectModel(NotificationUserConfig.name)
     private notificationUserConfigModel: mongoose.Model<NotificationUserConfigDocument>,
   ) {}
+
+  async initNotificationUserConfig(userId: string | mongoose.Types.ObjectId) {
+    await new this.notificationUserConfigModel({
+      userId: new mongoose.Types.ObjectId(userId),
+      receivePoll: true,
+      receivePull: true,
+    }).save();
+  }
 
   async updateNotificationUserConfig(
     userId: string | mongoose.Types.ObjectId,
