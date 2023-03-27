@@ -40,11 +40,11 @@ export class PollingDto {
   @ApiProperty({default: false})
   skipped: string;
 
-  @ApiProperty({})
+  @ApiProperty({default: 0})
   refreshCount: number;
 
   // selectedAt
-  @ApiProperty({})
+  @ApiProperty({default: null})
   selectedAt: Date;
 
   // isOpened

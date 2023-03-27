@@ -73,7 +73,7 @@ export class PollingsService {
   async updateRefreshedPollingById(
     user_id,
     polling_id: string,
-  ): Promise<Polling | string> {
+  ): Promise<Polling> {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
@@ -189,6 +189,7 @@ export class PollingsService {
         $set: {
           skipped: body.skipped,
           updatedAt: now(),
+          selectedAt: now(),
         },
       });
       result = polling._id.toString();
@@ -197,6 +198,7 @@ export class PollingsService {
         $set: {
           selectedProfileId: new Types.ObjectId(body.selectedProfileId),
           updatedAt: now(),
+          selectedAt: now(),
         },
       });
       result = polling._id.toString();
@@ -209,7 +211,6 @@ export class PollingsService {
       .sort({ createdAt: -1 });
 
     const checked = await this.checkUserroundComplete(user_id, userround);
-
     if (checked) {
       await this.updateComplete(user_id, userround._id.toString());
     }
@@ -322,15 +323,18 @@ export class PollingsService {
       }
     }
 
+    let shuffledPollIds = nextRound.pollIds
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 17);
     let userround = new UserRound();
     userround = {
       userId: user_id,
       roundId: nextRound._id.toString(),
-      pollIds: nextRound.pollIds,
+      pollIds: shuffledPollIds,
       createdAt: now(),
     };
-    await new this.userroundModel(userround).save();
-    return userround;
+    const result = await new this.userroundModel(userround).save();
+    return result;
   }
 
   async findRecentUserRound(user_id: string) {
@@ -411,9 +415,10 @@ export class PollingsService {
   async checkUserroundComplete(user_id: string, userround) {
     const pollings = await this.pollingModel.find({
       userroundId: userround._id,
-      $ne: {completedAt: null}
+      selectedAt: { $ne: null }
     });
-
+    console.log(pollings)
+    console.log(pollings.length)
     // userround의 pollids길이 만큼 완료가 됐는지 확인
     if (pollings.length >= userround.pollIds.length) {
       return true
@@ -446,6 +451,15 @@ export class PollingsService {
     dto.pollId = doc.pollId;
     dto.friendIds = doc.friendIds;
     dto.createdAt = doc.createdAt;
+    return dto;
+  }
+
+  userRoundToDto(doc: UserRound | UserRoundDocument): UserRoundDto {
+    const dto = new UserRoundDto();
+    dto.id = doc._id.toHexString();
+    dto.userId = doc.userId;
+    dto.roundId = doc.roundId;
+    dto.pollIds = doc.pollIds;
     return dto;
   }
 }

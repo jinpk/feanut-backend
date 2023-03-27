@@ -6,5 +6,5 @@ export class UpdatePollingDto {
   selectedProfileId?: string;
 
   @ApiProperty({default: false})
-  skkiped?: boolean;
+  skipped?: boolean;
 }

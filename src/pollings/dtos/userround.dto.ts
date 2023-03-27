@@ -3,6 +3,7 @@ import { now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class UserRoundDto {
+  id?: string;
   // userId
   @ApiProperty({})
   userId: string;

@@ -141,6 +141,7 @@ export class PollingsController {
   })
   async getUserRound(@Request() req) {
     const result = await this.pollingsService.findUserRound(req.user.id);
+    result.data = this.pollingsService.userRoundToDto(result.data);
     return result
   }
 
@@ -151,7 +152,7 @@ export class PollingsController {
   })
   @ApiResponse({
     status: 200,
-    type: Polling,
+    type: PollingDto,
   })
   async putRefreshPolling(
     @Param('pollingId') pollingId: string,
@@ -161,11 +162,14 @@ export class PollingsController {
     if (exist.userId != req.user.id) {
       throw new WrappedError('권한이 없습니다');
     }
-
-    return await this.pollingsService.updateRefreshedPollingById(
+    const result = await this.pollingsService.updateRefreshedPollingById(
       req.user.id,
       pollingId,
     );
+
+    const dto = this.pollingsService.pollingToDto(result);
+
+    return dto
   }
 
   @Put(':pollingId/result')
