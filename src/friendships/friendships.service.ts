@@ -19,6 +19,7 @@ import { PROFILE_SCHEMA_NAME } from 'src/profiles/profiles.constant';
 import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 import { FILE_SCHEMA_NAME } from 'src/files/files.constant';
 import { ListFriendParams } from './interfaces';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class FriendshipsService {
@@ -27,6 +28,7 @@ export class FriendshipsService {
     private friendShipModel: Model<FriendShipDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
+    private usersService: UsersService,
   ) {}
 
   async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
@@ -65,7 +67,6 @@ export class FriendshipsService {
     let profileId = await this.profilesService.getIdByPhoneNumber(
       dto.phoneNumber,
     );
-
     // 휴대폰번호로 이미 생성된 프로필 없다면 empty profile 생성
     if (!profileId) {
       // 탈퇴하지 않은 오너의 프로필만 조회하고 없다면 새롭게 생성
@@ -75,6 +76,14 @@ export class FriendshipsService {
       );
     } else {
       // 내 전화번호 검증 필요
+      const user = await this.usersService.findActiveUserById(userId);
+      if (user.phoneNumber === dto.phoneNumber) {
+        throw new WrappedError(
+          FRIENDSHIPS_MODULE_NAME,
+          null,
+          'failed to add my phone number',
+        ).alreadyExist();
+      }
 
       // 이미 추가된 친구인지 검증
       if (await this.hasFriend(userId, profileId)) {

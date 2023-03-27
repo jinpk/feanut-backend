@@ -53,6 +53,7 @@ export class ProfilesService {
       {
         $unwind: {
           path: '$user',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -182,7 +183,10 @@ export class ProfilesService {
     return profile.toObject();
   }
 
-  async findMyFeanutCard(user_id: string, profile_id: Object): Promise<FeanutCardDto> {
+  async findMyFeanutCard(
+    user_id: string,
+    profile_id: Object,
+  ): Promise<FeanutCardDto> {
     var myCard = new FeanutCardDto();
     myCard = {
       joy: 0,
@@ -195,7 +199,7 @@ export class ProfilesService {
       inspiration: 0,
       awe: 0,
       love: 0,
-    }
+    };
 
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile_id,
