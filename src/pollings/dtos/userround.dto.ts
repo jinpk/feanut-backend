@@ -32,7 +32,7 @@ export class FindUserRoundDto {
   recentCompletedAt: Date;
 
   @ApiProperty({})
-  availabledAt: Date;
+  remainTime: number;
   
   @ApiProperty({})
   data: UserRoundDto;

@@ -356,10 +356,6 @@ export class PollingsService {
   }
 
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
-    const bb = now();
-    const aa = new Date(bb.getTime() + (30 * 60 * 1000))
-    console.log(bb)
-    console.log(aa)
     var res = new FindUserRoundDto()
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -376,12 +372,13 @@ export class PollingsService {
     if (rounds.length == 0) {
       await this.createUserRound(user_id)
     } else if (rounds.length == 1) {
-      res.availabledAt = new Date(rounds[0].completedAt.getTime() + (30 * 60 * 1000))
+      res.remainTime = rounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
     } else if (rounds.length == 2 ) {
-      res.availabledAt
+      res.remainTime = end.getTime() - now().getTime();
     }
 
     res.todayCount = rounds.length;
+    
     return res;
   }
 
