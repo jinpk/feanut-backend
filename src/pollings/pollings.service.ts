@@ -38,23 +38,11 @@ export class PollingsService {
 
   async createPolling(
     user_id: string,
-    userround): Promise<Polling> {
+    body): Promise<Polling> {
     const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
 
     let isopened = new Opened();
     isopened = { isOpened: false, useCoinId: null };
-
-    // userround의 pollIds에 추가 되지 않은 pollId sorting
-    const round = await this.roundModel.findById(userround.roundId);
-
-    let newPollId = '';
-    for (let i = 0; i < round.pollIds.length; i++) {
-      if (userround.pollIds.includes(round.pollIds[i])) {
-      } else {
-        newPollId = round.pollIds[i];
-        break;
-      }
-    }
 
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
@@ -70,22 +58,14 @@ export class PollingsService {
     let polling = new Polling();
     polling = {
       userId: user_id,
-      userroundId: userround._id.toString(),
-      roundId: userround.roundId,
-      pollId: newPollId,
+      userroundId: body.userRoundId,
+      pollId: body.pollId,
       friendIds: friendIds,
       opened: isopened,
       createdAt: krtime,
     };
 
     const result = await new this.pollingModel(polling).save();
-
-    // userround에 pollId추가
-    await this.userroundModel.findByIdAndUpdate(userround._id, {
-      $set: {
-        pollIds: userround.pollIds.push(newPollId),
-      },
-    });
 
     return result;
   }
@@ -463,7 +443,6 @@ export class PollingsService {
     dto.id = doc._id.toHexString();
     dto.userId = doc.userId;
     dto.userroundId = doc.userroundId;
-    dto.roundId = doc.roundId;
     dto.pollId = doc.pollId;
     dto.friendIds = doc.friendIds;
     dto.createdAt = doc.createdAt;

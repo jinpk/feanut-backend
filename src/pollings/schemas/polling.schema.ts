@@ -17,10 +17,6 @@ export class Polling {
   @Prop({ required: true })
   userroundId: string;
 
-  // roundId
-  @Prop({ required: true })
-  roundId: string;
-
   // pollId
   @Prop({ required: true })
   pollId: string;

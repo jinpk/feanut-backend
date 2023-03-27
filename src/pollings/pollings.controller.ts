@@ -124,17 +124,7 @@ export class PollingsController {
   async postPolling(
     @Body() body: ReqNewPollingDto,
     @Request() req) {
-    const userround = await this.pollingsService.findRecentUserRound(
-      req.user.id,
-    );
-    if (userround.pollIds.length >= 17) {
-      await this.pollingsService.updateComplete(
-        req.user.id,
-        userround.id,
-      );
-      throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
-    }
-    const polling = await this.pollingsService.createPolling(req.user.id, userround);
+    const polling = await this.pollingsService.createPolling(req.user.id, body);
     const dto = this.pollingsService.pollingToDto(polling);
     
     return dto;
