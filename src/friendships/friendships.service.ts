@@ -74,6 +74,8 @@ export class FriendshipsService {
         dto.phoneNumber,
       );
     } else {
+      // 내 전화번호 검증 필요
+
       // 이미 추가된 친구인지 검증
       if (await this.hasFriend(userId, profileId)) {
         throw new WrappedError(
@@ -195,6 +197,7 @@ export class FriendshipsService {
 
     const unwindProfile: PipelineStage.Unwind['$unwind'] = {
       path: '$profile',
+      preserveNullAndEmptyArrays: true,
     };
 
     const lookupUser: PipelineStage.Lookup['$lookup'] = {
@@ -206,6 +209,7 @@ export class FriendshipsService {
 
     const unwindUser: PipelineStage.Unwind['$unwind'] = {
       path: '$user',
+      preserveNullAndEmptyArrays: true,
     };
 
     const lookupFile: PipelineStage.Lookup['$lookup'] = {
@@ -217,6 +221,7 @@ export class FriendshipsService {
 
     const unwindFile: PipelineStage.Unwind['$unwind'] = {
       path: '$file',
+      preserveNullAndEmptyArrays: true,
     };
 
     const projection: ProjectionFields<FriendDto> = {
@@ -279,69 +284,5 @@ export class FriendshipsService {
         data: doc,
       };
     }
-  }
-
-  async listHiddenFriend(
-    userId: string | Types.ObjectId,
-    page?: number,
-    limit?: number,
-  ): Promise<PagingResDto<Friend>> {
-    const paging = page && limit;
-
-    const filter: FilterQuery<Friendship> = {
-      userId: new Types.ObjectId(userId),
-    };
-
-    const friendFilter: FilterQuery<Friend> = {
-      hidden: true,
-    };
-
-    const projection: ProjectionFields<Friend> = {
-      friendshipId: '$_id',
-      id: '$friends._id',
-      hidden: '$friends.hidden',
-      name: '$friends.name',
-      profileId: '$friends.profileId',
-    };
-
-    const pipeline: PipelineStage[] = [
-      // 친구 도큐먼트 조회
-      { $match: filter },
-      // 친구목록 언와인딩
-      {
-        $unwind: { path: '$friends' },
-      },
-      { $project: projection },
-      // 숨김친구 필터링
-      { $match: friendFilter },
-      { $sort: { name: 1 } },
-    ];
-
-    if (paging) {
-      pipeline.push(this.utilsService.getCommonMongooseFacet({ page, limit }));
-      const cursor = await this.friendShipModel.aggregate(pipeline);
-      const metdata = cursor[0].metadata;
-      const data = cursor[0].data;
-      return {
-        total: metdata[0]?.total || 0,
-        data: data,
-      };
-    } else {
-      const doc = await this.friendShipModel.aggregate<Friend>(pipeline);
-      return {
-        total: doc.length,
-        data: doc,
-      };
-    }
-  }
-
-  _friendDocToDto(friend: Friend): FriendDto {
-    const dto = new FriendDto();
-    dto.name = friend.name;
-    dto.profileId = friend.profileId.toHexString();
-
-    dto.profileId = friend.profileId.toHexString();
-    dto.profileId = friend.profileId.toHexString();
-    return dto;
   }
 }

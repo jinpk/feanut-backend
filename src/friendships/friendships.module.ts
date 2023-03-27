@@ -16,4 +16,4 @@ import { Friendship, FriendShipSchema } from './schemas/friendships.schema';
   providers: [FriendshipsService],
   exports: [FriendshipsService],
 })
-export class FriendsModule {}
+export class FriendshipsModule {}

@@ -11,7 +11,7 @@ import { PollingsService } from './pollings.service';
 import { PollingsController } from './pollings.controller';
 import { UsersModule } from 'src/users/users.module';
 import { CoinsModule } from 'src/coins/coins.module';
-import { FriendsModule } from 'src/friendships/friendships.module';
+import { FriendshipsModule } from 'src/friendships/friendships.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { FriendsModule } from 'src/friendships/friendships.module';
     ProfilesModule,
     UsersModule,
     CoinsModule,
-    FriendsModule,
+    FriendshipsModule,
   ],
   controllers: [PollingsController],
   providers: [PollingsService],
