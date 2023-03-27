@@ -243,20 +243,6 @@ export class PollingsService {
     return res;
   }
 
-  async checkUserroundComplete(user_id: string, userround) {
-    const pollings = await this.pollingModel.find({
-      userroundId: userround._id,
-      $ne: {completedAt: null}
-    });
-
-    // userround의 pollids길이 만큼 완료가 됐는지 확인
-    if (pollings.length >= userround.pollIds.length) {
-      return true
-    }
-
-    return false
-  }
-
   // 피넛을 소모. 수신투표 열기.
   async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto): Promise<string> {
     let opened = new Opened();
@@ -306,42 +292,56 @@ export class PollingsService {
   }
 
   // userRound
-  async createUserRound(user_id: string): Promise<UserRoundDto> {
-    var today = new Date();
-    today.setTime(today.setUTCHours(0,0,0,0))
+  async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
     const rounds = await this.roundModel.find();
 
+    // 이벤트 라운드 체크
     var eventRounds = []
-    rounds.forEach((element) => {
-      if (element.eventRound) {
-        eventRounds.push(element);
+    eventRounds = rounds.filter((element) => element.eventRound == true);
+
+    eventRounds.sort((prev, next) => {
+      if(prev.startedAt > next.startedAt) return 1;
+      if(prev.startedAt < next.startedAt) return -1;
+    })
+
+    for (var i = 0; i < eventRounds.length; i++) {
+      for (const ur of userrounds) {
+        if (eventRounds[i]._id.toString() == ur.roundId) {
+          eventRounds.splice(i, 1);
+          i--;
+        }
       }
-    });
+    }
 
-    // 3. 사용자가 해당 라운드 참여 했는지 확인
-    // 5. 참여하지 않았으면 해당 라운드 먼저.
-    // 4. 참여 했으면 index순서대로.
-    // GET 가장 최근의 라운드 index
-    const recentRound = await this.findRecentUserRound(user_id);
+    var normalRounds = []
+    normalRounds = rounds.filter((element) => element.eventRound == false);
 
-    // var nextRoundIndex: number;
-    // if (rounds.length == recentRound.index) {
-    //   nextRoundIndex = 0;
-    // } else {
-    //   nextRoundIndex = recentRound.index + 1;
-    // }
-
-    // // 해당 라운드에 속한 pollId 12개 생성
-    // const nextRoundId = rounds[nextRoundIndex].roundId;
+    var nextRound = new Round();
+    if (eventRounds) {
+      nextRound = eventRounds[0];
+    } else {
+      // 4. 참여 했으면 index순서대로.
+      const nextRoundIndex = userrounds[0].index + 1;
+      if (normalRounds.length > nextRoundIndex) {
+        nextRound = normalRounds[0];
+      } else {
+        for (const r of normalRounds) {
+          if (r.index == nextRoundIndex) {
+            nextRound = r;
+            break;
+          }
+        }        
+      }
+    }
 
     let userround = new UserRound();
     userround = {
       userId: user_id,
-      roundId: '',
-      pollIds: [],
+      roundId: nextRound._id.toString(),
+      pollIds: nextRound.pollIds,
       createdAt: now(),
     };
-    // await new this.userroundModel(userround).save();
+    await new this.userroundModel(userround).save();
     return userround;
   }
 
@@ -357,29 +357,73 @@ export class PollingsService {
 
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto()
+
+    var sortStart = new Date(now().getTime() - 365 * 24 * 3600000)
+
+    const userrounds = await this.userroundModel
+      .find({
+        userId: user_id,
+        createdAt: { $gte: sortStart },
+      })
+      .sort({ createdAt: -1 });
+
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    const rounds = await this.userroundModel
-      .find({
-        userId: user_id,
-        completedAt: { $gte: start, $lte: end },
-      })
-      .sort({ completedAt: -1 });
+    var todayRounds = []
+    userrounds.forEach(element => {
+      if (element.completedAt == null) {
+        todayRounds.push(element);
+      }
+      if ((element.completedAt >= start) && (element.completedAt <= end)) {
+        todayRounds.push(element);
+      }
+    });
 
-    if (rounds.length == 0) {
-      await this.createUserRound(user_id)
-    } else if (rounds.length == 1) {
-      res.remainTime = rounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
-    } else if (rounds.length == 2 ) {
+    res.todayCount = todayRounds.length;
+
+    if (res.todayCount == 0) {
+      if (!userrounds[0].completedAt) {
+        res.data = userrounds[0];
+      } else {
+        const result = await this.createUserRound(user_id, userrounds)
+        res.data = result;
+      }
+    } else if (res.todayCount == 1) {
+      res.remainTime = todayRounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
+      if (!userrounds[0].completedAt) {
+        res.data = userrounds[0];
+      } else {
+        res.recentCompletedAt = userrounds[0].completedAt;        
+        const result = await this.createUserRound(user_id, userrounds)
+        res.data = result;
+      }
+    } else if (res.todayCount == 2 ) {
       res.remainTime = end.getTime() - now().getTime();
+      if (!userrounds[0].completedAt) {
+        res.data = userrounds[0];
+      } else {
+        res.recentCompletedAt = userrounds[0].completedAt;
+      }
     }
 
-    res.todayCount = rounds.length;
-    
     return res;
+  }
+
+  async checkUserroundComplete(user_id: string, userround) {
+    const pollings = await this.pollingModel.find({
+      userroundId: userround._id,
+      $ne: {completedAt: null}
+    });
+
+    // userround의 pollids길이 만큼 완료가 됐는지 확인
+    if (pollings.length >= userround.pollIds.length) {
+      return true
+    }
+
+    return false
   }
 
   async updateComplete(user_id, userround_id: string) {

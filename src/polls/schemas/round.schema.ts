@@ -8,7 +8,7 @@ export type RoundDocument = HydratedDocument<Round>;
 @Schema({ collection: ROUND_MODULE_NAME, timestamps: true })
 export class Round {
   // pk
-  id?: string;
+  _id?: string;
 
   @Prop({})
   title: string;
