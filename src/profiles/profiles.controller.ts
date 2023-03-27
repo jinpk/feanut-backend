@@ -48,7 +48,7 @@ export class ProfilesController {
       throw new WrappedError(PROFILE_MODULE_NAME).notFound();
     }
 
-    return await this.profileService.findMyFeanutCard(req.user.id, profile._id);
+    return await this.profileService.findMyFeanutCard(profile._id);
   }
 
   @Patch(':profileId')

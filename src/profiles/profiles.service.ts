@@ -174,6 +174,7 @@ export class ProfilesService {
   }
 
   async getByUserId(userId: string | Types.ObjectId): Promise<Profile | null> {
+    console.log(userId)
     const profile = await this.profileModel.findOne({
       ownerId: new Types.ObjectId(userId),
     });
@@ -184,7 +185,6 @@ export class ProfilesService {
   }
 
   async findMyFeanutCard(
-    user_id: string,
     profile_id: Object,
   ): Promise<FeanutCardDto> {
     var myCard = new FeanutCardDto();
