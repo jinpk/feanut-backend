@@ -18,8 +18,8 @@ import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
-import { UserRoundDto } from './dtos/userround.dto';
-import { KR_TIME_DIFF } from 'src/common/common.constant';
+import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
+import { WrappedError } from 'src/common/errors';
 
 @Injectable()
 export class PollingsService {
@@ -68,6 +68,7 @@ export class PollingsService {
     let polling = new Polling();
     polling = {
       userId: user_id,
+      userroundId: userround._id.toString(),
       roundId: userround.roundId,
       pollId: newPollId,
       friendIds: friendIds,
@@ -92,8 +93,6 @@ export class PollingsService {
     user_id,
     polling_id: string,
   ): Promise<Polling | string> {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
-
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
@@ -101,10 +100,10 @@ export class PollingsService {
     if (!polling.refreshCount) {
       polling.refreshCount = 1;
     } else {
-      if (polling.refreshCount < 2) {
+      if (polling.refreshCount < 3) {
         polling.refreshCount += 1;
       } else {
-        return 'Exceed your free refresh count';
+        throw new WrappedError('Exceed your free refresh count').reject()
       }
     }
     // 친구목록 불러오기/셔플
@@ -154,7 +153,7 @@ export class PollingsService {
     };
   }
 
-  async findListPollingByProfileId(
+  async findListPollingByUserId(
     user_id: string,
     query: GetListReceivePollingDto,
   ): Promise<PagingResDto<PollingDto>> {
@@ -202,13 +201,25 @@ export class PollingsService {
     return result._id.toString();
   }
 
-  async updateSelectedProfile(user_id, polling_id, profile_id: string) {
-    const result = await this.pollingModel.findByIdAndUpdate(polling_id, {
-      $set: {
-        selectedProfileId: new Types.ObjectId(profile_id),
-        updatedAt: now(),
-      },
-    });
+  async updatePollingResult(user_id, polling_id: string, body) {
+    var result = ''
+    if (body.skipped){
+      let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
+        $set: {
+          skipped: body.skipped,
+          updatedAt: now(),
+        },
+      });
+      result = polling._id.toString();
+    } else {
+      let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
+        $set: {
+          selectedProfileId: new Types.ObjectId(body.selectedProfileId),
+          updatedAt: now(),
+        },
+      });
+      result = polling._id.toString();
+    }
 
     const userround = await this.userroundModel
       .findOne({
@@ -216,44 +227,37 @@ export class PollingsService {
       })
       .sort({ createdAt: -1 });
 
-    const count = await this.checkUserroundComplete(user_id, userround);
+    const checked = await this.checkUserroundComplete(user_id, userround);
 
-    let completed = false;
-    if (count >= 12) {
-      completed = true;
+    if (checked) {
       await this.updateComplete(user_id, userround._id.toString());
     }
 
     const res = {
+      pollingId: result,
       userroundId: userround._id.toString(),
-      userroundCompleted: completed,
-      pollingId: result._id.toString(),
+      userroundCompleted: checked,
     };
 
     return res;
   }
 
   async checkUserroundComplete(user_id: string, userround) {
-    const round = await this.userroundModel
-      .findOne({
-        userId: user_id,
-      })
-      .sort({ createdAt: -1 });
+    const pollings = await this.pollingModel.find({
+      userroundId: userround._id,
+      $ne: {completedAt: null}
+    });
 
-    const result = await this.pollingModel.find({ $in: userround.pollingIds });
-
-    let selecteCount = 0;
-    for (const value of result) {
-      if (value.selectedProfileId) {
-        selecteCount += 1;
-      }
+    // userround의 pollids길이 만큼 완료가 됐는지 확인
+    if (pollings.length >= userround.pollIds.length) {
+      return true
     }
 
-    return selecteCount;
+    return false
   }
 
   // 피넛을 소모. 수신투표 열기.
-  async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto) {
+  async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto): Promise<string> {
     let opened = new Opened();
 
     //userId 사용하여 get profile
@@ -263,7 +267,7 @@ export class PollingsService {
     const usercoin = await this.coinService.findUserCoin(user_id);
 
     if (usercoin.total < 3) {
-      return 'Lack of total feanut amount';
+      throw new WrappedError('Lack of total feanut amount').reject()
     } else {
       let usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
@@ -301,150 +305,90 @@ export class PollingsService {
   }
 
   // userRound
-  async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
-    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
+  async createUserRound(user_id: string): Promise<UserRoundDto> {
+    var today = new Date();
+    today.setTime(today.setUTCHours(0,0,0,0))
+    const rounds = await this.roundModel.find();
 
-    // userrounds에서 roundId 추출
-    const completeRoundIds = [];
-    userrounds.data.forEach((element) => {
-      completeRoundIds.push(element.roundId);
-    });
-
-    // roundModel에서 enable, startedAt, endedAt 조건 roundId
-    const enbaleRoundIds = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    today.setTime(today.getTime() + KR_TIME_DIFF);
-    const enbaleRounds = await this.roundModel.find({
-      enabled: true,
-      startedAt: { $lte: today },
-      endedAt: { $gt: today },
-    });
-    enbaleRounds.forEach((element) => {
-      enbaleRoundIds.push(element._id.toString());
-    });
-
-    // roundModel중 userrounds roundId들 삭제.
-    for (let i = 0; i < enbaleRoundIds.length; i++) {
-      for (let j = 0; j < completeRoundIds.length; j++) {
-        if (enbaleRoundIds.includes(completeRoundIds[j])) {
-          enbaleRoundIds.splice(i, 1);
-          i--;
-        }
-      }
-    }
-
-    // 남은 것 중 랜덤으로 하나의 라운드 아이디 선정
-    const randomIndex = Math.floor(Math.random() * enbaleRoundIds.length);
-    const RandomRoundId = enbaleRoundIds[randomIndex];
-
-    // 해당 라운드에 속한 pollId 12개 생성
-    let polls = [];
-    enbaleRounds.forEach((element) => {
-      if (element._id.toString() == RandomRoundId) {
-        let temp = [];
-        temp = element.pollIds.sort(() => Math.random() - 0.5);
-        polls = temp.slice(-12);
+    var eventRounds = []
+    rounds.forEach((element) => {
+      if (element.eventRound) {
+        eventRounds.push(element);
       }
     });
 
-    // pollId에 매핑 된 polling 12개 생성
-    const pollings = await this.createFirstDozen(user_id, RandomRoundId, polls);
+    // 3. 사용자가 해당 라운드 참여 했는지 확인
+    // 5. 참여하지 않았으면 해당 라운드 먼저.
+    // 4. 참여 했으면 index순서대로.
+    // GET 가장 최근의 라운드 index
+    const recentRound = await this.findRecentUserRound(user_id);
+
+    // var nextRoundIndex: number;
+    // if (rounds.length == recentRound.index) {
+    //   nextRoundIndex = 0;
+    // } else {
+    //   nextRoundIndex = recentRound.index + 1;
+    // }
+
+    // // 해당 라운드에 속한 pollId 12개 생성
+    // const nextRoundId = rounds[nextRoundIndex].roundId;
 
     let userround = new UserRound();
     userround = {
       userId: user_id,
-      roundId: RandomRoundId,
-      pollIds: polls.slice(0, 12),
-      pollingIds: pollings,
-      createdAt: krtime,
+      roundId: '',
+      pollIds: [],
+      createdAt: now(),
     };
-    await new this.userroundModel(userround).save();
+    // await new this.userroundModel(userround).save();
     return userround;
   }
 
   async findRecentUserRound(user_id: string) {
-    const round = await this.userroundModel
+    const recent = await this.userroundModel
       .findOne({
         userId: user_id,
       })
       .sort({ createdAt: -1 });
 
-    return round;
+    return recent;
   }
 
-  async findUserRound(user_id: string) {
+  async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    start.setTime(start.getTime() + KR_TIME_DIFF);
+    start.setUTCHours(0, 0, 0, 0);
     const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    end.setTime(end.getTime() + KR_TIME_DIFF);
+    end.setUTCHours(23, 59, 59, 999);
 
     const rounds = await this.userroundModel
       .find({
         userId: user_id,
-        createdAt: { $gte: start, $lt: end },
+        completedAt: { $gte: start, $lte: end },
       })
-      .sort({ createdAt: -1 });
+      .sort({ completedAt: -1 });
 
-    const result = {
-      todayCount: rounds.length,
-      data: rounds,
-    };
+    const result = new FindUserRoundDto()
+
+    this.createUserRound(user_id)
 
     return result;
   }
 
   async updateComplete(user_id, userround_id: string) {
+    var curtime = new Date();
+    curtime.setUTCHours(0,0,0,0);
     const result = await this.userroundModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(userround_id),
         userId: user_id,
       },
       {
-        $set: { complete: true, completedAt: now() },
+        $set: { complete: true, completedAt: curtime },
       },
     );
 
     // 투표 완료: 코인 획득
     await this.coinService.updateCoinAccum(user_id, 2);
     return result._id.toString();
-  }
-
-  async createFirstDozen(user_id, round_id: string, polls: string[]) {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
-
-    let polling = new Polling();
-    let isopened = new Opened();
-    isopened = { isOpened: false, useCoinId: null };
-
-    const friendList = await this.friendShipsService.listFriend(user_id);
-
-    const pollingIds = [];
-    for (const poll_id of polls) {
-      // 친구목록 불러오기/셔플
-      const temp_arr = friendList.data
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
-
-      const friendIds = [];
-      for (const friend of temp_arr) {
-        friendIds.push(friend.profileId);
-      }
-
-      polling = {
-        userId: user_id,
-        roundId: round_id,
-        pollId: poll_id,
-        friendIds: friendIds,
-        opened: isopened,
-        createdAt: krtime,
-      };
-
-      const savepolling = await new this.pollingModel(polling).save();
-      await pollingIds.push(savepolling._id);
-    }
-    return pollingIds;
   }
 }

@@ -3,5 +3,8 @@ import { PollingDto } from './polling.dto';
 
 export class UpdatePollingDto {
   @ApiProperty({})
-  selectedProfileId: string;
+  selectedProfileId?: string;
+
+  @ApiProperty({default: false})
+  skkiped?: boolean;
 }

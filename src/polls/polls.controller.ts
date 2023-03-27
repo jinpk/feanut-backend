@@ -47,16 +47,13 @@ export class PollsController {
   @ApiOperation({
     summary: '(ADMIN) New 라운드 등록',
     description:
-      'startedAt: 시작 날짜 00시00분, endedAt: 종료 날짜 23시 59분.\n\nendedAt이 없을 시 기본 1년',
-  })
-  @ApiBody({
-    type: RoundDto,
+      'startedAt, endedAt: YYYY-MM-DD 입력.\n\n시작날짜 00시00분, 종료날짜 00시00분 종료.\n\nndedAt이 없을 시 기본 1년',
   })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
-  async postRound(@Body() body, @Request() req) {
+  async postRound(@Body() body: RoundDto, @Request() req) {
     if (!req.user.isAdmin) {
       throw new UnauthorizedException('Not an Admin');
     }

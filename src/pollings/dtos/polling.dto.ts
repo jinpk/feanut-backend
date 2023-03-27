@@ -16,6 +16,10 @@ export class PollingDto {
   @ApiProperty({})
   userId: string;
 
+  // userroundId
+  @ApiProperty({})
+  userroundId: string;
+
   // roundId
   @ApiProperty({})
   roundId: string;
@@ -31,6 +35,10 @@ export class PollingDto {
   // selectedId
   @ApiProperty({})
   selectedProfileId: string;
+
+  // skipped
+  @ApiProperty({default: false})
+  skipped: string;
 
   @ApiProperty({})
   refreshCount: number;
@@ -54,4 +62,18 @@ export class PollingOpenDto extends OmitType(UseCoinDto, ['userId']) {
     required: true,
   })
   profileId: string;
+}
+
+export class ReqNewPollingDto {
+  @ApiProperty({required: true})
+  pollId: string;
+  
+  @ApiProperty({required: true})
+  userRoundId: string;
+}
+
+export class PollingResultDto {
+  // 
+  @ApiProperty({})
+  userId: string;
 }

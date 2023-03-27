@@ -9,16 +9,27 @@ export type RoundDocument = HydratedDocument<Round>;
 @Schema({ collection: ROUND_MODULE_NAME, timestamps: true })
 export class Round {
   // pk
-  id: string;
+  id?: string;
 
+  @Prop({})
+  title: string;
+  
+  @Prop({})
+  index: number;
+
+  // 활성화 여부
   @Prop({ default: false })
   enabled: boolean;
+
+  // 이벤트 라운드 여부
+  @Prop({ default: false })
+  eventRound: boolean;
 
   @Prop({})
   pollIds: string[];
 
   // round 활성화 시작 시간
-  @Prop({})
+  @Prop({default: null})
   startedAt?: Date;
 
   // round 활성화 끝 시간
@@ -26,7 +37,7 @@ export class Round {
   endedAt?: Date;
 
   // 생성시간
-  @Prop({})
+  @Prop({ default: now()})
   createdAt?: Date;
 }
 

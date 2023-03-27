@@ -15,12 +15,6 @@ export class UserRoundDto {
   @ApiProperty({})
   pollIds: string[];
 
-  @ApiProperty({})
-  pollingIds: any[];
-
-  @ApiProperty({})
-  skipCount?: number;
-
   // complete
   @ApiProperty({ default: false })
   complete?: boolean;
@@ -28,6 +22,17 @@ export class UserRoundDto {
   // completedAt
   @ApiProperty({})
   completedAt?: Date;
+}
+
+export class FindUserRoundDto {
+  @ApiProperty({})
+  todayCount: number;
+
+  @ApiProperty({})
+  recentCompleteAt: Date;  
+  
+  @ApiProperty({})
+  data: UserRoundDto;
 }
 
 export class PayUserRoundDto extends OmitType(UseCoinDto, [

@@ -12,6 +12,10 @@ export class Polling {
   @Prop({ required: true })
   userId: string;
 
+  // userroundId
+  @Prop({ required: true })
+  userroundId: string;
+
   // roundId
   @Prop({ required: true })
   roundId: string;
@@ -28,10 +32,14 @@ export class Polling {
   @Prop({ type: Types.ObjectId, default: null })
   selectedProfileId?: string;
 
+  // 건너뛰기 여부
+  @Prop({ type: Types.ObjectId, default: false })
+  skipped?: boolean;
+
   @Prop({ defaul: 0 })
   refreshCount?: number;
 
-  // selectedAt
+  // completedAt
   @Prop({ defaul: null })
   selectedAt?: Date;
 
