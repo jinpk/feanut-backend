@@ -302,6 +302,7 @@ export class PollingsService {
     eventRounds.sort((prev, next) => {
       if(prev.startedAt > next.startedAt) return 1;
       if(prev.startedAt < next.startedAt) return -1;
+      return 0;
     })
 
     for (var i = 0; i < eventRounds.length; i++) {
@@ -315,22 +316,29 @@ export class PollingsService {
 
     var normalRounds = []
     normalRounds = rounds.filter((element) => element.eventRound == false);
+    normalRounds.sort((prev, next) => {
+      if(prev.index > next.index) return 1;
+      if(prev.index < next.index) return -1;
+      return 0;
+    })
 
     var nextRound = new Round();
     if (eventRounds) {
       nextRound = eventRounds[0];
     } else {
-      // 4. 참여 했으면 index순서대로.
-      const nextRoundIndex = userrounds[0].index + 1;
-      if (normalRounds.length > nextRoundIndex) {
-        nextRound = normalRounds[0];
-      } else {
-        for (const r of normalRounds) {
-          if (r.index == nextRoundIndex) {
-            nextRound = r;
+      if (userrounds) {
+        for (let i = 0; i < normalRounds.length; i++) {
+          if (normalRounds[i].index == userrounds[0].index) {
+            if ((i + 1) < normalRounds.length) {
+              nextRound = normalRounds[i+1];
+            } else{
+              nextRound = normalRounds[0];
+            }
             break;
           }
-        }        
+        }
+      } else {
+        nextRound = normalRounds[0];
       }
     }
 
@@ -367,46 +375,54 @@ export class PollingsService {
       })
       .sort({ createdAt: -1 });
 
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-
-    var todayRounds = []
-    userrounds.forEach(element => {
-      if (element.completedAt == null) {
-        todayRounds.push(element);
+    if (userrounds.length > 0) {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+  
+      var todayRounds = []
+      userrounds.forEach(element => {
+        if (element.completedAt == null) {
+          todayRounds.push(element);
+        }
+        if ((element.completedAt >= start) && (element.completedAt <= end)) {
+          todayRounds.push(element);
+        }
+      });
+  
+      res.todayCount = todayRounds.length;
+  
+      if (res.todayCount == 0) {
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          const result = await this.createUserRound(user_id, userrounds)
+          res.data = result;
+        }
+      } else if (res.todayCount == (1 || 2)) {
+        if (todayRounds[0].completedAt) {
+          res.remainTime = todayRounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
+        }
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          res.recentCompletedAt = userrounds[0].completedAt;
+          const result = await this.createUserRound(user_id, userrounds)
+          res.data = result;
+        }
+      } else if (res.todayCount == 3 ) {
+        res.remainTime = end.getTime() - now().getTime();
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          res.recentCompletedAt = userrounds[0].completedAt;
+        }
       }
-      if ((element.completedAt >= start) && (element.completedAt <= end)) {
-        todayRounds.push(element);
-      }
-    });
-
-    res.todayCount = todayRounds.length;
-
-    if (res.todayCount == 0) {
-      if (!userrounds[0].completedAt) {
-        res.data = userrounds[0];
-      } else {
-        const result = await this.createUserRound(user_id, userrounds)
-        res.data = result;
-      }
-    } else if (res.todayCount == 1) {
-      res.remainTime = todayRounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
-      if (!userrounds[0].completedAt) {
-        res.data = userrounds[0];
-      } else {
-        res.recentCompletedAt = userrounds[0].completedAt;        
-        const result = await this.createUserRound(user_id, userrounds)
-        res.data = result;
-      }
-    } else if (res.todayCount == 2 ) {
-      res.remainTime = end.getTime() - now().getTime();
-      if (!userrounds[0].completedAt) {
-        res.data = userrounds[0];
-      } else {
-        res.recentCompletedAt = userrounds[0].completedAt;
-      }
+    } else {
+      const result = await this.createUserRound(user_id, userrounds)
+      res.data = result;
+      res.todayCount = 0;
     }
 
     return res;

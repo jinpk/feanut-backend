@@ -150,9 +150,8 @@ export class PollingsController {
     type: FindUserRoundDto,
   })
   async getUserRound(@Request() req) {
-    const rounds = await this.pollingsService.findUserRound(req.user.id);
-
-    return 
+    const result = await this.pollingsService.findUserRound(req.user.id);
+    return result
   }
 
   @Put(':pollingId/refresh')
