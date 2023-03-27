@@ -17,8 +17,8 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { FilesModule } from './files/files.module';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { AdminModule } from './admin/admin.module';
-import { SchedulerModule } from './scheduler/scheduler.module';
 import { EmojisModule } from './emojis/emojis.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -35,6 +35,7 @@ import { EmojisModule } from './emojis/emojis.module';
       inject: [ConfigService],
     }),
     EventEmitterModule.forRoot(),
+    CommonModule,
     UsersModule,
     AuthModule,
     CoinsModule,
@@ -44,7 +45,6 @@ import { EmojisModule } from './emojis/emojis.module';
     PollingsModule,
     PollsModule,
     AdminModule,
-    SchedulerModule,
     EmojisModule,
   ],
   controllers: [AppController],

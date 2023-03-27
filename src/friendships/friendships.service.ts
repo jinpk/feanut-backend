@@ -9,16 +9,19 @@ import {
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
-import { FriendShipsServiceInterface } from './friendships.interface';
 import { AddFriendDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
 import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
 import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
+import { PROFILE_SCHEMA_NAME } from 'src/profiles/profiles.constant';
+import { USER_SCHEMA_NAME } from 'src/users/users.constant';
+import { FILE_SCHEMA_NAME } from 'src/files/files.constant';
+import { ListFriendParams } from './interfaces';
 
 @Injectable()
-export class FriendshipsService implements FriendShipsServiceInterface {
+export class FriendshipsService {
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
@@ -165,41 +168,102 @@ export class FriendshipsService implements FriendShipsServiceInterface {
 
   async listFriend(
     userId: string | Types.ObjectId,
-    page?: number,
-    limit?: number,
-  ): Promise<PagingResDto<Friend>> {
-    const paging = page && limit;
+    params: ListFriendParams = {},
+  ): Promise<PagingResDto<FriendDto>> {
+    const paging = params.page && params.limit;
+
     const filter: FilterQuery<Friendship> = {
       userId: new Types.ObjectId(userId),
     };
 
-    const friendFilter: FilterQuery<Friend> = {
-      hidden: { $ne: true },
+    const unwind: PipelineStage.Unwind['$unwind'] = {
+      path: '$friends',
     };
 
-    const projection: ProjectionFields<Friend> = {
-      friendshipId: '$_id',
-      id: '$friends._id',
-      hidden: '$friends.hidden',
-      name: '$friends.name',
+    const match: FilterQuery<Friend> = {
+      $expr: {
+        [params.hidden ? '$eq' : '$ne']: ['$friends.hidden', true],
+      },
+    };
+
+    const lookupProfile: PipelineStage.Lookup['$lookup'] = {
+      from: PROFILE_SCHEMA_NAME,
+      localField: 'friends.profileId',
+      foreignField: '_id',
+      as: 'profile',
+    };
+
+    const unwindProfile: PipelineStage.Unwind['$unwind'] = {
+      path: '$profile',
+    };
+
+    const lookupUser: PipelineStage.Lookup['$lookup'] = {
+      from: USER_SCHEMA_NAME,
+      localField: 'profile.ownerId',
+      foreignField: '_id',
+      as: 'user',
+    };
+
+    const unwindUser: PipelineStage.Unwind['$unwind'] = {
+      path: '$user',
+    };
+
+    const lookupFile: PipelineStage.Lookup['$lookup'] = {
+      from: FILE_SCHEMA_NAME,
+      localField: 'profile.imageFileId',
+      foreignField: '_id',
+      as: 'file',
+    };
+
+    const unwindFile: PipelineStage.Unwind['$unwind'] = {
+      path: '$file',
+    };
+
+    const projection: ProjectionFields<FriendDto> = {
+      _id: 0,
       profileId: '$friends.profileId',
+      hidden: '$friends.hidden',
+      name: {
+        $ifNull: ['$profile.name', '$friends.name'],
+      },
+      gender: '$profile.gender',
+      username: '$user.username',
+      profileImageKey: '$file.key',
+    };
+
+    const sort: PipelineStage.Sort['$sort'] = {
+      name: 1,
     };
 
     const pipeline: PipelineStage[] = [
-      // 친구 도큐먼트 조회
       { $match: filter },
-      // 친구목록 언와인딩
       {
-        $unwind: { path: '$friends' },
+        $unwind: unwind,
+      },
+      { $match: match },
+      { $lookup: lookupProfile },
+      {
+        $unwind: unwindProfile,
+      },
+      { $lookup: lookupUser },
+      {
+        $unwind: unwindUser,
+      },
+      { $lookup: lookupFile },
+      {
+        $unwind: unwindFile,
       },
       { $project: projection },
-      // 숨김친구 필터링
-      { $match: friendFilter },
-      { $sort: { name: 1 } },
+      { $sort: sort },
     ];
 
     if (paging) {
-      pipeline.push(this.utilsService.getCommonMongooseFacet({ page, limit }));
+      pipeline.push(
+        this.utilsService.getCommonMongooseFacet({
+          page: params.page,
+          limit: params.limit,
+        }),
+      );
       const cursor = await this.friendShipModel.aggregate(pipeline);
       const metdata = cursor[0].metadata;
       const data = cursor[0].data;
@@ -208,7 +272,8 @@ export class FriendshipsService implements FriendShipsServiceInterface {
         data: data,
       };
     } else {
-      const doc = await this.friendShipModel.aggregate<Friend>(pipeline);
+      const doc = await this.friendShipModel.aggregate<FriendDto>(pipeline);
+
       return {
         total: doc.length,
         data: doc,
@@ -273,6 +338,9 @@ export class FriendshipsService implements FriendShipsServiceInterface {
   _friendDocToDto(friend: Friend): FriendDto {
     const dto = new FriendDto();
     dto.name = friend.name;
+    dto.profileId = friend.profileId.toHexString();
+
+    dto.profileId = friend.profileId.toHexString();
     dto.profileId = friend.profileId.toHexString();
     return dto;
   }

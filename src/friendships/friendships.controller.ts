@@ -113,28 +113,11 @@ export class FriendshipsController {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
 
-    const { total, data } =
-      query.hidden === '1'
-        ? await this.friendshipsService.listHiddenFriend(
-            userId,
-            query.page,
-            query.limit,
-          )
-        : await this.friendshipsService.listFriend(
-            userId,
-            query.page,
-            query.limit,
-          );
-
-    const dtoData: FriendDto[] = [];
-    data.forEach((x, i) => {
-      dtoData.push(this.friendshipsService._friendDocToDto(x));
+    return await this.friendshipsService.listFriend(userId, {
+      page: query.page,
+      limit: query.limit,
+      hidden: query.hidden === '1',
     });
-
-    return {
-      total,
-      data: dtoData,
-    };
   }
 
   @Post(':userId/friends')
