@@ -29,7 +29,10 @@ export class FindUserRoundDto {
   todayCount: number;
 
   @ApiProperty({})
-  recentCompleteAt: Date;  
+  recentCompletedAt: Date;
+
+  @ApiProperty({})
+  availabledAt: Date;
   
   @ApiProperty({})
   data: UserRoundDto;

@@ -134,7 +134,10 @@ export class PollingsController {
       );
       throw new WrappedError('투표 건너뛰기 횟수 초과').reject();
     }
-    return await this.pollingsService.createPolling(req.user.id, userround);
+    const polling = await this.pollingsService.createPolling(req.user.id, userround);
+    const dto = this.pollingsService.pollingToDto(polling);
+    
+    return dto;
   }
 
   @Get('userround')

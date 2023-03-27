@@ -36,7 +36,9 @@ export class PollingsService {
     private utilsService: UtilsService,
   ) {}
 
-  async createPolling(user_id: string, userround) {
+  async createPolling(
+    user_id: string,
+    userround): Promise<Polling> {
     const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
 
     let isopened = new Opened();
@@ -82,11 +84,10 @@ export class PollingsService {
     await this.userroundModel.findByIdAndUpdate(userround._id, {
       $set: {
         pollIds: userround.pollIds.push(newPollId),
-        pollingIds: userround.pollingIds.push(result._id.toString()),
       },
     });
 
-    return result._id.toString();
+    return result;
   }
 
   async updateRefreshedPollingById(
@@ -355,10 +356,15 @@ export class PollingsService {
   }
 
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
+    const bb = now();
+    const aa = new Date(bb.getTime() + (30 * 60 * 1000))
+    console.log(bb)
+    console.log(aa)
+    var res = new FindUserRoundDto()
     const start = new Date();
-    start.setUTCHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
     const end = new Date();
-    end.setUTCHours(23, 59, 59, 999);
+    end.setHours(23, 59, 59, 999);
 
     const rounds = await this.userroundModel
       .find({
@@ -367,28 +373,43 @@ export class PollingsService {
       })
       .sort({ completedAt: -1 });
 
-    const result = new FindUserRoundDto()
+    if (rounds.length == 0) {
+      await this.createUserRound(user_id)
+    } else if (rounds.length == 1) {
+      res.availabledAt = new Date(rounds[0].completedAt.getTime() + (30 * 60 * 1000))
+    } else if (rounds.length == 2 ) {
+      res.availabledAt
+    }
 
-    this.createUserRound(user_id)
-
-    return result;
+    res.todayCount = rounds.length;
+    return res;
   }
 
   async updateComplete(user_id, userround_id: string) {
-    var curtime = new Date();
-    curtime.setUTCHours(0,0,0,0);
     const result = await this.userroundModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(userround_id),
         userId: user_id,
       },
       {
-        $set: { complete: true, completedAt: curtime },
+        $set: { complete: true, completedAt: now() },
       },
     );
 
     // 투표 완료: 코인 획득
     await this.coinService.updateCoinAccum(user_id, 2);
     return result._id.toString();
+  }
+
+  pollingToDto(doc: Polling | PollingDocument): PollingDto {
+    const dto = new PollingDto();
+    dto.id = doc._id.toHexString();
+    dto.userId = doc.userId;
+    dto.userroundId = doc.userroundId;
+    dto.roundId = doc.roundId;
+    dto.pollId = doc.pollId;
+    dto.friendIds = doc.friendIds;
+    dto.createdAt = doc.createdAt;
+    return dto;
   }
 }

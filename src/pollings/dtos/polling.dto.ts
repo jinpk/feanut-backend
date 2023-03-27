@@ -1,4 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { Types} from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class Opened {
@@ -12,6 +13,9 @@ export class Opened {
 }
 
 export class PollingDto {
+  @ApiProperty({})
+  id?: string
+
   // userId
   @ApiProperty({})
   userId: string;
@@ -30,7 +34,7 @@ export class PollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: string[];
+  friendIds: Types.ObjectId[];
 
   // selectedId
   @ApiProperty({})

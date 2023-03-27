@@ -8,6 +8,7 @@ export type PollingDocument = HydratedDocument<Polling>;
 // Polling
 @Schema({ collection: POLLING_MODULE_NAME, timestamps: true })
 export class Polling {
+  _id?: Types.ObjectId;
   // userId
   @Prop({ required: true })
   userId: string;

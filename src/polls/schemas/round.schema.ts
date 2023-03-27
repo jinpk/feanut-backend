@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
 import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
-import { KR_TIME_DIFF } from 'src/common/common.constant';
 
 export type RoundDocument = HydratedDocument<Round>;
 
