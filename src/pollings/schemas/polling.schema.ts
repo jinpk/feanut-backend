@@ -30,7 +30,7 @@ export class Polling {
   selectedProfileId?: string;
 
   // 건너뛰기 여부
-  @Prop({ type: Types.ObjectId, default: false })
+  @Prop({ default: null })
   skipped?: boolean;
 
   @Prop({ defaul: 0 })

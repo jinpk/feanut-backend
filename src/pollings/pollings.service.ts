@@ -214,16 +214,12 @@ export class PollingsService {
       .sort({ createdAt: -1 });
 
     const checked = await this.checkUserroundComplete(user_id, userround);
-
     
     if (checked) {
       const [complete, coinAmount] = await this.updateComplete(user_id, userround._id.toString());
       res.roundReward = ROUND_REWARD;
-      res.totalFeanut = coinAmount;
     }
 
-    res.pollingId = result;
-    res.userroundId = userround._id.toString();
     res.userroundCompleted = checked;
 
     return res;

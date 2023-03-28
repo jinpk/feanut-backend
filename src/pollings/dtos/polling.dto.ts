@@ -33,11 +33,11 @@ export class PollingDto {
   friendIds: Types.ObjectId[];
 
   // selectedId
-  @ApiProperty({})
+  @ApiProperty({default: null})
   selectedProfileId: string;
 
   // skipped
-  @ApiProperty({default: false})
+  @ApiProperty({default: null})
   skipped: string;
 
   @ApiProperty({default: 0})
@@ -73,18 +73,9 @@ export class ReqNewPollingDto {
 }
 
 export class PollingResultDto {
-  @ApiProperty({})
-  pollingId: string;
-
-  @ApiProperty({})
-  userroundId: string;
-
   @ApiProperty({default: false})
   userroundCompleted: boolean;
 
   @ApiProperty({default: 0})
   roundReward: number;
-
-  @ApiProperty({default: 0})
-  totalFeanut: number;
 }

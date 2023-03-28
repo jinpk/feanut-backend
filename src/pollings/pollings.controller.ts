@@ -7,8 +7,7 @@ import {
   Put,
   Post,
   Query,
-  NotFoundException,
-  UnauthorizedException,
+  ForbiddenException,
   Body,
   Request,
 } from '@nestjs/common';
@@ -188,8 +187,13 @@ export class PollingsController {
   ) {
     const exist = await this.pollingsService.findPollingById(pollingId);
     if (exist.userId != req.user.id) {
-      throw new WrappedError('권한이 없습니다');
+      throw new WrappedError('권한이 없습니다.');
     }
+
+    if ((!exist.selectedProfileId) || (!exist.skipped)) {
+      throw new WrappedError('completed already.').alreadyExist();
+    }
+
     return await this.pollingsService.updatePollingResult(
       req.user.id,
       pollingId,
