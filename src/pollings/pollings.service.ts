@@ -7,7 +7,7 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingOpenDto, Opened, PollingResultDto, ReceivePollingDto } from './dtos/polling.dto';
+import { PollingDto, PollingResultDto, ReceivePollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -21,6 +21,7 @@ import { UtilsService } from 'src/common/providers';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
 import { OPEN_POLLING, ROUND_REWARD } from 'src/coins/coins.constant';
+import { UseType } from 'src/coins/enums';
 
 @Injectable()
 export class PollingsService {
@@ -40,8 +41,6 @@ export class PollingsService {
   async createPolling(
     user_id: string,
     body): Promise<Polling> {
-    // pollid userroundid 무결성 검사
-
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
@@ -400,9 +399,7 @@ export class PollingsService {
   }
 
   // 피넛을 소모. 수신투표 열기.
-  async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto): Promise<string> {
-    let opened = new Opened();
-
+  async updatePollingOpen(user_id, polling_id: string): Promise<string> {
     //userId 사용하여 get profile
     const profile = await this.profilesService.getByUserId(user_id);
 
@@ -412,39 +409,46 @@ export class PollingsService {
     if (usercoin.total < OPEN_POLLING) {
       throw new WrappedError('Lack of total feanut amount').reject()
     } else {
+      const exist = await this.pollingModel.findOne({
+        _id: new Types.ObjectId(polling_id),
+        selectedProfileId: profile._id,        
+      });
+
+      if (!exist) {
+        throw new WrappedError('Not found polling').notFound();
+      }
+      if (exist.isOpened) {
+        throw new WrappedError('already Opened').reject();
+      }
+
       let usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
         userId: user_id,
-        useType: body.useType,
+        useType: UseType.Open,
         amount: OPEN_POLLING,
       };
 
-      const usecoin_result = await this.coinService.createUseCoin(usecoin);
+      const usecoin_id = await this.coinService.createUseCoin(usecoin);
       await this.coinService.updateCoinAccum(user_id, -1 * 3);
 
-      // polling isOpened 상태 업데이트
-      opened = {
-        isOpened: true,
-        useCoinId: usecoin_result,
-      };
+      const result = await this.pollingModel.findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(polling_id),
+          selectedProfileId: profile._id,
+          isOpened: false,
+        },
+        {
+          $set: { isOpened: true, useCoinId: usecoin_id, updatedAt: now() },
+        },
+      );
+  
+      // poll isOpenedCount 업데이트
+      await this.pollModel.findByIdAndUpdate(result.pollId, {
+        $inc: { isOpened: 1 },
+      });
+  
+      return result._id.toString();
     }
-
-    const result = await this.pollingModel.findOneAndUpdate(
-      {
-        _id: new Types.ObjectId(polling_id),
-        selectedProfileId: profile._id,
-      },
-      {
-        $set: { opened: opened, updatedAt: now() },
-      },
-    );
-
-    // poll isOpenedCount 업데이트
-    await this.pollModel.findByIdAndUpdate(result.pollId, {
-      $inc: { isOpened: 1 },
-    });
-
-    return result._id.toString();
   }
 
   // userRound
@@ -621,6 +625,15 @@ export class PollingsService {
     await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
 
     return result._id.toString();
+  }
+
+  async findUserRoundById(user_id: string, body) {
+    const res = await this.userroundModel.findOne({
+      _id: new Types.ObjectId(body.userRoundId),
+      userId: user_id,
+    });
+
+    return res
   }
 
   pollingToDto(doc: Polling | PollingDocument): PollingDto {

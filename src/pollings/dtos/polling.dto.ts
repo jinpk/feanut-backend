@@ -61,14 +61,6 @@ export class PollingDto {
   createdAt?: Date;
 }
 
-export class PollingOpenDto extends OmitType(UseCoinDto, ['userId']) {
-  @ApiProperty({
-    description: 'profileId',
-    required: true,
-  })
-  profileId: string;
-}
-
 export class ReqNewPollingDto {
   @ApiProperty({required: true})
   pollId: string;

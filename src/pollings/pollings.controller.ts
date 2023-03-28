@@ -23,7 +23,6 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { PollingsService } from './pollings.service';
 import {
   PollingDto,
-  PollingOpenDto,
   ReqNewPollingDto,
   PollingResultDto,
   ReceivePollingDto
@@ -113,9 +112,7 @@ export class PollingsController {
   @Post('receive/:pollingId/open')
   @ApiOperation({
     summary: '수신투표 열람. 피넛 소모',
-  })
-  @ApiBody({
-    type: PollingOpenDto,
+    description: 'isOpened=true 인 경우 reject: already opened\n\n피넛 수량이 부족한 경우 reject: Lack of total feanut amount'
   })
   @ApiResponse({
     status: 200,
@@ -123,13 +120,11 @@ export class PollingsController {
   })
   async postPollingOpen(
     @Param('pollingId') pollingId: string,
-    @Body() body: PollingOpenDto,
     @Request() req,
   ) {
     return await this.pollingsService.updatePollingOpen(
       req.user.id,
       pollingId,
-      body,
     );
   }
 
@@ -144,10 +139,20 @@ export class PollingsController {
   async postPolling(
     @Body() body: ReqNewPollingDto,
     @Request() req) {
-    const polling = await this.pollingsService.createPolling(req.user.id, body);
-    const dto = this.pollingsService.pollingToDto(polling);
-    
-    return dto;
+      const exist = await this.pollingsService.findUserRoundById(req.user.id, body);
+
+      if (!exist) {
+        throw new WrappedError('Not Found Userround').notFound()
+      } else {
+        if (!exist.pollIds.includes(body.pollId)) {
+          throw new WrappedError('Not included pollId').reject()
+        }
+      }
+
+      const polling = await this.pollingsService.createPolling(req.user.id, body);
+      const dto = this.pollingsService.pollingToDto(polling);
+      
+      return dto;
   }
 
   @Get('userround')

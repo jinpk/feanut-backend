@@ -116,7 +116,7 @@ export class CoinsService {
     const result = await new this.usecoinModel(params).save();
 
     await this.updateCoinAccum(params.userId, -1 * params.amount);
-    return result._id.toString();
+    return result._id;
   }
 
   async createCoin(user_id: string) {
