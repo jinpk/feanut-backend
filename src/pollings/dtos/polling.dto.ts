@@ -85,3 +85,36 @@ export class PollingFriendDto extends OmitType(FriendDto, [
   'username',
   'hidden',
 ]){}
+
+
+
+export class ReceivePollingDto {
+  @ApiProperty({})
+  id?: string
+
+  // userId
+  @ApiProperty({})
+  userId: Types.ObjectId;
+
+  @ApiProperty({})
+  userName: string;
+
+  @ApiProperty({})
+  userImageFileId: Types.ObjectId;
+
+  // pollId
+  @ApiProperty({})
+  pollId: Types.ObjectId;
+
+  // friendList
+  @ApiProperty({})
+  friendIds: [Types.ObjectId[]];
+
+  // selectedId
+  @ApiProperty({default: null})
+  selectedProfileId: Types.ObjectId;
+
+  // selectedAt
+  @ApiProperty({default: null})
+  selectedAt: Date;
+}

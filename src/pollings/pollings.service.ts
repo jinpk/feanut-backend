@@ -7,7 +7,7 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingOpenDto, Opened, PollingResultDto } from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto, Opened, PollingResultDto, ReceivePollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -249,9 +249,9 @@ export class PollingsService {
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
+      { $sort: {selectedAt: -1}},
       ...lookups,
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
@@ -274,6 +274,80 @@ export class PollingsService {
   async findPollingById(polling_id: string) {
     const result = await this.pollingModel.findById(polling_id);
     return result;
+  }
+
+  async findInboxPollingByUserId(user_id, polling_id: string) {
+    const profile = await this.profilesService.getByUserId(user_id);
+
+    const filter: FilterQuery<PollingDocument> = {
+      _id: new Types.ObjectId(polling_id),
+      selectedProfileId: profile._id,
+      isOpened: true,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'friendIds',
+          foreignField: '_id',
+          as: 'friendIds',
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {        
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
+
+    const projection: ProjectionFields<ReceivePollingDto> = {
+      _id: 1,
+      userId: 1,
+      userName: '$user.name',
+      userImageFileId: '$user.imageFileId',
+      friendIds: 1,
+      selectedAt: 1,
+      selectedProfileId: 1,
+    };
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+      { $project: projection }
+    ]);
+
+    if (cursor.length == 0) {
+      throw new WrappedError('Not Found Receive Polling').notFound();
+    }
+
+    cursor[cursor.length-1].friendIds.forEach(element => {
+      delete element.birth;
+      delete element.gender;
+      delete element.phoneNumber;
+      delete element.ownerId;
+      delete element.createdAt;
+      delete element.updatedAt;
+      delete element.statusMessage;
+      delete element.instagram
+    });
+
+    return cursor[cursor.length-1];
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {

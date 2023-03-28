@@ -25,7 +25,8 @@ import {
   PollingDto,
   PollingOpenDto,
   ReqNewPollingDto,
-  PollingResultDto
+  PollingResultDto,
+  ReceivePollingDto
 } from './dtos/polling.dto';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
@@ -56,9 +57,10 @@ export class PollingsController {
   @Get('recieve')
   @ApiOperation({
     summary: '나의 수신 리스트 조회',
+    description: 'selectedAt 최신순서 정렬되어 response',
   })
   @ApiOkResponsePaginated(Polling)
-  async getMyPollingList(
+  async getMyInboxList(
     @Query() query: GetListReceivePollingDto,
     @Request() req,
   ) {
@@ -68,10 +70,27 @@ export class PollingsController {
     );
   }
 
+  @Get('recieve/:pollingId/detail')
+  @ApiOperation({
+    summary: '나의 수신함 상세 조회',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: ReceivePollingDto,
+  })
+  async getInboxDetail(
+    @Param('pollingId') pollingId: string,
+    @Request() req,
+  ) {
+    return await this.pollingsService.findInboxPollingByUserId(
+      req.user.id,
+      pollingId
+    );
+  }
+
   @Get(':pollingId/detail')
   @ApiOperation({
-    summary: 'Polling 상세내역 조회',
-    description: 'Polling userId = 요청 userId가 동일해야 response',
+    summary: 'Polling 상세 조회',
   })
   @ApiOkResponse({
     status: 200,
