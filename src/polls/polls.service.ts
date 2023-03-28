@@ -23,13 +23,18 @@ import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto';
 import { UtilsService } from 'src/common/providers';
 import { KR_TIME_DIFF } from 'src/common/common.constant';
 import { WrappedError } from 'src/common/errors';
+import {
+  PollRoundEvent,
+  PollRoundEventDocument,
+} from './schemas/round-\bevent.schema';
 
 @Injectable()
 export class PollsService {
   constructor(
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
-    private profilesService: ProfilesService,
+    @InjectModel(PollRoundEvent.name)
+    private pollRoundEventModel: Model<PollRoundEventDocument>,
     private utilsService: UtilsService,
   ) {}
 
@@ -44,12 +49,12 @@ export class PollsService {
   async createRound(body: RoundDto): Promise<string> {
     // pollids가 12개 이하인지 확인
     if (body.pollIds.length < 12) {
-      throw new WrappedError('투표를 12개 이상 선택해주세요.').reject()
+      throw new WrappedError('투표를 12개 이상 선택해주세요.').reject();
     }
 
     if (body.eventRound) {
-      if ((!body.startedAt) || (!body.endedAt)) {
-        throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject()
+      if (!body.startedAt || !body.endedAt) {
+        throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject();
       }
     }
 

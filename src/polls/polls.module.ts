@@ -5,11 +5,18 @@ import { Poll, PollSchema } from './schemas/poll.schema';
 import { PollsService } from './polls.service';
 import { PollsController, PublicPollsController } from './polls.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
+import {
+  PollRoundEvent,
+  PollRoundEventSchema,
+} from './schemas/round-\bevent.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Poll.name, schema: PollSchema }]),
     MongooseModule.forFeature([{ name: Round.name, schema: RoundSchema }]),
+    MongooseModule.forFeature([
+      { name: PollRoundEvent.name, schema: PollRoundEventSchema },
+    ]),
     ProfilesModule,
   ],
   providers: [PollsService],

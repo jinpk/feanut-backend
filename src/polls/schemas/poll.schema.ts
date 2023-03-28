@@ -1,13 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { Emotion } from '../enums';
-import { POLL_MODULE_NAME } from '../../polls/polls.constant';
-import { KR_TIME_DIFF } from 'src/common/common.constant';
+import { POLL_SCHEMA_NAME } from '../../polls/polls.constant';
 
 export type PollDocument = HydratedDocument<Poll>;
 
 // Poll
-@Schema({ collection: POLL_MODULE_NAME, timestamps: true })
+@Schema({ collection: POLL_SCHEMA_NAME, timestamps: true })
 export class Poll {
   // emotion
   @Prop({})

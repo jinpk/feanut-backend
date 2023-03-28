@@ -1,20 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
-import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
+import { HydratedDocument, now, Types } from 'mongoose';
+import { POLL_ROUND_SCHEMA_NAME } from '../../polls/polls.constant';
 
 export type RoundDocument = HydratedDocument<Round>;
 
 // Round
-@Schema({ collection: ROUND_MODULE_NAME, timestamps: true })
+@Schema({ collection: POLL_ROUND_SCHEMA_NAME, timestamps: true })
 export class Round {
   // pk
   _id?: string;
 
   @Prop({})
   title: string;
-  
+
   @Prop({})
   index: number;
+
+  // 속한 이벤트 ID
+  @Prop({})
+  pollRoundEventId?: Types.ObjectId;
 
   // 활성화 여부
   @Prop({ default: false })
@@ -28,7 +32,7 @@ export class Round {
   pollIds: string[];
 
   // round 활성화 시작 시간
-  @Prop({default: null})
+  @Prop({ default: null })
   startedAt?: Date;
 
   // round 활성화 끝 시간
@@ -36,7 +40,7 @@ export class Round {
   endedAt?: Date;
 
   // 생성시간
-  @Prop({ default: now()})
+  @Prop({ default: now() })
   createdAt?: Date;
 }
 
