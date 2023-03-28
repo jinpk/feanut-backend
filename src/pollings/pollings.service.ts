@@ -20,7 +20,7 @@ import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
-import { OPEN_POLLING, ROUND_REWARD } from 'src/coins/coins.constant';
+import { OPEN_POLLING } from 'src/coins/coins.constant';
 import { UseType } from 'src/coins/enums';
 
 @Injectable()
@@ -271,8 +271,54 @@ export class PollingsService {
   }
 
   async findPollingById(polling_id: string) {
-    const result = await this.pollingModel.findById(polling_id);
-    return result;
+    const filter: FilterQuery<PollingDocument> = {
+      _id: new Types.ObjectId(polling_id),
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'friendIds',
+          foreignField: '_id',
+          as: 'friendIds',
+        },
+      },
+    ];
+
+    const projection: ProjectionFields<PollingDto> = {
+      _id: 1,
+      userId: 1,
+      friendIds: 1,
+      selectedAt: 1,
+    };
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+      { $project: projection }
+    ]);
+
+    if (cursor.length == 0) {
+      throw new WrappedError('Not found polling').notFound();
+    }
+    cursor[cursor.length-1].friendIds.forEach(element => {
+      delete element.birth;
+      delete element.gender;
+      delete element.phoneNumber;
+      delete element.ownerId;
+      delete element.createdAt;
+      delete element.updatedAt;
+      delete element.statusMessage;
+    });
+
+    return cursor[cursor.length-1];
   }
 
   async findInboxPollingByUserId(user_id, polling_id: string) {
@@ -390,7 +436,9 @@ export class PollingsService {
     
     if (checked) {
       const complete = await this.updateComplete(user_id, userround._id.toString());
-      res.roundReward = ROUND_REWARD;
+      // pollround event 로 수정예정
+      // res.roundReward = ROUND_REWARD;
+      res.roundReward = 2;
     }
 
     res.userroundCompleted = checked;
@@ -622,7 +670,9 @@ export class PollingsService {
     );
 
     // 투표 완료: 코인 획득
-    await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
+    // pollround event 로 수정예정
+    // await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
+    await this.coinService.updateCoinAccum(user_id, 2);
 
     return result._id.toString();
   }

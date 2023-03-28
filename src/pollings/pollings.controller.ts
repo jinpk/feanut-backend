@@ -94,19 +94,21 @@ export class PollingsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Polling,
+    type: PollingDto,
   })
   async getMyPollingDetail(
     @Param('pollingId') pollingId: string,
     @Request() req,
   ) {
-    const result = await this.pollingsService.findPollingById(pollingId);
+    const polling = await this.pollingsService.findPollingById(pollingId);
     if (req.isAdmin) {
-    } else if (req.user.id != result.userId) {
+    } else if (req.user.id != polling.userId) {
       throw new WrappedError('권한이 없습니다.').reject();
     }
 
-    return result;
+    const dto = this.pollingsService.pollingToDto(polling)
+
+    return dto;
   }
 
   @Post('receive/:pollingId/open')
