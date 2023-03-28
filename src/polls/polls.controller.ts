@@ -37,12 +37,29 @@ import { Round } from './schemas/round.schema';
 import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
+import { PollRoundEventDto } from './dtos/round-event.dto';
 
 @ApiTags('Poll')
 @Controller('polls')
 @ApiBearerAuth()
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
+
+  @Post('pollroundevents')
+  @ApiOperation({
+    summary: '(ADMIN) New RoundEvent 등록',
+    description: 'required: message, subMessage, emojiId',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async postPollRoundEvent(@Body() body: PollRoundEventDto, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new UnauthorizedException('Not an Admin');
+    }
+    return await this.pollsService.createPollRoundEvent(body);
+  }
 
   @Post('rounds')
   @ApiOperation({

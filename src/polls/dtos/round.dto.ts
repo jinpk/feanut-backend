@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
-import { now } from 'mongoose';
+import { Types, now } from 'mongoose';
 
 export class RoundDto {
   @ApiProperty({ description: 'round ID' })
@@ -11,6 +11,10 @@ export class RoundDto {
 
   @ApiProperty({description: 'round 정렬 순서'})
   index: number;
+
+  // 속한 이벤트 ID
+  @ApiProperty({description: '속한 이벤트 ID'})
+  pollRoundEventId?: Types.ObjectId;
 
   @ApiProperty({description: '활성화 여부', default: false})
   enabled: boolean;

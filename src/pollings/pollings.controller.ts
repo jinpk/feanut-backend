@@ -73,6 +73,7 @@ export class PollingsController {
   @Get('recieve/:pollingId/detail')
   @ApiOperation({
     summary: '나의 수신함 상세 조회',
+    description: 'selecteProfileId, pollingId 일치. isOpened=true일때 응답.',
   })
   @ApiOkResponse({
     status: 200,

@@ -27,6 +27,7 @@ import {
   PollRoundEvent,
   PollRoundEventDocument,
 } from './schemas/round-\bevent.schema';
+import { PollRoundEventDto } from './dtos/round-event.dto';
 
 @Injectable()
 export class PollsService {
@@ -38,6 +39,11 @@ export class PollsService {
     private utilsService: UtilsService,
   ) {}
 
+  async createPollRoundEvent(body:PollRoundEventDto) {
+    const res = await new this.pollRoundEventModel(body).save();
+    return res._id.toString();
+  }
+  
   async createPoll(body: PollDto): Promise<string> {
     const krtime = new Date(now().getTime() + KR_TIME_DIFF);
     body.createdAt = krtime;
