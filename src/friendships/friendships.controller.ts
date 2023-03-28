@@ -116,6 +116,7 @@ export class FriendshipsController {
     return await this.friendshipsService.listFriend(userId, {
       page: query.page,
       limit: query.limit,
+      keyword: query.keyword,
       hidden: query.hidden === '1',
     });
   }

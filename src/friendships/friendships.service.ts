@@ -221,6 +221,34 @@ export class FriendshipsService {
       preserveNullAndEmptyArrays: true,
     };
 
+    const matchUser: FilterQuery<FriendDto> = {
+      $expr: {
+        $or: [
+          {
+            $regexMatch: {
+              input: '$profile.name',
+              regex: params.keyword,
+              options: 'i',
+            },
+          },
+          {
+            $regexMatch: {
+              input: '$friends.name',
+              regex: params.keyword,
+              options: 'i',
+            },
+          },
+          {
+            $regexMatch: {
+              input: '$user.username',
+              regex: params.keyword,
+              options: 'i',
+            },
+          },
+        ],
+      },
+    };
+
     const lookupFile: PipelineStage.Lookup['$lookup'] = {
       from: FILE_SCHEMA_NAME,
       localField: 'profile.imageFileId',
@@ -263,13 +291,14 @@ export class FriendshipsService {
       {
         $unwind: unwindUser,
       },
+      params.keyword && { $match: matchUser },
       { $lookup: lookupFile },
       {
         $unwind: unwindFile,
       },
       { $project: projection },
       { $sort: sort },
-    ];
+    ].filter((x) => x);
 
     if (paging) {
       pipeline.push(

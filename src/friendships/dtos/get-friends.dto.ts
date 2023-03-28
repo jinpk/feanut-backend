@@ -8,4 +8,8 @@ export class GetFriendsDto extends PagingReqDto {
   @IsOptional()
   @IsEnum(QueryBoolean)
   hidden?: QueryBoolean;
+
+  @ApiProperty({ title: '이름 | 아이디', required: false })
+  @IsOptional()
+  keyword?: string;
 }
