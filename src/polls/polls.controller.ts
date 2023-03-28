@@ -180,9 +180,6 @@ export class PollsController {
     type: Poll,
   })
   async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
-    if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
-    }
     return await this.pollsService.findPollById(pollId);
   }
 }
