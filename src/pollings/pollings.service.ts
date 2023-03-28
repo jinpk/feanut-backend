@@ -7,7 +7,7 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingOpenDto, Opened } from './dtos/polling.dto';
+import { PollingDto, PollingOpenDto, Opened, PollingResultDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -20,6 +20,7 @@ import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
+import { OPEN_POLLING, ROUND_REWARD } from 'src/coins/coins.constant';
 
 @Injectable()
 export class PollingsService {
@@ -182,7 +183,9 @@ export class PollingsService {
     return result._id.toString();
   }
 
-  async updatePollingResult(user_id, polling_id: string, body) {
+  async updatePollingResult(user_id, polling_id: string, body): Promise<PollingResultDto> {
+    var res = new PollingResultDto()
+    
     var result = ''
     if (body.skipped){
       let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
@@ -211,15 +214,17 @@ export class PollingsService {
       .sort({ createdAt: -1 });
 
     const checked = await this.checkUserroundComplete(user_id, userround);
+
+    
     if (checked) {
-      await this.updateComplete(user_id, userround._id.toString());
+      const [complete, coinAmount] = await this.updateComplete(user_id, userround._id.toString());
+      res.roundReward = ROUND_REWARD;
+      res.totalFeanut = coinAmount;
     }
 
-    const res = {
-      pollingId: result,
-      userroundId: userround._id.toString(),
-      userroundCompleted: checked,
-    };
+    res.pollingId = result;
+    res.userroundId = userround._id.toString();
+    res.userroundCompleted = checked;
 
     return res;
   }
@@ -234,14 +239,14 @@ export class PollingsService {
     // user_id의 feanut 개수 체크/차감
     const usercoin = await this.coinService.findUserCoin(user_id);
 
-    if (usercoin.total < 3) {
+    if (usercoin.total < OPEN_POLLING) {
       throw new WrappedError('Lack of total feanut amount').reject()
     } else {
       let usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
         userId: user_id,
         useType: body.useType,
-        amount: 3,
+        amount: OPEN_POLLING,
       };
 
       const usecoin_result = await this.coinService.createUseCoin(usecoin);
@@ -417,8 +422,7 @@ export class PollingsService {
       userroundId: userround._id,
       selectedAt: { $ne: null }
     });
-    console.log(pollings)
-    console.log(pollings.length)
+
     // userround의 pollids길이 만큼 완료가 됐는지 확인
     if (pollings.length >= userround.pollIds.length) {
       return true
@@ -427,7 +431,7 @@ export class PollingsService {
     return false
   }
 
-  async updateComplete(user_id, userround_id: string) {
+  async updateComplete(user_id, userround_id: string): Promise<[string, number]> {
     const result = await this.userroundModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(userround_id),
@@ -439,8 +443,9 @@ export class PollingsService {
     );
 
     // 투표 완료: 코인 획득
-    await this.coinService.updateCoinAccum(user_id, 2);
-    return result._id.toString();
+    const coin = await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
+
+    return [result._id.toString(), coin.total];
   }
 
   pollingToDto(doc: Polling | PollingDocument): PollingDto {

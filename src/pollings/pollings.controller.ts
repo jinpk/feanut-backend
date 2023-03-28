@@ -25,7 +25,8 @@ import { PollingsService } from './pollings.service';
 import {
   PollingDto,
   PollingOpenDto,
-  ReqNewPollingDto
+  ReqNewPollingDto,
+  PollingResultDto
 } from './dtos/polling.dto';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
@@ -178,7 +179,7 @@ export class PollingsController {
   })
   @ApiResponse({
     status: 200,
-    type: Polling,
+    type: PollingResultDto,
   })
   async putPollingResult(
     @Param('pollingId') pollingId: string,

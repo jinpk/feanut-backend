@@ -73,7 +73,18 @@ export class ReqNewPollingDto {
 }
 
 export class PollingResultDto {
-  // 
   @ApiProperty({})
-  userId: string;
+  pollingId: string;
+
+  @ApiProperty({})
+  userroundId: string;
+
+  @ApiProperty({default: false})
+  userroundCompleted: boolean;
+
+  @ApiProperty({default: 0})
+  roundReward: number;
+
+  @ApiProperty({default: 0})
+  totalFeanut: number;
 }
