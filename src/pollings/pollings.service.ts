@@ -295,6 +295,7 @@ export class PollingsService {
     const projection: ProjectionFields<PollingDto> = {
       _id: 1,
       userId: 1,
+      pollId: 1,
       friendIds: 1,
       selectedAt: 1,
     };
