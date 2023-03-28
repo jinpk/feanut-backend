@@ -216,7 +216,7 @@ export class PollingsService {
     const checked = await this.checkUserroundComplete(user_id, userround);
     
     if (checked) {
-      const [complete, coinAmount] = await this.updateComplete(user_id, userround._id.toString());
+      const complete = await this.updateComplete(user_id, userround._id.toString());
       res.roundReward = ROUND_REWARD;
     }
 
@@ -427,7 +427,7 @@ export class PollingsService {
     return false
   }
 
-  async updateComplete(user_id, userround_id: string): Promise<[string, number]> {
+  async updateComplete(user_id, userround_id: string): Promise<string> {
     const result = await this.userroundModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(userround_id),
@@ -439,9 +439,9 @@ export class PollingsService {
     );
 
     // 투표 완료: 코인 획득
-    const coin = await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
+    await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
 
-    return [result._id.toString(), coin.total];
+    return result._id.toString();
   }
 
   pollingToDto(doc: Polling | PollingDocument): PollingDto {

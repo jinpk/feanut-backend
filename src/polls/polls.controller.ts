@@ -22,7 +22,7 @@ import {
 import { Public } from '../auth/decorators';
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
-import { RoundDto } from './dtos/round.dto';
+import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import {
   UpdatePollDto,
   UpdateRoundDto,
@@ -36,6 +36,7 @@ import {
 import { Round } from './schemas/round.schema';
 import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
+import { WrappedError } from 'src/common/errors';
 
 @ApiTags('Poll')
 @Controller('polls')
@@ -162,13 +163,21 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: ResRoundDto,
   })
   async getRoundDetail(@Param('roundId') roundId: string, @Request() req) {
     if (!req.user.isAdmin) {
       throw new UnauthorizedException('Not an Admin');
     }
-    return await this.pollsService.findRoundById(roundId);
+    
+    const round = await this.pollsService.findRoundById(roundId);
+    if (!round) {
+      throw new WrappedError('Not Found Round').notFound();
+    }
+
+    const dto = this.pollsService.roundToDto(round);
+
+    return dto
   }
 
   @Get(':pollId')
@@ -177,10 +186,15 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: PollDto,
   })
   async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
-    return await this.pollsService.findPollById(pollId);
+    const poll = await this.pollsService.findPollById(pollId);
+    if (!poll) {
+      throw new WrappedError('Not Found Poll').notFound();
+    }
+    const dto = this.pollsService.pollToDto(poll);
+    return dto;
   }
 }
 

@@ -11,7 +11,7 @@ import {
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { PollDto } from './dtos/poll.dto';
-import { RoundDto } from './dtos/round.dto';
+import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
 import { Round, RoundDocument } from './schemas/round.schema';
 import {
@@ -205,5 +205,27 @@ export class PollsService {
       total: metdata[0]?.total || 0,
       data: data,
     };
+  }
+
+  pollToDto(doc: Poll | PollDocument): PollDto {
+    const dto = new PollDto();
+    dto.id = doc._id.toHexString();
+    dto.emotion = doc.emotion;
+    dto.emojiId = doc.emojiId;
+    dto.contentText = doc.contentText;
+    return dto;
+  }
+
+  roundToDto(doc: Round | RoundDocument): ResRoundDto {
+    const dto = new ResRoundDto();
+    dto.id = doc._id.toHexString();
+    dto.title = doc.title;
+    dto.index = doc.index;
+    dto.enabled = doc.enabled;
+    dto.eventRound = doc.eventRound;
+    dto.pollIds = doc.pollIds;
+    dto.startedAt = doc.startedAt;
+    dto.endedAt = doc.endedAt;
+    return dto;
   }
 }
