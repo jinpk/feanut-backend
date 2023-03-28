@@ -61,7 +61,7 @@ export class PollingsService {
       userId: user_id,
       userroundId: body.userRoundId,
       pollId: body.pollId,
-      friendIds: friendIds,
+      friendIds: [friendIds],
       opened: isopened,
       createdAt: krtime,
     };
@@ -98,7 +98,7 @@ export class PollingsService {
     for (const friend of temp_arr) {
       newIds.push(friend.profileId);
     }
-    polling.friendIds = newIds;
+    polling.friendIds.push(newIds);
 
     polling.save();
 

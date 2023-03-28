@@ -1,6 +1,7 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Types} from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
+import { FriendDto } from 'src/friendships/dtos';
 
 export class Opened {
   // isOpened
@@ -30,7 +31,7 @@ export class PollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: Types.ObjectId[];
+  friendIds: [PollingFriendDto[]];
 
   // selectedId
   @ApiProperty({default: null})
@@ -79,3 +80,8 @@ export class PollingResultDto {
   @ApiProperty({default: 0})
   roundReward: number;
 }
+
+export class PollingFriendDto extends OmitType(FriendDto, [
+  'username',
+  'hidden',
+]){}

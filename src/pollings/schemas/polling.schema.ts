@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types, now } from 'mongoose';
-import { Opened } from '../dtos/polling.dto';
+import { Opened, PollingFriendDto } from '../dtos/polling.dto';
 import { POLLING_MODULE_NAME } from '../../pollings/pollings.constant';
 
 export type PollingDocument = HydratedDocument<Polling>;
@@ -23,7 +23,7 @@ export class Polling {
 
   // friendList
   @Prop({ required: true })
-  friendIds: Types.ObjectId[];
+  friendIds: [PollingFriendDto[]];
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
