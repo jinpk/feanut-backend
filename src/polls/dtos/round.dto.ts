@@ -39,3 +39,29 @@ export class RoundDto {
   @IsOptional()
   endedAt?: string;
 }
+
+export class ResRoundDto {
+  @ApiProperty({ description: 'round ID' })
+  id: string;
+
+  @ApiProperty({description: 'round 타이틀', default: 'title'})
+  title: string;
+
+  @ApiProperty({description: 'round 정렬 순서'})
+  index: number;
+
+  @ApiProperty({description: '활성화 여부', default: false})
+  enabled: boolean;
+
+  @ApiProperty({description: '이벤트 라운드 여부', default: false})
+  eventRound: boolean;
+
+  @ApiProperty({description: 'round에 포함된 pollIds'})
+  pollIds: string[];
+
+  @ApiProperty({})
+  startedAt?: Date;
+
+  @ApiProperty({})
+  endedAt?: Date;
+}

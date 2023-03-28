@@ -22,7 +22,7 @@ import {
 import { Public } from '../auth/decorators';
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
-import { RoundDto } from './dtos/round.dto';
+import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import {
   UpdatePollDto,
   UpdateRoundDto,
@@ -163,13 +163,21 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Round,
+    type: ResRoundDto,
   })
   async getRoundDetail(@Param('roundId') roundId: string, @Request() req) {
     if (!req.user.isAdmin) {
       throw new UnauthorizedException('Not an Admin');
     }
-    return await this.pollsService.findRoundById(roundId);
+    
+    const round = await this.pollsService.findRoundById(roundId);
+    if (!round) {
+      throw new WrappedError('Not Found Round').notFound();
+    }
+
+    const dto = this.pollsService.roundToDto(round);
+
+    return dto
   }
 
   @Get(':pollId')
