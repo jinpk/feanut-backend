@@ -9,6 +9,7 @@ import {
   PollRoundEvent,
   PollRoundEventSchema,
 } from './schemas/round-\bevent.schema';
+import { EmojisModule } from 'src/emojis/emojis.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import {
       { name: PollRoundEvent.name, schema: PollRoundEventSchema },
     ]),
     ProfilesModule,
+    EmojisModule,
   ],
   providers: [PollsService],
   controllers: [PollsController, PublicPollsController],

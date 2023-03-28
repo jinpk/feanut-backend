@@ -28,6 +28,7 @@ import {
   PollRoundEventDocument,
 } from './schemas/round-\bevent.schema';
 import { PollRoundEventDto } from './dtos/round-event.dto';
+import { EmojisService } from 'src/emojis/emojis.service';
 
 @Injectable()
 export class PollsService {
@@ -37,16 +38,24 @@ export class PollsService {
     @InjectModel(PollRoundEvent.name)
     private pollRoundEventModel: Model<PollRoundEventDocument>,
     private utilsService: UtilsService,
+    private emojisService: EmojisService,
   ) {}
 
   async createPollRoundEvent(body:PollRoundEventDto) {
+    const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
+    if (!exist) {
+      throw new WrappedError('Not Found Emoji').notFound();
+    }
+
     const res = await new this.pollRoundEventModel(body).save();
     return res._id.toString();
   }
-  
+
   async createPoll(body: PollDto): Promise<string> {
-    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
-    body.createdAt = krtime;
+    const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
+    if (!exist) {
+      throw new WrappedError('Not Found Emoji').notFound();
+    }
 
     const result = await new this.pollModel(body).save();
     return result._id.toString();
