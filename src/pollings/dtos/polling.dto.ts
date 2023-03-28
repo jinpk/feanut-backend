@@ -23,7 +23,7 @@ export class PollingDto {
 
   // userroundId
   @ApiProperty({})
-  userroundId: string;
+  userroundId: Types.ObjectId;
 
   // pollId
   @ApiProperty({})
@@ -31,7 +31,7 @@ export class PollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: [PollingFriendDto[]];
+  friendIds: [Types.ObjectId[]];
 
   // selectedId
   @ApiProperty({default: null})
@@ -50,7 +50,7 @@ export class PollingDto {
 
   // isOpened
   @ApiProperty({})
-  opened: Opened;
+  isOpened: boolean;
 
   // 생성시간
   @ApiProperty()

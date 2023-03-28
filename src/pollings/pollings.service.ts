@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { now, FilterQuery, Model, ProjectionFields, Types } from 'mongoose';
+import { now, FilterQuery, Model, ProjectionFields, Types, PipelineStage } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
@@ -40,10 +40,7 @@ export class PollingsService {
   async createPolling(
     user_id: string,
     body): Promise<Polling> {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
-
-    let isopened = new Opened();
-    isopened = { isOpened: false, useCoinId: null };
+    // pollid userroundid 무결성 검사
 
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
@@ -59,16 +56,52 @@ export class PollingsService {
     let polling = new Polling();
     polling = {
       userId: user_id,
-      userroundId: body.userRoundId,
+      userroundId: new Types.ObjectId(body.userRoundId),
       pollId: body.pollId,
       friendIds: [friendIds],
-      opened: isopened,
-      createdAt: krtime,
+      isOpened: null,
+      createdAt: now(),
     };
 
     const result = await new this.pollingModel(polling).save();
+  
+    const pollingId = result._id;
+    const filter: FilterQuery<PollingDocument> = {
+      _id: pollingId,
+    };
 
-    return result;
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'friendIds',
+          foreignField: '_id',
+          as: 'friendIds',
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    cursor[cursor.length-1].friendIds.forEach(element => {
+      delete element.birth;
+      delete element.phoneNumber;
+      delete element.ownerId;
+      delete element.createdAt;
+      delete element.updatedAt;
+      delete element.statusMessage;
+    });
+
+    return cursor[cursor.length-1];
   }
 
   async updateRefreshedPollingById(
@@ -88,19 +121,62 @@ export class PollingsService {
         throw new WrappedError('Exceed your free refresh count').reject()
       }
     }
+    
     // 친구목록 불러오기/셔플
+    let prevFriend = []
+    for (const arr of polling.friendIds) {
+      prevFriend.push(arr);
+    }
+
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
+      .filter(friend => !prevFriend.includes(friend.profileId))
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
+
     // polling friendlist 갱신
     const newIds = [];
     for (const friend of temp_arr) {
-      newIds.push(friend.profileId);
+      newIds.push(new Types.ObjectId(friend.profileId));
     }
     polling.friendIds.push(newIds);
 
     polling.save();
+
+    const filter: FilterQuery<PollingDocument> = {
+      _id: polling._id,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'friendIds',
+          foreignField: '_id',
+          as: 'friendIds',
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    cursor[cursor.length-1].friendIds.forEach(element => {
+      delete element.birth;
+      delete element.phoneNumber;
+      delete element.ownerId;
+      delete element.createdAt;
+      delete element.updatedAt;
+      delete element.statusMessage;
+    });
 
     return polling;
   }
@@ -145,11 +221,26 @@ export class PollingsService {
       selectedProfileId: profile._id,
     };
 
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'friendIds',
+          foreignField: '_id',
+          as: 'friendIds',
+        },
+      },
+    ];
+
     const projection: ProjectionFields<PollingDto> = {
       _id: 1,
-      userId: 1,
-      roundId: 1,
-      pollIds: 1,
+      pollId: 1,
       friendIds: 1,
       selectedAt: 1,
       createdAt: 1,
@@ -157,6 +248,7 @@ export class PollingsService {
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
+      ...lookups,
       { $project: projection },
       { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),

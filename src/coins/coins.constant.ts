@@ -2,7 +2,7 @@ export const COIN_MODULE_NAME = 'coins';
 export const USECOIN_NAME = 'usecoins';
 export const BUYCOIN_NAME = 'buycoins';
 
-export const ROUND_REWARD = 3;
+export const ROUND_REWARD = 2;
 export const SIGNUP_REWARD = 3;
 export const OPEN_POLLING = 3;
 

@@ -15,7 +15,7 @@ export class Polling {
 
   // userroundId
   @Prop({ required: true })
-  userroundId: string;
+  userroundId: Types.ObjectId;
 
   // pollId
   @Prop({ required: true })
@@ -23,7 +23,7 @@ export class Polling {
 
   // friendList
   @Prop({ required: true })
-  friendIds: [PollingFriendDto[]];
+  friendIds: [Types.ObjectId[]];
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
@@ -41,8 +41,8 @@ export class Polling {
   selectedAt?: Date;
 
   // isOpened
-  @Prop({ default: Opened })
-  opened?: Opened;
+  @Prop({ default: null })
+  isOpened?: boolean;
 
   // 생성시간
   @Prop({})
