@@ -3,16 +3,6 @@ import { Types} from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 import { FriendDto } from 'src/friendships/dtos';
 
-export class Opened {
-  // isOpened
-  @ApiProperty({ default: false })
-  isOpened: boolean;
-
-  // useCoinId
-  @ApiProperty({ default: null })
-  useCoinId: string;
-}
-
 export class PollingDto {
   @ApiProperty({})
   id?: string

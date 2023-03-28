@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types, now } from 'mongoose';
-import { Opened, PollingFriendDto } from '../dtos/polling.dto';
 import { POLLING_MODULE_NAME } from '../../pollings/pollings.constant';
 
 export type PollingDocument = HydratedDocument<Polling>;
