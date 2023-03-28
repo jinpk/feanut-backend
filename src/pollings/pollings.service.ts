@@ -449,6 +449,11 @@ export class PollingsService {
 
   // userRound
   async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
+    const friendList = await this.friendShipsService.listFriend(user_id);
+    if (friendList.total < 4) {
+      throw new WrappedError('Please add friends at least four.').reject()
+    }
+
     const rounds = await this.roundModel.find();
 
     // 이벤트 라운드 체크

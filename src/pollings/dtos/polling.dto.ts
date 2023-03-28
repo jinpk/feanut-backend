@@ -52,6 +52,10 @@ export class PollingDto {
   @ApiProperty({})
   isOpened: boolean;
 
+  // useCoinId
+  @ApiProperty({default: null})
+  useCoinId?: Types.ObjectId;
+
   // 생성시간
   @ApiProperty()
   createdAt?: Date;
@@ -85,8 +89,6 @@ export class PollingFriendDto extends OmitType(FriendDto, [
   'username',
   'hidden',
 ]){}
-
-
 
 export class ReceivePollingDto {
   @ApiProperty({})
