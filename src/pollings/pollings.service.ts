@@ -55,9 +55,9 @@ export class PollingsService {
 
     let polling = new Polling();
     polling = {
-      userId: user_id,
+      userId: new Types.ObjectId(user_id),
       userroundId: new Types.ObjectId(body.userRoundId),
-      pollId: body.pollId,
+      pollId: new Types.ObjectId(body.pollId),
       friendIds: [friendIds],
       isOpened: null,
       createdAt: now(),
@@ -211,7 +211,7 @@ export class PollingsService {
     };
   }
 
-  async findListPollingByUserId(
+  async findListInboxByUserId(
     user_id: string,
     query: GetListReceivePollingDto,
   ): Promise<PagingResDto<PollingDto>> {
@@ -223,27 +223,28 @@ export class PollingsService {
 
     const lookups: PipelineStage[] = [
       {
-        $unwind: {
-          path: '$friendIds',
-          preserveNullAndEmptyArrays: true,
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'profiles',
         },
       },
       {
-        $lookup: {
-          from: 'profiles',
-          localField: 'friendIds',
-          foreignField: '_id',
-          as: 'friendIds',
+        $unwind: {
+          path: '$profiles',
+          preserveNullAndEmptyArrays: true,
         },
       },
     ];
 
     const projection: ProjectionFields<PollingDto> = {
       _id: 1,
+      userId: 1,
       pollId: 1,
-      friendIds: 1,
-      selectedAt: 1,
-      createdAt: 1,
+      isOpened: 1,
+      name: '$profiles.name',
+      imageFileId: '$profiles.imageFileId'
     };
 
     const cursor = await this.pollingModel.aggregate([
@@ -256,6 +257,13 @@ export class PollingsService {
 
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
+
+    data.forEach(element => {
+      if (!element.isOpened) {
+        delete element.name;
+        delete element.imageFilePath;  
+      }
+    });
 
     return {
       total: metdata[0]?.total || 0,

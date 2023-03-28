@@ -11,7 +11,7 @@ export class Polling {
   _id?: Types.ObjectId;
   // userId
   @Prop({ required: true })
-  userId: string;
+  userId: Types.ObjectId;
 
   // userroundId
   @Prop({ required: true })
@@ -19,7 +19,7 @@ export class Polling {
 
   // pollId
   @Prop({ required: true })
-  pollId: string;
+  pollId: Types.ObjectId;
 
   // friendList
   @Prop({ required: true })
@@ -27,7 +27,7 @@ export class Polling {
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
-  selectedProfileId?: string;
+  selectedProfileId?: Types.ObjectId;
 
   // 건너뛰기 여부
   @Prop({ default: null })

@@ -19,7 +19,7 @@ export class PollingDto {
 
   // userId
   @ApiProperty({})
-  userId: string;
+  userId: Types.ObjectId;
 
   // userroundId
   @ApiProperty({})
@@ -27,7 +27,7 @@ export class PollingDto {
 
   // pollId
   @ApiProperty({})
-  pollId: string;
+  pollId: Types.ObjectId;
 
   // friendList
   @ApiProperty({})
@@ -35,11 +35,11 @@ export class PollingDto {
 
   // selectedId
   @ApiProperty({default: null})
-  selectedProfileId: string;
+  selectedProfileId: Types.ObjectId;
 
   // skipped
   @ApiProperty({default: null})
-  skipped: string;
+  skipped: boolean;
 
   @ApiProperty({default: 0})
   refreshCount: number;

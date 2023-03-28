@@ -62,7 +62,7 @@ export class PollingsController {
     @Query() query: GetListReceivePollingDto,
     @Request() req,
   ) {
-    return await this.pollingsService.findListPollingByUserId(
+    return await this.pollingsService.findListInboxByUserId(
       req.user.id,
       query,
     );
