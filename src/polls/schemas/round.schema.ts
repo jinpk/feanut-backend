@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
+import { HydratedDocument, Types, now } from 'mongoose';
 import { ROUND_MODULE_NAME } from '../../polls/polls.constant';
 
 export type RoundDocument = HydratedDocument<Round>;
@@ -8,7 +8,7 @@ export type RoundDocument = HydratedDocument<Round>;
 @Schema({ collection: ROUND_MODULE_NAME, timestamps: true })
 export class Round {
   // pk
-  _id?: string;
+  _id: Types.ObjectId;
 
   @Prop({})
   title: string;

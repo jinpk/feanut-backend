@@ -36,6 +36,7 @@ import {
 import { Round } from './schemas/round.schema';
 import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
+import { WrappedError } from 'src/common/errors';
 
 @ApiTags('Poll')
 @Controller('polls')
@@ -162,7 +163,7 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: Round,
   })
   async getRoundDetail(@Param('roundId') roundId: string, @Request() req) {
     if (!req.user.isAdmin) {
@@ -177,10 +178,15 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: PollDto,
   })
   async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
-    return await this.pollsService.findPollById(pollId);
+    const poll = await this.pollsService.findPollById(pollId);
+    if (!poll) {
+      throw new WrappedError('Not Found Poll').notFound();
+    }
+    const dto = this.pollsService.pollToDto(poll);
+    return dto;
   }
 }
 

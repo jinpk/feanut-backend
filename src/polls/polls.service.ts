@@ -201,4 +201,13 @@ export class PollsService {
       data: data,
     };
   }
+
+  pollToDto(doc: Poll | PollDocument): PollDto {
+    const dto = new PollDto();
+    dto.id = doc._id.toHexString();
+    dto.emotion = doc.emotion;
+    dto.emojiId = doc.emojiId;
+    dto.contentText = doc.contentText;
+    return dto;
+  }
 }

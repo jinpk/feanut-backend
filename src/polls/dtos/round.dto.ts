@@ -3,6 +3,7 @@ import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
 import { now } from 'mongoose';
 
 export class RoundDto {
+  @ApiProperty({ description: 'round ID' })
   id: string;
 
   @ApiProperty({description: 'round 타이틀', default: 'title'})
