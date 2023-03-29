@@ -20,6 +20,10 @@ export class UserRound {
   @Prop({})
   pollIds: string[];
 
+  // pollingIds
+  @Prop({})
+  pollingIds: Types.ObjectId[];
+
   // complete 여부
   @Prop({ default: false })
   complete?: boolean;

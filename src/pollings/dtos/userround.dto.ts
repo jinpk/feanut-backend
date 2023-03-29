@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { now } from 'mongoose';
+import { Types, now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class UserRoundDto {
@@ -15,6 +15,10 @@ export class UserRoundDto {
   // poll 목록
   @ApiProperty({})
   pollIds: string[];
+
+  // pollingIds 목록
+  @ApiProperty({})
+  pollingIds: Types.ObjectId[];
 
   // complete
   @ApiProperty({ default: false })

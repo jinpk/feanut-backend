@@ -89,6 +89,10 @@ export class PollingsService {
 
     const result = await new this.pollingModel(polling).save();
 
+    await this.userroundModel.findByIdAndUpdate(result.userRoundId,{
+      $push: {pollingIds: result._id}
+    })
+
     const pollingId = result._id;
     const filter: FilterQuery<PollingDocument> = {
       _id: pollingId,
@@ -127,10 +131,22 @@ export class PollingsService {
               },
             },
             {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
               $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
             },
           ],
           as: 'friendIds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -156,14 +172,14 @@ export class PollingsService {
     ]);
 
     let mergedList = [];
-    const aa = cursor.slice(-4);
-    for (const v of aa) {
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
       let temp = { profileId: null, name: null, imageFileId: null };
-      temp.profileId = v.friendIds[0].friends.profileId;
-      temp.name = v.friendIds[0].friends.name;
+      temp.profileId = v.friendIds.friends.profileId;
+      temp.name = v.friendIds.friends.name;
 
-      if (v.friendIds[0].profile[0].imageFileId) {
-        temp.imageFileId = v.friendIds[0].profile[0].imageFileId;
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileId = v.friendIds.profile.imageFileId;
       }
       mergedList.push(temp);
     }
@@ -644,6 +660,7 @@ export class PollingsService {
       userId: user_id,
       roundId: nextRound._id.toString(),
       pollIds: shuffledPollIds,
+      pollingIds: []
     };
     const result = await new this.userroundModel(userround).save();
     return result;
