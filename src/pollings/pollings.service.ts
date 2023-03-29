@@ -176,7 +176,12 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = { profileId: null, name: null, imageFileId: null };
       temp.profileId = v.friendIds.friends.profileId;
-      temp.name = v.friendIds.friends.name;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
 
       if (v.friendIds.profile.imageFileId) {
         temp.imageFileId = v.friendIds.profile.imageFileId;
