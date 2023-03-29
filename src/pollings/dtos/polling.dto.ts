@@ -11,9 +11,9 @@ export class PollingDto {
   @ApiProperty({})
   userId: Types.ObjectId;
 
-  // userroundId
+  // userRoundId
   @ApiProperty({})
-  userroundId: Types.ObjectId;
+  userRoundId: Types.ObjectId;
 
   // pollId
   @ApiProperty({})

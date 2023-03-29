@@ -12,9 +12,9 @@ export class Polling {
   @Prop({ required: true })
   userId: Types.ObjectId;
 
-  // userroundId
+  // userRoundId
   @Prop({ required: true })
-  userroundId: Types.ObjectId;
+  userRoundId: Types.ObjectId;
 
   // pollId
   @Prop({ required: true })

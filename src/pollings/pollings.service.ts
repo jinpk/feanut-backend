@@ -13,7 +13,7 @@ import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
-import { UserRound, UserRoundDocument } from './schemas/userround.schema';
+import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
 import {
   PollingDto,
   PollingResultDto,
@@ -56,7 +56,7 @@ export class PollingsService {
   async existPollingByUserId(user_id, userround_id: string): Promise<boolean> {
     const exist = await this.pollingModel.findOne({
       userId: new Types.ObjectId(user_id),
-      userroundId: new Types.ObjectId(userround_id),
+      userRoundId: new Types.ObjectId(userround_id),
     });
     if (!exist) {
       return false;
@@ -79,7 +79,7 @@ export class PollingsService {
     let polling = new Polling();
     polling = {
       userId: new Types.ObjectId(user_id),
-      userroundId: new Types.ObjectId(body.userRoundId),
+      userRoundId: new Types.ObjectId(body.userRoundId),
       pollId: new Types.ObjectId(body.pollId),
       friendIds: [friendIds],
       isOpened: null,
@@ -683,7 +683,7 @@ export class PollingsService {
 
   async checkUserroundComplete(user_id: string, userround) {
     const pollings = await this.pollingModel.find({
-      userroundId: userround._id,
+      userRoundId: userround._id,
       selectedAt: { $ne: null },
     });
 
@@ -727,7 +727,7 @@ export class PollingsService {
     const dto = new PollingDto();
     dto.id = doc._id.toHexString();
     dto.userId = doc.userId;
-    dto.userroundId = doc.userroundId;
+    dto.userRoundId = doc.userRoundId;
     dto.pollId = doc.pollId;
     dto.friendIds = doc.friendIds;
     dto.createdAt = doc.createdAt;

@@ -29,7 +29,7 @@ import {
 } from './dtos/polling.dto';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
-import { UserRound } from './schemas/userround.schema';
+import { UserRound } from './schemas/user-round.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -173,8 +173,7 @@ export class PollingsController {
 
   @Post('rounds')
   @ApiOperation({
-    summary: '투표 조회 & 생성',
-    description: 'GET userRound 조회. todayCount=0|1|2 반환.',
+    summary: '내 투표 라운드 조회 & 생성',
   })
   @ApiOkResponse({
     status: 200,

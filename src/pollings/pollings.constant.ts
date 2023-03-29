@@ -1,6 +1,6 @@
 export const POLLING_MODULE_NAME = 'pollings';
 export const POLLING_SCHEMA_NAME = 'pollings';
-export const POLLING_ROUND_SCHEMA_NAME = 'userround';
+export const POLLING_USER_ROUND_SCHEMA_NAME = 'polling_user_rounds';
 
 export const POLLING_ERROR_EXIST_POLLING = 1;
 export const POLLING_ERROR_EXIST_USERROUND = 2;

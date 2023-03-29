@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Polling, PollingSchema } from './schemas/polling.schema';
-import { UserRound, UserRoundSchema } from './schemas/userround.schema';
+import { UserRound, UserRoundSchema } from './schemas/user-round.schema';
 import { Coin, CoinSchema } from '../coins/schemas/coin.schema';
 import { Poll, PollSchema } from '../polls/schemas/poll.schema';
 import { Round, RoundSchema } from '../polls/schemas/round.schema';
