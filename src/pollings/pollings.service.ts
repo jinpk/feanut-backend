@@ -53,6 +53,17 @@ export class PollingsService {
     private utilsService: UtilsService,
   ) {}
 
+  async existPollingByUserId(user_id, userround_id: string): Promise<boolean> {
+    const exist = await this.pollingModel.findOne({
+      userId: new Types.ObjectId(user_id),
+      userroundId: new Types.ObjectId(userround_id),
+    });
+    if (!exist) {
+      return false;
+    }
+
+    return true;
+  }
   async createPolling(user_id: string, body): Promise<Polling> {
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
@@ -580,15 +591,13 @@ export class PollingsService {
       }
     }
 
-    let shuffledPollIds = nextRound.pollIds
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 17);
+    let shuffledPollIds = nextRound.pollIds.sort(() => Math.random() - 0.5);
+
     let userround = new UserRound();
     userround = {
       userId: user_id,
       roundId: nextRound._id.toString(),
       pollIds: shuffledPollIds,
-      createdAt: now(),
     };
     const result = await new this.userroundModel(userround).save();
     return result;
