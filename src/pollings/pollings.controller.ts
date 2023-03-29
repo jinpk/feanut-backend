@@ -185,7 +185,7 @@ export class PollingsController {
     return dto;
   }
 
-  @Put(':pollingId/refresh')
+  @Post(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
     description: 'refreshCount < 2이면 pass.',
@@ -212,7 +212,7 @@ export class PollingsController {
     return dto;
   }
 
-  @Put(':pollingId/vote')
+  @Post(':pollingId/vote')
   @ApiOperation({
     summary: 'polling 결과 업데이트',
   })
