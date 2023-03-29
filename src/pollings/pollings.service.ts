@@ -704,6 +704,7 @@ export class PollingsService {
         }
       });
 
+      console.log(userrounds[0])
       res.todayCount = todayRounds.length;
 
       if (res.todayCount == 0) {
@@ -803,6 +804,7 @@ export class PollingsService {
     dto.userId = doc.userId;
     dto.roundId = doc.roundId;
     dto.pollIds = doc.pollIds;
+    dto.pollingIds = doc.pollingIds;
     return dto;
   }
 }
