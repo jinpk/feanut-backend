@@ -487,61 +487,99 @@ export class PollingsService {
         },
       },
       {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $lookup: {
-          from: 'profiles',
-          localField: 'friendIds',
-          foreignField: '_id',
+          from: 'friendships',
+          let: { friend_id: '$friendIds' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
+            },
+          ],
           as: 'friendIds',
         },
       },
       {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $lookup: {
-          from: 'profiles',
-          localField: 'userId',
-          foreignField: 'ownerId',
-          as: 'user',
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
         },
       },
       {
         $unwind: {
-          path: '$user',
+          path: '$pollId',
           preserveNullAndEmptyArrays: true,
         },
       },
+      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
     ];
-
-    const projection: ProjectionFields<ReceivePollingDto> = {
-      _id: 1,
-      userId: 1,
-      userName: '$user.name',
-      userImageFileId: '$user.imageFileId',
-      friendIds: 1,
-      selectedAt: 1,
-      selectedProfileId: 1,
-    };
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
       ...lookups,
-      { $project: projection },
     ]);
 
-    if (cursor.length == 0) {
-      throw new WrappedError('Not Found Receive Polling').notFound();
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+        ).notFound();
     }
 
-    cursor[cursor.length - 1].friendIds.forEach((element) => {
-      delete element.birth;
-      delete element.gender;
-      delete element.phoneNumber;
-      delete element.ownerId;
-      delete element.createdAt;
-      delete element.updatedAt;
-      delete element.statusMessage;
-      delete element.instagram;
-    });
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileId: null };
+      temp.profileId = v.friendIds.friends.profileId;
 
-    return cursor[cursor.length - 1];
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileId = v.friendIds.profile.imageFileId;
+      }
+      mergedList.push(temp);
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1)
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
