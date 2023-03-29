@@ -75,12 +75,12 @@ export class PollsService {
       throw new WrappedError('투표를 12개 이상 선택해주세요.').reject();
     }
 
-    if (body.eventRound) {
+    if (body.pollRoundEventId) {
       if (!body.startedAt || !body.endedAt) {
         throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject();
       }
     }
-
+    
     const result = await new this.roundModel(body).save();
     return result._id.toString();
   }
@@ -245,7 +245,7 @@ export class PollsService {
     dto.title = doc.title;
     dto.index = doc.index;
     dto.enabled = doc.enabled;
-    dto.eventRound = doc.eventRound;
+    dto.pollRoundEventId = doc.pollRoundEventId;
     dto.pollIds = doc.pollIds;
     dto.startedAt = doc.startedAt;
     dto.endedAt = doc.endedAt;

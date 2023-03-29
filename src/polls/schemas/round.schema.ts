@@ -17,16 +17,12 @@ export class Round {
   index: number;
 
   // 속한 이벤트 ID
-  @Prop({})
-  pollRoundEventId?: Types.ObjectId;
+  @Prop({defaul: null})
+  pollRoundEventId?: string;
 
   // 활성화 여부
   @Prop({ default: false })
   enabled: boolean;
-
-  // 이벤트 라운드 여부
-  @Prop({ default: false })
-  eventRound: boolean;
 
   @Prop({})
   pollIds: string[];

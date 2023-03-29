@@ -511,7 +511,7 @@ export class PollingsService {
 
     // 이벤트 라운드 체크
     var eventRounds = []
-    eventRounds = rounds.filter((element) => element.eventRound == true);
+    eventRounds = rounds.filter((element) => (element.pollRoundEventId));
 
     eventRounds.sort((prev, next) => {
       if(prev.startedAt > next.startedAt) return 1;
@@ -529,7 +529,7 @@ export class PollingsService {
     }
 
     var normalRounds = []
-    normalRounds = rounds.filter((element) => element.eventRound == false);
+    normalRounds = rounds.filter((element) => !(element.pollRoundEventId));
     normalRounds.sort((prev, next) => {
       if(prev.index > next.index) return 1;
       if(prev.index < next.index) return -1;

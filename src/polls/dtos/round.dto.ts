@@ -14,7 +14,7 @@ export class RoundDto {
 
   // 속한 이벤트 ID
   @ApiProperty({description: '속한 이벤트 ID'})
-  pollRoundEventId?: Types.ObjectId;
+  pollRoundEventId?: string;
 
   @ApiProperty({description: '활성화 여부', default: false})
   enabled: boolean;
@@ -54,11 +54,12 @@ export class ResRoundDto {
   @ApiProperty({description: 'round 정렬 순서'})
   index: number;
 
+  // 속한 이벤트 ID
+  @ApiProperty({description: '속한 이벤트 ID'})
+  pollRoundEventId: string;
+
   @ApiProperty({description: '활성화 여부', default: false})
   enabled: boolean;
-
-  @ApiProperty({description: '이벤트 라운드 여부', default: false})
-  eventRound: boolean;
 
   @ApiProperty({description: 'round에 포함된 pollIds'})
   pollIds: string[];
