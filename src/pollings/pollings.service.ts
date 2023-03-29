@@ -133,6 +133,21 @@ export class PollingsService {
           as: 'friendIds',
         },
       },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
     ];
 
     const cursor = await this.pollingModel.aggregate([
