@@ -25,7 +25,7 @@ import {
   PollingDto,
   ReqNewPollingDto,
   PollingResultDto,
-  ReceivePollingDto
+  ReceivePollingDto,
 } from './dtos/polling.dto';
 import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
@@ -63,10 +63,7 @@ export class PollingsController {
     @Query() query: GetListReceivePollingDto,
     @Request() req,
   ) {
-    return await this.pollingsService.findListInboxByUserId(
-      req.user.id,
-      query,
-    );
+    return await this.pollingsService.findListInboxByUserId(req.user.id, query);
   }
 
   @Get('recieve/:pollingId/detail')
@@ -78,13 +75,10 @@ export class PollingsController {
     status: 200,
     type: ReceivePollingDto,
   })
-  async getInboxDetail(
-    @Param('pollingId') pollingId: string,
-    @Request() req,
-  ) {
+  async getInboxDetail(@Param('pollingId') pollingId: string, @Request() req) {
     return await this.pollingsService.findInboxPollingByUserId(
       req.user.id,
-      pollingId
+      pollingId,
     );
   }
 
@@ -106,7 +100,7 @@ export class PollingsController {
       throw new WrappedError('권한이 없습니다.').reject();
     }
 
-    const dto = this.pollingsService.pollingToDto(polling)
+    const dto = this.pollingsService.pollingToDto(polling);
 
     return dto;
   }
@@ -114,20 +108,15 @@ export class PollingsController {
   @Post('receive/:pollingId/open')
   @ApiOperation({
     summary: '수신투표 열람. 피넛 소모',
-    description: 'isOpened=true 인 경우 reject: already opened\n\n피넛 수량이 부족한 경우 reject: Lack of total feanut amount'
+    description:
+      'isOpened=true 인 경우 reject: already opened\n\n피넛 수량이 부족한 경우 reject: Lack of total feanut amount',
   })
   @ApiResponse({
     status: 200,
     type: String,
   })
-  async postPollingOpen(
-    @Param('pollingId') pollingId: string,
-    @Request() req,
-  ) {
-    return await this.pollingsService.updatePollingOpen(
-      req.user.id,
-      pollingId,
-    );
+  async postPollingOpen(@Param('pollingId') pollingId: string, @Request() req) {
+    return await this.pollingsService.updatePollingOpen(req.user.id, pollingId);
   }
 
   @Post('new')
@@ -138,28 +127,29 @@ export class PollingsController {
     status: 200,
     type: PollingDto,
   })
-  async postPolling(
-    @Body() body: ReqNewPollingDto,
-    @Request() req) {
-      const exist = await this.pollingsService.findUserRoundById(req.user.id, body);
+  async postPolling(@Body() body: ReqNewPollingDto, @Request() req) {
+    const exist = await this.pollingsService.findUserRoundById(
+      req.user.id,
+      body,
+    );
 
-      if (!exist) {
-        throw new WrappedError('Not Found Userround').notFound()
-      } else {
-        if (!exist.pollIds.includes(body.pollId)) {
-          throw new WrappedError('Not included pollId').reject()
-        }
+    if (!exist) {
+      throw new WrappedError('Not Found Userround').notFound();
+    } else {
+      if (!exist.pollIds.includes(body.pollId)) {
+        throw new WrappedError('Not included pollId').reject();
       }
+    }
 
-      const polling = await this.pollingsService.createPolling(req.user.id, body);
-      const dto = this.pollingsService.pollingToDto(polling);
-      
-      return dto;
+    const polling = await this.pollingsService.createPolling(req.user.id, body);
+    const dto = this.pollingsService.pollingToDto(polling);
+
+    return dto;
   }
 
-  @Get('userround')
+  @Post('rounds')
   @ApiOperation({
-    summary: '사용자 userround조회',
+    summary: '투표 조회 & 생성',
     description: 'GET userRound 조회. todayCount=0|1|2 반환.',
   })
   @ApiOkResponse({
@@ -169,7 +159,7 @@ export class PollingsController {
   async getUserRound(@Request() req) {
     const result = await this.pollingsService.findUserRound(req.user.id);
     result.data = this.pollingsService.userRoundToDto(result.data);
-    return result
+    return result;
   }
 
   @Put(':pollingId/refresh')
@@ -196,7 +186,7 @@ export class PollingsController {
 
     const dto = this.pollingsService.pollingToDto(result);
 
-    return dto
+    return dto;
   }
 
   @Put(':pollingId/result')
@@ -217,14 +207,14 @@ export class PollingsController {
       throw new WrappedError('권한이 없습니다.');
     }
 
-    if ((!exist.selectedProfileId) || (!exist.skipped)) {
+    if (!exist.selectedProfileId || !exist.skipped) {
       throw new WrappedError('completed already.').alreadyExist();
     }
 
     return await this.pollingsService.updatePollingResult(
       req.user.id,
       pollingId,
-      body
+      body,
     );
   }
 }

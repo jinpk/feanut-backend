@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types, now } from 'mongoose';
-import { POLLING_MODULE_NAME } from '../../pollings/pollings.constant';
+import { POLLING_SCHEMA_NAME } from '../../pollings/pollings.constant';
 
 export type PollingDocument = HydratedDocument<Polling>;
 
 // Polling
-@Schema({ collection: POLLING_MODULE_NAME, timestamps: true })
+@Schema({ collection: POLLING_SCHEMA_NAME, timestamps: true })
 export class Polling {
   _id?: Types.ObjectId;
   // userId

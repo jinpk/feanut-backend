@@ -1,13 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { now, FilterQuery, Model, ProjectionFields, Types, PipelineStage } from 'mongoose';
+import {
+  now,
+  FilterQuery,
+  Model,
+  ProjectionFields,
+  Types,
+  PipelineStage,
+} from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingResultDto, ReceivePollingDto } from './dtos/polling.dto';
+import {
+  PollingDto,
+  PollingResultDto,
+  ReceivePollingDto,
+} from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -22,6 +33,10 @@ import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
 import { OPEN_POLLING } from 'src/coins/coins.constant';
 import { UseType } from 'src/coins/enums';
+import {
+  POLLING_ERROR_MIN_FRIENDS,
+  POLLING_MODULE_NAME,
+} from './pollings.constant';
 
 @Injectable()
 export class PollingsService {
@@ -38,9 +53,7 @@ export class PollingsService {
     private utilsService: UtilsService,
   ) {}
 
-  async createPolling(
-    user_id: string,
-    body): Promise<Polling> {
+  async createPolling(user_id: string, body): Promise<Polling> {
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
@@ -63,7 +76,7 @@ export class PollingsService {
     };
 
     const result = await new this.pollingModel(polling).save();
-  
+
     const pollingId = result._id;
     const filter: FilterQuery<PollingDocument> = {
       _id: pollingId,
@@ -91,7 +104,7 @@ export class PollingsService {
       ...lookups,
     ]);
 
-    cursor[cursor.length-1].friendIds.forEach(element => {
+    cursor[cursor.length - 1].friendIds.forEach((element) => {
       delete element.birth;
       delete element.phoneNumber;
       delete element.ownerId;
@@ -100,7 +113,7 @@ export class PollingsService {
       delete element.statusMessage;
     });
 
-    return cursor[cursor.length-1];
+    return cursor[cursor.length - 1];
   }
 
   async updateRefreshedPollingById(
@@ -117,19 +130,19 @@ export class PollingsService {
       if (polling.refreshCount < 3) {
         polling.refreshCount += 1;
       } else {
-        throw new WrappedError('Exceed your free refresh count').reject()
+        throw new WrappedError('Exceed your free refresh count').reject();
       }
     }
-    
+
     // 친구목록 불러오기/셔플
-    let prevFriend = []
+    let prevFriend = [];
     for (const arr of polling.friendIds) {
       prevFriend.push(arr);
     }
 
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
-      .filter(friend => !prevFriend.includes(friend.profileId))
+      .filter((friend) => !prevFriend.includes(friend.profileId))
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
 
@@ -168,7 +181,7 @@ export class PollingsService {
       ...lookups,
     ]);
 
-    cursor[cursor.length-1].friendIds.forEach(element => {
+    cursor[cursor.length - 1].friendIds.forEach((element) => {
       delete element.birth;
       delete element.phoneNumber;
       delete element.ownerId;
@@ -243,12 +256,12 @@ export class PollingsService {
       pollId: 1,
       isOpened: 1,
       name: '$profiles.name',
-      imageFileId: '$profiles.imageFileId'
+      imageFileId: '$profiles.imageFileId',
     };
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
-      { $sort: {selectedAt: -1}},
+      { $sort: { selectedAt: -1 } },
       ...lookups,
       { $project: projection },
       this.utilsService.getCommonMongooseFacet(query),
@@ -257,10 +270,10 @@ export class PollingsService {
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
 
-    data.forEach(element => {
+    data.forEach((element) => {
       if (!element.isOpened) {
         delete element.name;
-        delete element.imageFilePath;  
+        delete element.imageFilePath;
       }
     });
 
@@ -303,13 +316,13 @@ export class PollingsService {
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
       ...lookups,
-      { $project: projection }
+      { $project: projection },
     ]);
 
     if (cursor.length == 0) {
       throw new WrappedError('Not found polling').notFound();
     }
-    cursor[cursor.length-1].friendIds.forEach(element => {
+    cursor[cursor.length - 1].friendIds.forEach((element) => {
       delete element.birth;
       delete element.gender;
       delete element.phoneNumber;
@@ -319,7 +332,7 @@ export class PollingsService {
       delete element.statusMessage;
     });
 
-    return cursor[cursor.length-1];
+    return cursor[cursor.length - 1];
   }
 
   async findInboxPollingByUserId(user_id, polling_id: string) {
@@ -355,7 +368,7 @@ export class PollingsService {
         },
       },
       {
-        $unwind: {        
+        $unwind: {
           path: '$user',
           preserveNullAndEmptyArrays: true,
         },
@@ -375,14 +388,14 @@ export class PollingsService {
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
       ...lookups,
-      { $project: projection }
+      { $project: projection },
     ]);
 
     if (cursor.length == 0) {
       throw new WrappedError('Not Found Receive Polling').notFound();
     }
 
-    cursor[cursor.length-1].friendIds.forEach(element => {
+    cursor[cursor.length - 1].friendIds.forEach((element) => {
       delete element.birth;
       delete element.gender;
       delete element.phoneNumber;
@@ -390,10 +403,10 @@ export class PollingsService {
       delete element.createdAt;
       delete element.updatedAt;
       delete element.statusMessage;
-      delete element.instagram
+      delete element.instagram;
     });
 
-    return cursor[cursor.length-1];
+    return cursor[cursor.length - 1];
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
@@ -403,11 +416,15 @@ export class PollingsService {
     return result._id.toString();
   }
 
-  async updatePollingResult(user_id, polling_id: string, body): Promise<PollingResultDto> {
-    var res = new PollingResultDto()
-    
-    var result = ''
-    if (body.skipped){
+  async updatePollingResult(
+    user_id,
+    polling_id: string,
+    body,
+  ): Promise<PollingResultDto> {
+    var res = new PollingResultDto();
+
+    var result = '';
+    if (body.skipped) {
       let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
         $set: {
           skipped: body.skipped,
@@ -434,9 +451,12 @@ export class PollingsService {
       .sort({ createdAt: -1 });
 
     const checked = await this.checkUserroundComplete(user_id, userround);
-    
+
     if (checked) {
-      const complete = await this.updateComplete(user_id, userround._id.toString());
+      const complete = await this.updateComplete(
+        user_id,
+        userround._id.toString(),
+      );
       // pollround event 로 수정예정
       // res.roundReward = ROUND_REWARD;
       res.roundReward = 2;
@@ -456,11 +476,11 @@ export class PollingsService {
     const usercoin = await this.coinService.findUserCoin(user_id);
 
     if (usercoin.total < OPEN_POLLING) {
-      throw new WrappedError('Lack of total feanut amount').reject()
+      throw new WrappedError('Lack of total feanut amount').reject();
     } else {
       const exist = await this.pollingModel.findOne({
         _id: new Types.ObjectId(polling_id),
-        selectedProfileId: profile._id,        
+        selectedProfileId: profile._id,
       });
 
       if (!exist) {
@@ -490,12 +510,12 @@ export class PollingsService {
           $set: { isOpened: true, useCoinId: usecoin_id, updatedAt: now() },
         },
       );
-  
+
       // poll isOpenedCount 업데이트
       await this.pollModel.findByIdAndUpdate(result.pollId, {
         $inc: { isOpened: 1 },
       });
-  
+
       return result._id.toString();
     }
   }
@@ -504,20 +524,24 @@ export class PollingsService {
   async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
     const friendList = await this.friendShipsService.listFriend(user_id);
     if (friendList.total < 4) {
-      throw new WrappedError('Please add friends at least four.').reject()
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        null,
+      ).reject();
     }
 
     const rounds = await this.roundModel.find();
 
     // 이벤트 라운드 체크
-    var eventRounds = []
-    eventRounds = rounds.filter((element) => (element.pollRoundEventId));
+    var eventRounds = [];
+    eventRounds = rounds.filter((element) => element.pollRoundEventId);
 
     eventRounds.sort((prev, next) => {
-      if(prev.startedAt > next.startedAt) return 1;
-      if(prev.startedAt < next.startedAt) return -1;
+      if (prev.startedAt > next.startedAt) return 1;
+      if (prev.startedAt < next.startedAt) return -1;
       return 0;
-    })
+    });
 
     for (var i = 0; i < eventRounds.length; i++) {
       for (const ur of userrounds) {
@@ -528,13 +552,13 @@ export class PollingsService {
       }
     }
 
-    var normalRounds = []
-    normalRounds = rounds.filter((element) => !(element.pollRoundEventId));
+    var normalRounds = [];
+    normalRounds = rounds.filter((element) => !element.pollRoundEventId);
     normalRounds.sort((prev, next) => {
-      if(prev.index > next.index) return 1;
-      if(prev.index < next.index) return -1;
+      if (prev.index > next.index) return 1;
+      if (prev.index < next.index) return -1;
       return 0;
-    })
+    });
 
     var nextRound = new Round();
     if (eventRounds) {
@@ -543,9 +567,9 @@ export class PollingsService {
       if (userrounds) {
         for (let i = 0; i < normalRounds.length; i++) {
           if (normalRounds[i].index == userrounds[0].index) {
-            if ((i + 1) < normalRounds.length) {
-              nextRound = normalRounds[i+1];
-            } else{
+            if (i + 1 < normalRounds.length) {
+              nextRound = normalRounds[i + 1];
+            } else {
               nextRound = normalRounds[0];
             }
             break;
@@ -581,9 +605,9 @@ export class PollingsService {
   }
 
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
-    var res = new FindUserRoundDto()
+    var res = new FindUserRoundDto();
 
-    var sortStart = new Date(now().getTime() - 365 * 24 * 3600000)
+    var sortStart = new Date(now().getTime() - 365 * 24 * 3600000);
 
     const userrounds = await this.userroundModel
       .find({
@@ -597,38 +621,41 @@ export class PollingsService {
       start.setHours(0, 0, 0, 0);
       const end = new Date();
       end.setHours(23, 59, 59, 999);
-  
-      var todayRounds = []
-      userrounds.forEach(element => {
+
+      var todayRounds = [];
+      userrounds.forEach((element) => {
         if (element.completedAt == null) {
           todayRounds.push(element);
         }
-        if ((element.completedAt >= start) && (element.completedAt <= end)) {
+        if (element.completedAt >= start && element.completedAt <= end) {
           todayRounds.push(element);
         }
       });
-  
+
       res.todayCount = todayRounds.length;
-  
+
       if (res.todayCount == 0) {
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          const result = await this.createUserRound(user_id, userrounds)
+          const result = await this.createUserRound(user_id, userrounds);
           res.data = result;
         }
       } else if (res.todayCount == (1 || 2)) {
         if (todayRounds[0].completedAt) {
-          res.remainTime = todayRounds[0].completedAt.getTime() + (30 * 60 * 1000) - now().getTime();
+          res.remainTime =
+            todayRounds[0].completedAt.getTime() +
+            30 * 60 * 1000 -
+            now().getTime();
         }
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
           res.recentCompletedAt = userrounds[0].completedAt;
-          const result = await this.createUserRound(user_id, userrounds)
+          const result = await this.createUserRound(user_id, userrounds);
           res.data = result;
         }
-      } else if (res.todayCount == 3 ) {
+      } else if (res.todayCount == 3) {
         res.remainTime = end.getTime() - now().getTime();
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
@@ -637,7 +664,7 @@ export class PollingsService {
         }
       }
     } else {
-      const result = await this.createUserRound(user_id, userrounds)
+      const result = await this.createUserRound(user_id, userrounds);
       res.data = result;
       res.todayCount = 0;
     }
@@ -648,15 +675,15 @@ export class PollingsService {
   async checkUserroundComplete(user_id: string, userround) {
     const pollings = await this.pollingModel.find({
       userroundId: userround._id,
-      selectedAt: { $ne: null }
+      selectedAt: { $ne: null },
     });
 
     // userround의 pollids길이 만큼 완료가 됐는지 확인
     if (pollings.length >= userround.pollIds.length) {
-      return true
+      return true;
     }
 
-    return false
+    return false;
   }
 
   async updateComplete(user_id, userround_id: string): Promise<string> {
@@ -684,7 +711,7 @@ export class PollingsService {
       userId: user_id,
     });
 
-    return res
+    return res;
   }
 
   pollingToDto(doc: Polling | PollingDocument): PollingDto {
