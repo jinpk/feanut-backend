@@ -1,11 +1,11 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { Types} from 'mongoose';
+import { Types } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 import { FriendDto } from 'src/friendships/dtos';
 
 export class PollingDto {
   @ApiProperty({})
-  id?: string
+  id?: string;
 
   // userId
   @ApiProperty({})
@@ -21,21 +21,21 @@ export class PollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: [Object[]];
+  friendIds: Object[][];
 
   // selectedId
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   selectedProfileId: Types.ObjectId;
 
   // skipped
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   skipped: boolean;
 
-  @ApiProperty({default: 0})
+  @ApiProperty({ default: 0 })
   refreshCount: number;
 
   // selectedAt
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   selectedAt: Date;
 
   // isOpened
@@ -43,7 +43,7 @@ export class PollingDto {
   isOpened: boolean;
 
   // useCoinId
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   useCoinId?: Types.ObjectId;
 
   // 생성시간
@@ -52,29 +52,29 @@ export class PollingDto {
 }
 
 export class ReqNewPollingDto {
-  @ApiProperty({required: true})
+  @ApiProperty({ required: true })
   pollId: string;
-  
-  @ApiProperty({required: true})
+
+  @ApiProperty({ required: true })
   userRoundId: string;
 }
 
 export class PollingResultDto {
-  @ApiProperty({default: false})
+  @ApiProperty({ default: false })
   userroundCompleted: boolean;
 
-  @ApiProperty({default: 0})
+  @ApiProperty({ default: 0 })
   roundReward: number;
 }
 
 export class PollingFriendDto extends OmitType(FriendDto, [
   'username',
   'hidden',
-]){}
+]) {}
 
 export class ReceivePollingDto {
   @ApiProperty({})
-  id?: string
+  id?: string;
 
   // userId
   @ApiProperty({})
@@ -92,13 +92,13 @@ export class ReceivePollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: [Types.ObjectId[]];
+  friendIds: Types.ObjectId[][];
 
   // selectedId
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   selectedProfileId: Types.ObjectId;
 
   // selectedAt
-  @ApiProperty({default: null})
+  @ApiProperty({ default: null })
   selectedAt: Date;
 }

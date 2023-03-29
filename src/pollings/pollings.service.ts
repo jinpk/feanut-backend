@@ -110,21 +110,26 @@ export class PollingsService {
       {
         $lookup: {
           from: 'friendships',
-          let: { 'friend_id': '$friendIds' },
-          pipeline: [{
-            $unwind: '$friends'
-          }, {
-            $match: { $expr: { $eq: [ '$friends.profileId', '$$friend_id' ] } }
-          }, {
-            $lookup: {
-              from: 'profiles',
-              localField: 'friends.profileId',
-              foreignField: '_id',
-              as: 'profile',
+          let: { friend_id: '$friendIds' },
+          pipeline: [
+            {
+              $unwind: '$friends',
             },
-          }, {
-            $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0}
-          }],
+            {
+              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
+            },
+          ],
           as: 'friendIds',
         },
       },
@@ -135,10 +140,10 @@ export class PollingsService {
       ...lookups,
     ]);
 
-    let mergedList = []
+    let mergedList = [];
     const aa = cursor.slice(-4);
     for (const v of aa) {
-      let temp = {profileId: null, name: null, imageFileId: null};
+      let temp = { profileId: null, name: null, imageFileId: null };
       temp.profileId = v.friendIds[0].friends.profileId;
       temp.name = v.friendIds[0].friends.name;
 
@@ -147,7 +152,7 @@ export class PollingsService {
       }
       mergedList.push(temp);
     }
-    
+
     cursor.at(-1).friendIds = mergedList;
 
     return cursor.at(-1);
