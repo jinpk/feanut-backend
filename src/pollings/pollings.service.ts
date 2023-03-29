@@ -8,6 +8,7 @@ import {
   Types,
   PipelineStage,
 } from 'mongoose';
+import * as dayjs from 'dayjs';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
@@ -17,7 +18,6 @@ import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
 import {
   PollingDto,
   PollingResultDto,
-  ReceivePollingDto,
 } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
@@ -38,6 +38,7 @@ import {
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
 } from './pollings.constant';
+import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
 @Injectable()
 export class PollingsService {
@@ -593,36 +594,28 @@ export class PollingsService {
     user_id,
     polling_id: string,
     body,
-  ): Promise<PollingResultDto> {
-    var res = new PollingResultDto();
+  ): Promise<PollRoundEventDto> {
 
-    var result = '';
+    let update = {}
     if (body.skipped) {
-      let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
-        $set: {
+      update = {
           skipped: body.skipped,
           updatedAt: now(),
           selectedAt: now(),
-        },
-      });
-      result = polling._id.toString();
+      }
     } else {
-      let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
-        $set: {
+      update = {
           selectedProfileId: new Types.ObjectId(body.selectedProfileId),
           updatedAt: now(),
           selectedAt: now(),
-        },
-      });
-      result = polling._id.toString();
+        }
     }
 
-    const userround = await this.userroundModel
-      .findOne({
-        userId: user_id,
-      })
-      .sort({ createdAt: -1 });
+    let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
+      $set: update,
+    });
 
+    const userround = await this.userroundModel.findById(polling.userRoundId);
     const checked = await this.checkUserroundComplete(user_id, userround);
 
     if (checked) {
@@ -632,12 +625,9 @@ export class PollingsService {
       );
       // pollround event 로 수정예정
       // res.roundReward = ROUND_REWARD;
-      res.roundReward = 2;
     }
 
-    res.userroundCompleted = checked;
-
-    return res;
+    return 
   }
 
   // 피넛을 소모. 수신투표 열기.
@@ -703,16 +693,16 @@ export class PollingsService {
         null,
       ).reject();
     }
-
-    const rounds = await this.roundModel.find();
+    const rounds = await this.roundModel.find()
+    .sort({ index: 1})
 
     // 이벤트 라운드 체크
     var eventRounds = [];
     eventRounds = rounds.filter((element) => element.pollRoundEventId);
 
     eventRounds.sort((prev, next) => {
-      if (prev.startedAt > next.startedAt) return 1;
-      if (prev.startedAt < next.startedAt) return -1;
+      if (prev.startedAt > next.startedAt) return -1;
+      if (prev.startedAt < next.startedAt) return 1;
       return 0;
     });
 
@@ -727,26 +717,23 @@ export class PollingsService {
 
     var normalRounds = [];
     normalRounds = rounds.filter((element) => !element.pollRoundEventId);
-    normalRounds.sort((prev, next) => {
-      if (prev.index > next.index) return 1;
-      if (prev.index < next.index) return -1;
-      return 0;
-    });
 
     var nextRound = new Round();
-    if (eventRounds) {
+    if (eventRounds.length > 0) {
       nextRound = eventRounds[0];
+      for (const v of eventRounds){
+        if (v.index == 0) {
+          nextRound = v;
+          break;
+        }
+      }
     } else {
-      if (userrounds) {
-        for (let i = 0; i < normalRounds.length; i++) {
-          if (normalRounds[i].index == userrounds[0].index) {
-            if (i + 1 < normalRounds.length) {
-              nextRound = normalRounds[i + 1];
-            } else {
-              nextRound = normalRounds[0];
-            }
-            break;
-          }
+      if (userrounds.length > 0) {
+        let filtered = normalRounds.filter((element) => (element.index > userrounds[0].index));
+        if (filtered.length > 0) {
+          nextRound = filtered[0];
+        } else {
+          nextRound = normalRounds[0];          
         }
       } else {
         nextRound = normalRounds[0];
@@ -763,6 +750,7 @@ export class PollingsService {
       pollingIds: []
     };
     const result = await new this.userroundModel(userround).save();
+    
     return result;
   }
 
@@ -779,12 +767,9 @@ export class PollingsService {
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
 
-    var sortStart = new Date(now().getTime() - 365 * 24 * 3600000);
-
     const userrounds = await this.userroundModel
       .find({
         userId: user_id,
-        createdAt: { $gte: sortStart },
       })
       .sort({ createdAt: -1 });
 
@@ -799,12 +784,11 @@ export class PollingsService {
         if (element.completedAt == null) {
           todayRounds.push(element);
         }
-        if (element.completedAt >= start && element.completedAt <= end) {
+        if ((element.completedAt >= start) && (element.completedAt <= end)) {
           todayRounds.push(element);
         }
       });
 
-      console.log(userrounds[0])
       res.todayCount = todayRounds.length;
 
       if (res.todayCount == 0) {
@@ -839,7 +823,7 @@ export class PollingsService {
     } else {
       const result = await this.createUserRound(user_id, userrounds);
       res.data = result;
-      res.todayCount = 0;
+      res.todayCount = 1;
     }
 
     return res;

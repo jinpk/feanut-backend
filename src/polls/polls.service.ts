@@ -80,6 +80,8 @@ export class PollsService {
         throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject();
       }
     }
+
+    body.pollRoundEventId = null;
     
     const result = await new this.roundModel(body).save();
     return result._id.toString();
