@@ -21,8 +21,8 @@ export class Polling {
   pollId: Types.ObjectId;
 
   // friendList
-  @Prop({ required: true })
-  friendIds: [Types.ObjectId[]];
+  @Prop({ required: true, type: [[Types.ObjectId]] })
+  friendIds: Types.ObjectId[][];
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
