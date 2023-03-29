@@ -43,7 +43,8 @@ import {
 export class PollingsController {
   constructor(private readonly pollingsService: PollingsService) {}
 
-  @Get('')
+  /** 초기 출시버전에서 조회할 일 없을 것 같아 주석 처리만 하였습니다. API 보안 */
+  /*@Get('')
   @ApiOperation({
     summary: '(ADMIN) 투표 리스트 조회',
     description: 'userId 미입력 시 전체조회',
@@ -51,7 +52,7 @@ export class PollingsController {
   @ApiOkResponsePaginated(Polling)
   async getPollingList(@Query() query: GetListPollingDto) {
     return await this.pollingsService.findListPolling(query);
-  }
+  }*/
 
   @Get('recieve')
   @ApiOperation({
@@ -66,7 +67,7 @@ export class PollingsController {
     return await this.pollingsService.findListInboxByUserId(req.user.id, query);
   }
 
-  @Get('recieve/:pollingId/detail')
+  @Get('recieve/:pollingId')
   @ApiOperation({
     summary: '나의 수신함 상세 조회',
     description: 'selecteProfileId, pollingId 일치. isOpened=true일때 응답.',
@@ -135,7 +136,7 @@ export class PollingsController {
 
   @Post('')
   @ApiOperation({
-    summary: 'New Polling 생성',
+    summary: 'Polling 생성 - 투표시작',
   })
   @ApiResponse({
     status: 200,
@@ -208,7 +209,7 @@ export class PollingsController {
 
   @Post(':pollingId/vote')
   @ApiOperation({
-    summary: 'polling 결과 업데이트',
+    summary: 'polling 투표',
   })
   @ApiResponse({
     status: 200,
