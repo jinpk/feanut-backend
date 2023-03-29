@@ -64,6 +64,7 @@ export class PollingsService {
 
     return true;
   }
+
   async createPolling(user_id: string, body): Promise<Polling> {
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
@@ -101,10 +102,29 @@ export class PollingsService {
         },
       },
       {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $lookup: {
-          from: 'profiles',
-          localField: 'friendIds',
-          foreignField: '_id',
+          from: 'friendships',
+          let: { 'friend_id': '$friendIds' },
+          pipeline: [{
+            $unwind: '$friends'
+          }, {
+            $match: { $expr: { $eq: [ '$friends.profileId', '$$friend_id' ] } }
+          }, {
+            $lookup: {
+              from: 'profiles',
+              localField: 'friends.profileId',
+              foreignField: '_id',
+              as: 'profile',
+            },
+          }, {
+            $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0}
+          }],
           as: 'friendIds',
         },
       },
@@ -115,16 +135,22 @@ export class PollingsService {
       ...lookups,
     ]);
 
-    cursor[cursor.length - 1].friendIds.forEach((element) => {
-      delete element.birth;
-      delete element.phoneNumber;
-      delete element.ownerId;
-      delete element.createdAt;
-      delete element.updatedAt;
-      delete element.statusMessage;
-    });
+    let mergedList = []
+    const aa = cursor.slice(-4);
+    for (const v of aa) {
+      let temp = {profileId: null, name: null, imageFileId: null};
+      temp.profileId = v.friendIds[0].friends.profileId;
+      temp.name = v.friendIds[0].friends.name;
 
-    return cursor[cursor.length - 1];
+      if (v.friendIds[0].profile[0].imageFileId) {
+        temp.imageFileId = v.friendIds[0].profile[0].imageFileId;
+      }
+      mergedList.push(temp);
+    }
+    
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1);
   }
 
   async updateRefreshedPollingById(

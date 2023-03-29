@@ -147,7 +147,7 @@ export class PollingsController {
       req.user.id,
       body,
     );
-
+    console.log(exist)
     if (!exist) {
       throw new WrappedError(
         POLLING_MODULE_NAME,

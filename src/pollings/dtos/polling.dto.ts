@@ -21,7 +21,7 @@ export class PollingDto {
 
   // friendList
   @ApiProperty({})
-  friendIds: [Types.ObjectId[]];
+  friendIds: [Object[]];
 
   // selectedId
   @ApiProperty({default: null})
