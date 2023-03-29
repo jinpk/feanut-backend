@@ -2,18 +2,13 @@ import {
   Controller,
   Get,
   Param,
-  Delete,
-  Patch,
-  Put,
   Post,
   Query,
-  ForbiddenException,
   Body,
   Request,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -27,9 +22,8 @@ import {
   PollingResultDto,
   ReceivePollingDto,
 } from './dtos/polling.dto';
-import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
+import { FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
-import { UserRound } from './schemas/user-round.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -102,7 +96,7 @@ export class PollingsController {
     return result;
   }
 
-  @Get(':pollingId/detail')
+  @Get(':pollingId')
   @ApiOperation({
     summary: 'Polling 상세 조회',
   })
@@ -125,7 +119,7 @@ export class PollingsController {
     return dto;
   }
 
-  @Post(':pollingId/open')
+  @Post('receive/:pollingId/open')
   @ApiOperation({
     summary: '수신투표 열람. 피넛 소모',
     description:
