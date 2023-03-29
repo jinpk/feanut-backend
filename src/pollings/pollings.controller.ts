@@ -88,6 +88,20 @@ export class PollingsController {
     );
   }
 
+  @Post('rounds')
+  @ApiOperation({
+    summary: '내 투표 라운드 조회 & 생성',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: FindUserRoundDto,
+  })
+  async getUserRound(@Request() req) {
+    const result = await this.pollingsService.findUserRound(req.user.id);
+    result.data = this.pollingsService.userRoundToDto(result.data);
+    return result;
+  }
+
   @Get(':pollingId/detail')
   @ApiOperation({
     summary: 'Polling 상세 조회',
@@ -111,7 +125,7 @@ export class PollingsController {
     return dto;
   }
 
-  @Post('receive/:pollingId/open')
+  @Post(':pollingId/open')
   @ApiOperation({
     summary: '수신투표 열람. 피넛 소모',
     description:
@@ -125,7 +139,7 @@ export class PollingsController {
     return await this.pollingsService.updatePollingOpen(req.user.id, pollingId);
   }
 
-  @Post('new')
+  @Post('')
   @ApiOperation({
     summary: 'New Polling 생성',
   })
@@ -171,20 +185,6 @@ export class PollingsController {
     return dto;
   }
 
-  @Post('rounds')
-  @ApiOperation({
-    summary: '내 투표 라운드 조회 & 생성',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: FindUserRoundDto,
-  })
-  async getUserRound(@Request() req) {
-    const result = await this.pollingsService.findUserRound(req.user.id);
-    result.data = this.pollingsService.userRoundToDto(result.data);
-    return result;
-  }
-
   @Put(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
@@ -212,7 +212,7 @@ export class PollingsController {
     return dto;
   }
 
-  @Put(':pollingId/result')
+  @Put(':pollingId/vote')
   @ApiOperation({
     summary: 'polling 결과 업데이트',
   })
