@@ -19,9 +19,6 @@ export class RoundDto {
   @ApiProperty({description: '활성화 여부', default: false})
   enabled: boolean;
 
-  @ApiProperty({description: '이벤트 라운드 여부', default: false})
-  eventRound: boolean;
-
   @ApiProperty({description: 'round에 포함된 pollIds'})
   pollIds: string[];
 
