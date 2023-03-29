@@ -65,7 +65,7 @@ export class PollsController {
   @ApiOperation({
     summary: '(ADMIN) New 라운드 등록',
     description:
-      'startedAt, endedAt: YYYY-MM-DD 입력.\n\n시작날짜 00시00분, 종료날짜 00시00분 종료.\n\nndedAt이 없을 시 기본 1년',
+      'eventround로 등록하려면 날짜 required. startedAt, endedAt: YYYY-MM-DD 입력.\n\n시작날짜 00시00분, 종료날짜 00시00분 종료.\n\nendedAt이 없을 시 기본 1년',
   })
   @ApiOkResponse({
     status: 200,

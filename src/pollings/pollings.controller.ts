@@ -36,6 +36,12 @@ import {
   GetListReceivePollingDto,
 } from './dtos/get-polling.dto';
 import { WrappedError } from '../common/errors';
+import {
+  POLLING_MODULE_NAME,
+  POLLING_ERROR_NOT_FOUND_USERROUND,
+  POLLING_ERROR_EXIST_POLLING,
+  POLLING_ERROR_NOT_INCLUDES_POLLID
+} from './pollings.constant';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -144,11 +150,25 @@ export class PollingsController {
       const exist = await this.pollingsService.findUserRoundById(req.user.id, body);
 
       if (!exist) {
-        throw new WrappedError('Not Found Userround').notFound()
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_NOT_FOUND_USERROUND
+          ).notFound()
       } else {
         if (!exist.pollIds.includes(body.pollId)) {
-          throw new WrappedError('Not included pollId').reject()
+          throw new WrappedError(POLLING_MODULE_NAME,
+            POLLING_ERROR_NOT_INCLUDES_POLLID,
+            ).reject()
         }
+      }
+
+      const pollingExist = await this.pollingsService.existPollingByUserId(req.user.id, body.userRoundId);
+
+      if (pollingExist) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_EXIST_POLLING
+          ).reject()
       }
 
       const polling = await this.pollingsService.createPolling(req.user.id, body);
