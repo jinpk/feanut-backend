@@ -26,7 +26,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   PollRoundEvent,
   PollRoundEventDocument,
-} from './schemas/round-\bevent.schema';
+} from './schemas/round-event.schema';
 import { PollRoundEventDto } from './dtos/round-event.dto';
 import { EmojisService } from 'src/emojis/emojis.service';
 
@@ -42,12 +42,20 @@ export class PollsService {
   ) {}
 
   async createPollRoundEvent(body:PollRoundEventDto) {
-    const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
+    const exist = await this.emojisService.findEmojiById(body.emojiId);
     if (!exist) {
       throw new WrappedError('Not Found Emoji').notFound();
     }
 
-    const res = await new this.pollRoundEventModel(body).save();
+    let pollroundevent = new PollRoundEvent();
+    pollroundevent = {
+      message: body.message,
+      subMessage: body.subMessage,
+      markingText: body.markingText,
+      emojiId: new Types.ObjectId(body.emojiId),
+      reward: body.reward,
+    }
+    const res = await new this.pollRoundEventModel(pollroundevent).save();
     return res._id.toString();
   }
 

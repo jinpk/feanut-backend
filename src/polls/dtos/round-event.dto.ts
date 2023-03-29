@@ -17,8 +17,8 @@ export class PollRoundEventDto {
 
   // 속한 이벤트 ID
   @ApiProperty({description: 'emoji ID', required: true})
-  emojiId: Types.ObjectId;
+  emojiId: string;
 
   @ApiProperty({description: '리워드 수량', required: true, default: 0})
-  resward: number;
+  reward: number;
 }

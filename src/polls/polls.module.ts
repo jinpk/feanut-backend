@@ -8,7 +8,7 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
 import {
   PollRoundEvent,
   PollRoundEventSchema,
-} from './schemas/round-\bevent.schema';
+} from './schemas/round-event.schema';
 import { EmojisModule } from 'src/emojis/emojis.module';
 
 @Module({

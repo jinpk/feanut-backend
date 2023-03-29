@@ -174,7 +174,6 @@ export class ProfilesService {
   }
 
   async getByUserId(userId: string | Types.ObjectId): Promise<Profile | null> {
-    console.log(userId)
     const profile = await this.profileModel.findOne({
       ownerId: new Types.ObjectId(userId),
     });
