@@ -22,6 +22,7 @@ import {
   AUTH_ERROR_EXIST_USERNAME,
   AUTH_ERROR_INVALID_CODE,
   AUTH_ERROR_INVALID_LOGIN,
+  AUTH_ERROR_NOT_FOUND_USER,
   AUTH_ERROR_NOT_FOUND_USERNAME,
   AUTH_ERROR_VERIFICATION_TIMEOUT,
   AUTH_MODULE_NAME,
@@ -93,7 +94,10 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_USER,
+      ).reject();
     }
 
     // 3분 쿨타임
