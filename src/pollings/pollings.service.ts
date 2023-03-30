@@ -37,6 +37,11 @@ import {
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
   POLLING_ERROR_EXCEED_REFRESH,
+  POLLING_ERROR_LACK_COIN_AMOUNT,
+  POLLING_ERROR_ALREADY_DONE,
+  POLLING_ERROR_WAITING_30_MIN,
+  POLLING_ERROR_WAITING_NEXT_DAY
+
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
@@ -725,8 +730,8 @@ export class PollingsService {
       res.roundEvent = round[0].roundevent;
 
       // reward 지급
-      if (round[0].roundevent.roundevent) {
-        const rewardAmount = round[0].roundevent.roundevent.reward;
+      if (round[0].roundevent != null) {
+        const rewardAmount = round[0].roundevent.reward;
         await this.coinService.updateCoinAccum(user_id, rewardAmount)
       }
     }
@@ -743,7 +748,10 @@ export class PollingsService {
     const usercoin = await this.coinService.findUserCoin(user_id);
 
     if (usercoin.total < OPEN_POLLING) {
-      throw new WrappedError('Lack of total feanut amount').reject();
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_LACK_COIN_AMOUNT,
+        'Lack of total feanut amount').reject();
     } else {
       const exist = await this.pollingModel.findOne({
         _id: new Types.ObjectId(polling_id),
@@ -751,10 +759,16 @@ export class PollingsService {
       });
 
       if (!exist) {
-        throw new WrappedError('Not found polling').notFound();
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_NOT_FOUND_POLLING,
+        ).notFound();
       }
       if (exist.isOpened) {
-        throw new WrappedError('already Opened').reject();
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_ALREADY_DONE,
+          'Already Opened').reject();
       }
 
       let usecoin: UseCoinDto = new UseCoinDto();
@@ -821,6 +835,9 @@ export class PollingsService {
         if (eventRounds[i]._id.toString() == ur.roundId) {
           eventRounds.splice(i, 1);
           i--;
+          if (i < 0) {
+            break;
+          }
         }
       }
     }
@@ -951,27 +968,46 @@ export class PollingsService {
           res.data = result;
         }
       } else if (res.todayCount < 3) {
+        let timecheck = 0;
         if (todayRounds[0].completedAt) {
-          res.remainTime =
+          timecheck =
             todayRounds[0].completedAt.getTime() +
-            30 * 60 * 1000 -
-            now().getTime();
+            1 * 60 * 1000 - 
+            now().getTime(); // 30분 30 * 60 * 1000
+
+          res.remainTime = timecheck;
         }
 
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          res.recentCompletedAt = userrounds[0].completedAt;
-          const result = await this.createUserRound(user_id);
-          res.data = result;
+          if (timecheck < 0) {
+            res.recentCompletedAt = userrounds[0].completedAt;
+            const result = await this.createUserRound(user_id);
+            res.data = result;
+          } else{
+            throw new WrappedError(
+              POLLING_MODULE_NAME,
+              POLLING_ERROR_WAITING_30_MIN,
+              res.remainTime.toString()
+            ).reject();
+          }
         }
       } else if (res.todayCount == 3) {
-        res.remainTime = end.getTime() - now().getTime();
+        let timecheck = 0;
+        timecheck = end.getTime() - now().getTime();
+        res.remainTime = timecheck;
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          res.recentCompletedAt = userrounds[0].completedAt;
-          res.data = userrounds[0];
+          if (timecheck < 0) {
+          } else {
+            throw new WrappedError(
+              POLLING_MODULE_NAME,
+              POLLING_ERROR_WAITING_NEXT_DAY,
+              res.remainTime.toString()
+            ).reject();
+          }
         }
       }
     } else {

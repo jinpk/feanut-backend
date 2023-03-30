@@ -38,6 +38,7 @@ import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
 import { PollRoundEventDto } from './dtos/round-event.dto';
+import { POLL_MODULE_NAME, POLL_ERROR_NOT_FOUND_ROUND, POLL_ERROR_NOT_FOUND_POLL } from './polls.constant';
 
 @ApiTags('Poll')
 @Controller('polls')
@@ -189,7 +190,10 @@ export class PollsController {
     
     const round = await this.pollsService.findRoundById(roundId);
     if (!round) {
-      throw new WrappedError('Not Found Round').notFound();
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_ROUND,
+        'Not Found Round').notFound();
     }
 
     const dto = this.pollsService.roundToDto(round);
@@ -208,7 +212,10 @@ export class PollsController {
   async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
     const poll = await this.pollsService.findPollById(pollId);
     if (!poll) {
-      throw new WrappedError('Not Found Poll').notFound();
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_POLL,
+      ).notFound();
     }
     const dto = this.pollsService.pollToDto(poll);
     return dto;

@@ -32,6 +32,10 @@ import { EmojisService } from 'src/emojis/emojis.service';
 import {
   POLL_MODULE_NAME,
   POLL_ERROR_NOT_FOUND_ROUND_EVENT,
+  POLL_ERROR_NOT_FOUND_POLL,
+  POLL_ERROR_NOT_FOUND_EMOJIID,
+  POLL_ERROR_LACK_POLLS,
+  POLL_ERROR_DATE_REQUIRED
 } from './polls.constant';
 
 @Injectable()
@@ -48,7 +52,10 @@ export class PollsService {
   async createPollRoundEvent(body:PollRoundEventDto) {
     const exist = await this.emojisService.findEmojiById(body.emojiId);
     if (!exist) {
-      throw new WrappedError('Not Found Emoji').notFound();
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_EMOJIID,
+      ).notFound();
     }
 
     let pollroundevent = new PollRoundEvent();
@@ -66,7 +73,10 @@ export class PollsService {
   async createPoll(body: PollDto): Promise<string> {
     const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
     if (!exist) {
-      throw new WrappedError('Not Found Emoji').notFound();
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_EMOJIID,
+      ).notFound();
     }
 
     const result = await new this.pollModel(body).save();
@@ -76,13 +86,19 @@ export class PollsService {
   async createRound(body: RoundDto): Promise<string> {
     // pollids가 12개 이하인지 확인
     if (body.pollIds.length < 12) {
-      throw new WrappedError('투표를 12개 이상 선택해주세요.').reject();
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_LACK_POLLS,
+        '투표를 12개 이상 선택해주세요.').reject();
     }
 
     var round = new Round();
     if (body.pollRoundEventId) {
       if (!body.startedAt || !body.endedAt) {
-        throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject();
+        throw new WrappedError(
+          POLL_MODULE_NAME,
+          POLL_ERROR_DATE_REQUIRED,
+          '시작일, 종료일을 입력해 주세요.').reject();
       }
 
       let exist = await this.pollRoundEventModel.findById(body.pollRoundEventId);
