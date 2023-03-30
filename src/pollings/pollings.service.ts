@@ -724,6 +724,12 @@ export class PollingsService {
       ]);
 
       res.roundEvent = round[0].roundevent;
+
+      // reward 지급
+      if (round[0].roundevent.roundevent) {
+        const rewardAmount = round[0].roundevent.roundevent.reward;
+        await this.coinService.updateCoinAccum(user_id, rewardAmount)
+      }
     }
 
     return res
