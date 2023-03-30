@@ -32,11 +32,11 @@ export class Polling {
   @Prop({ default: null })
   skipped?: boolean;
 
-  @Prop({ defaul: 0 })
+  @Prop({ default: 0 })
   refreshCount?: number;
 
   // completedAt
-  @Prop({ defaul: null })
+  @Prop({ default: null })
   completedAt?: Date;
 
   // isOpened

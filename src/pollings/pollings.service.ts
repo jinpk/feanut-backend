@@ -87,7 +87,6 @@ export class PollingsService {
       pollId: new Types.ObjectId(body.pollId),
       friendIds: [friendIds],
       isOpened: null,
-      createdAt: now(),
     };
 
     const result = await new this.pollingModel(polling).save();
@@ -789,7 +788,13 @@ export class PollingsService {
   }
 
   // userRound
-  async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
+  async createUserRound(user_id: string): Promise<UserRoundDto> {
+    const userrounds = await this.userroundModel
+    .find({
+      userId: user_id,
+    })
+    .sort({ createdAt: -1 });
+
     const friendList = await this.friendShipsService.listFriend(user_id);
     if (friendList.total < 4) {
       throw new WrappedError(
@@ -833,8 +838,14 @@ export class PollingsService {
         }
       }
     } else {
+      var currentRound = new Round();
       if (userrounds.length > 0) {
-        let filtered = normalRounds.filter((element) => (element.index > userrounds[0].index));
+        for (let r of rounds) {
+          if (r._id.toString() == userrounds[0].roundId) {
+            currentRound = r;
+          }
+        }
+        let filtered = normalRounds.filter((element) => (element.index > currentRound.index));
         if (filtered.length > 0) {
           nextRound = filtered[0];
         } else {
@@ -872,17 +883,53 @@ export class PollingsService {
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
 
-    const userrounds = await this.userroundModel
-      .find({
-        userId: user_id,
-      })
-      .sort({ createdAt: -1 });
+    const userrounds = await this.userroundModel.aggregate([
+      {
+        $match: { userId: user_id },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $limit: 4,
+      },
+      {
+        $lookup: {
+          from: 'pollings',
+          localField: 'pollingIds',
+          foreignField: '_id',
+          as: 'pollingIds',
+        },
+      },
+      { 
+        $project: {
+          'pollingIds.userId': 0,
+          'pollingIds.userRoundId': 0,
+          'pollingIds.friendIds': 0,
+          'pollingIds.selectedProfileId': 0,
+          'pollingIds.skipped': 0,
+          'pollingIds.isOpened': 0,
+          'pollingIds.useCoinId': 0,
+          'pollingIds.createdAt': 0,
+          'pollingIds.updatedAt': 0,
+        }
+      },
+    ]);
 
     if (userrounds.length > 0) {
       const start = new Date();
       start.setHours(0, 0, 0, 0);
       const end = new Date();
       end.setHours(23, 59, 59, 999);
+
+      userrounds[0].pollingIds.forEach(element => {
+        if (element.completedAt) {
+          element.isVoted = true;
+        } else {
+          element.isVoted = false;
+        }
+        delete element.completedAt;
+      })
 
       var todayRounds = [];
       userrounds.forEach((element) => {
@@ -900,7 +947,7 @@ export class PollingsService {
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          const result = await this.createUserRound(user_id, userrounds);
+          const result = await this.createUserRound(user_id);
           res.data = result;
         }
       } else if (res.todayCount < 3) {
@@ -915,7 +962,7 @@ export class PollingsService {
           res.data = userrounds[0];
         } else {
           res.recentCompletedAt = userrounds[0].completedAt;
-          const result = await this.createUserRound(user_id, userrounds);
+          const result = await this.createUserRound(user_id);
           res.data = result;
         }
       } else if (res.todayCount == 3) {
@@ -928,7 +975,7 @@ export class PollingsService {
         }
       }
     } else {
-      const result = await this.createUserRound(user_id, userrounds);
+      const result = await this.createUserRound(user_id);
       res.data = result;
       res.todayCount = 1;
     }
