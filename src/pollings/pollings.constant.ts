@@ -12,3 +12,5 @@ export const POLLING_ERROR_MIN_FRIENDS = 7;
 export const POLLING_ERROR_EXCEED_REFRESH = 8;
 export const POLLING_ERROR_NOT_AUTHORIZED = 9;
 export const POLLING_ERROR_ALREADY_DONE = 10;
+
+export const MAX_DAILY_COUNT = 3;

@@ -37,6 +37,7 @@ import {
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
   POLLING_ERROR_EXCEED_REFRESH,
+  MAX_DAILY_COUNT,
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
@@ -865,6 +866,7 @@ export class PollingsService {
 
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
+    res.maxDailyCount = MAX_DAILY_COUNT;
 
     const userrounds = await this.userroundModel
       .find({
@@ -987,6 +989,7 @@ export class PollingsService {
     dto.roundId = doc.roundId;
     dto.pollIds = doc.pollIds;
     dto.pollingIds = doc.pollingIds;
+    dto.completedAt = doc.completedAt;
     return dto;
   }
 }
