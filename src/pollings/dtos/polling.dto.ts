@@ -43,6 +43,10 @@ export class PollingDto {
   @ApiProperty({})
   isOpened: boolean;
 
+  // isVoted
+  @ApiProperty({})
+  isVoted: boolean;
+
   // useCoinId
   @ApiProperty({ default: null })
   useCoinId?: Types.ObjectId;

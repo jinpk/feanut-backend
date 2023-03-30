@@ -976,7 +976,11 @@ export class PollingsService {
     dto.userRoundId = doc.userRoundId;
     dto.pollId = doc.pollId;
     dto.friendIds = doc.friendIds;
-    dto.createdAt = doc.createdAt;
+    if (doc.completedAt) {
+      dto.isVoted = true;
+    } else {
+      dto.isVoted = false;
+    }
     return dto;
   }
 
@@ -987,7 +991,7 @@ export class PollingsService {
     dto.roundId = doc.roundId;
     dto.pollIds = doc.pollIds;
     dto.pollingIds = doc.pollingIds;
-    dto.completedAt = doc.completedAt;
+    dto.complete = doc.complete;
     return dto;
   }
 }
