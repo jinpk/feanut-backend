@@ -37,6 +37,9 @@ import {
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
   POLLING_ERROR_EXCEED_REFRESH,
+  POLLING_ERROR_LACK_COIN_AMOUNT,
+  POLLING_ERROR_ALREADY_DONE,
+
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
@@ -743,7 +746,10 @@ export class PollingsService {
     const usercoin = await this.coinService.findUserCoin(user_id);
 
     if (usercoin.total < OPEN_POLLING) {
-      throw new WrappedError('Lack of total feanut amount').reject();
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_LACK_COIN_AMOUNT,
+        'Lack of total feanut amount').reject();
     } else {
       const exist = await this.pollingModel.findOne({
         _id: new Types.ObjectId(polling_id),
@@ -751,10 +757,16 @@ export class PollingsService {
       });
 
       if (!exist) {
-        throw new WrappedError('Not found polling').notFound();
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_NOT_FOUND_POLLING,
+        ).notFound();
       }
       if (exist.isOpened) {
-        throw new WrappedError('already Opened').reject();
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_ALREADY_DONE,
+          'Already Opened').reject();
       }
 
       let usecoin: UseCoinDto = new UseCoinDto();

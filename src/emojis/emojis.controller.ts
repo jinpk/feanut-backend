@@ -21,6 +21,10 @@ import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
 import { CreateEmojiDto } from './dtos';
+import {
+  EMOJI_MODULE_NAME,
+  EMOJI_ERROR_NOT_FOUND_FILEID,
+} from './emojis.constant';
 
 @ApiTags('Emoji')
 @Controller('emojis')
@@ -44,7 +48,10 @@ export class EmojisController {
       throw new ForbiddenException('Not an Admin');
     }
     if (!(await this.emojisService.existFile(body.fileId))) {
-      throw new WrappedError('존재하지 않는 fileId입니다.').alreadyExist();
+      throw new WrappedError(
+        EMOJI_MODULE_NAME,
+        EMOJI_ERROR_NOT_FOUND_FILEID,
+        ).notFound();
     }
 
     return await this.emojisService.createEmoji(body);

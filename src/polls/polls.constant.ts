@@ -9,3 +9,6 @@ export const POLL_ERROR_EXIST_ROUND_EVENT = 3;
 export const POLL_ERROR_NOT_FOUND_POLL = 4;
 export const POLL_ERROR_NOT_FOUND_ROUND = 5;
 export const POLL_ERROR_NOT_FOUND_ROUND_EVENT = 6;
+export const POLL_ERROR_NOT_FOUND_EMOJIID = 7;
+export const POLL_ERROR_LACK_POLLS = 8;
+export const POLL_ERROR_DATE_REQUIRED = 9;
