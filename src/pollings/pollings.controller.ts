@@ -117,10 +117,10 @@ export class PollingsController {
     @Request() req,
   ) {
     const polling = await this.pollingsService.findPollingById(pollingId);
-    // if (req.isAdmin) {
-    // } else if (req.user.id != polling.userId) {
-    //   throw new WrappedError('권한이 없습니다.').reject();
-    // }
+    if (req.isAdmin) {
+    } else if (req.user.id != polling.userId) {
+      throw new WrappedError('권한이 없습니다.').reject();
+    }
 
     const dto = this.pollingsService.pollingToDto(polling);
 
