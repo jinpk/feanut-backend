@@ -225,7 +225,7 @@ export class ProfilesService {
       _id: 1,
       pollIds: 1,
       emotion: '$polls.emotion',
-      selectedAt: 1,
+      completedAt: 1,
       createdAt: 1,
     };
 

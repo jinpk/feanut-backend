@@ -59,7 +59,7 @@ export class PollingsController {
   @Get('recieve')
   @ApiOperation({
     summary: '나의 수신 리스트 조회',
-    description: 'selectedAt 최신순서 정렬되어 response',
+    description: 'completedAt 최신순서 정렬되어 response',
   })
   @ApiOkResponsePaginated(Polling)
   async getMyInboxList(

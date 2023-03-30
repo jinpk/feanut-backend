@@ -356,7 +356,7 @@ export class PollingsService {
       userId: 1,
       roundId: 1,
       friendIds: 1,
-      selectedAt: 1,
+      completedAt: 1,
       createdAt: 1,
     };
 
@@ -414,7 +414,7 @@ export class PollingsService {
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
-      { $sort: { selectedAt: -1 } },
+      { $sort: { completedAt: -1 } },
       ...lookups,
       { $project: projection },
       this.utilsService.getCommonMongooseFacet(query),
@@ -673,13 +673,13 @@ export class PollingsService {
       update = {
           skipped: body.skipped,
           updatedAt: now(),
-          selectedAt: now(),
+          completedAt: now(),
       }
     } else {
       update = {
           selectedProfileId: new Types.ObjectId(body.selectedProfileId),
           updatedAt: now(),
-          selectedAt: now(),
+          completedAt: now(),
         }
     }
 
@@ -889,7 +889,7 @@ export class PollingsService {
       });
 
       res.todayCount = todayRounds.length;
-      
+
       if (res.todayCount == 0) {
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
@@ -918,6 +918,7 @@ export class PollingsService {
           res.data = userrounds[0];
         } else {
           res.recentCompletedAt = userrounds[0].completedAt;
+          res.data = userrounds[0];
         }
       }
     } else {
@@ -932,7 +933,7 @@ export class PollingsService {
   async checkUserroundComplete(user_id: string, userround) {
     const pollings = await this.pollingModel.find({
       userRoundId: userround._id,
-      selectedAt: { $ne: null },
+      completedAt: { $ne: null },
     });
 
     // userround의 pollids길이 만큼 완료가 됐는지 확인

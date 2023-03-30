@@ -35,9 +35,9 @@ export class PollingDto {
   @ApiProperty({ default: 0 })
   refreshCount: number;
 
-  // selectedAt
+  // completedAt
   @ApiProperty({ default: null })
-  selectedAt: Date;
+  completedAt: Date;
 
   // isOpened
   @ApiProperty({})
@@ -99,7 +99,7 @@ export class ReceivePollingDto {
   @ApiProperty({ default: null })
   selectedProfileId: Types.ObjectId;
 
-  // selectedAt
+  // completedAt
   @ApiProperty({ default: null })
-  selectedAt: Date;
+  completedAt: Date;
 }

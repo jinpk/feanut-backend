@@ -35,9 +35,9 @@ export class Polling {
   @Prop({ defaul: 0 })
   refreshCount?: number;
 
-  // selecteddAt
+  // completedAt
   @Prop({ defaul: null })
-  selectedAt?: Date;
+  completedAt?: Date;
 
   // isOpened
   @Prop({ default: null })
