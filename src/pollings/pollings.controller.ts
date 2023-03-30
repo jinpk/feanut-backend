@@ -37,6 +37,7 @@ import {
   POLLING_ERROR_NOT_INCLUDES_POLLID,
   POLLING_ERROR_NOT_AUTHORIZED,
   POLLING_ERROR_ALREADY_DONE,
+  MAX_DAILY_COUNT,
 } from './pollings.constant';
 
 @ApiTags('Polling')
@@ -98,6 +99,8 @@ export class PollingsController {
     if (result.data){
       result.data = this.pollingsService.userRoundToDto(result.data);
     }
+
+    result.maxDailyCount = MAX_DAILY_COUNT;
     return result;
   }
 
