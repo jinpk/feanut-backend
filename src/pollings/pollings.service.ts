@@ -8,7 +8,6 @@ import {
   Types,
   PipelineStage,
 } from 'mongoose';
-import * as dayjs from 'dayjs';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
@@ -37,6 +36,7 @@ import {
   POLLING_ERROR_MIN_FRIENDS,
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
+  POLLING_ERROR_EXCEED_REFRESH,
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
@@ -211,7 +211,10 @@ export class PollingsService {
       if (polling.refreshCount < 3) {
         polling.refreshCount += 1;
       } else {
-        throw new WrappedError('Exceed your free refresh count').reject();
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_EXCEED_REFRESH,
+          ).reject();
       }
     }
 
@@ -248,13 +251,64 @@ export class PollingsService {
         },
       },
       {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $lookup: {
-          from: 'profiles',
-          localField: 'friendIds',
-          foreignField: '_id',
+          from: 'friendships',
+          let: { friend_id: '$friendIds' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
+            },
+          ],
           as: 'friendIds',
         },
       },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -262,16 +316,34 @@ export class PollingsService {
       ...lookups,
     ]);
 
-    cursor[cursor.length - 1].friendIds.forEach((element) => {
-      delete element.birth;
-      delete element.phoneNumber;
-      delete element.ownerId;
-      delete element.createdAt;
-      delete element.updatedAt;
-      delete element.statusMessage;
-    });
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+        ).notFound();
+    }
 
-    return polling;
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileId: null };
+      temp.profileId = v.friendIds.friends.profileId;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileId = v.friendIds.profile.imageFileId;
+      }
+      mergedList.push(temp);
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1);
   }
 
   async findListPolling(
@@ -595,7 +667,7 @@ export class PollingsService {
     user_id,
     polling_id: string,
     body,
-  ): Promise<PollRoundEventDto> {
+  ): Promise<PollingResultDto> {
     let update = {}
     if (body.skipped) {
       update = {
@@ -615,6 +687,7 @@ export class PollingsService {
       $set: update,
     });
 
+    var res = new PollingResultDto();
     const userround = await this.userroundModel.findById(polling.userRoundId);
 
     const checked = await this.checkUserroundComplete(user_id, userround);
@@ -623,11 +696,58 @@ export class PollingsService {
         user_id,
         userround._id.toString(),
       );
-      // pollround event 로 수정예정
-      // res.roundReward = ROUND_REWARD;
+
+      const round = await this.roundModel.aggregate([
+        {
+          $match: {_id: new Types.ObjectId(userround.roundId)},
+        },
+        {
+          $lookup: {
+            from: 'polls_round_events',
+            localField: 'pollRoundEventId',
+            foreignField: '_id',
+            as: 'roundevent',
+          },
+        },
+        {
+          $unwind: {
+            path: '$roundevent',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        { $project: { 'roundevent._id': 0,'roundevent.createdAt': 0, 'roundevent.updatedAt': 0} },
+      ]);
+
+      res.roundEvent = round[0].roundevent;
+      res.userroundCompleted = checked;
     }
 
-    return 
+    return res
+  }
+
+  async aggtest(){
+    const temp = await this.roundModel.aggregate([
+      {
+        $match: {_id: new Types.ObjectId('642424f857c2a61efe5b1f83')},
+      },
+      {
+        $lookup: {
+          from: 'polls_round_events',
+          localField: 'pollRoundEventId',
+          foreignField: '_id',
+          as: 'roundevent',
+        },
+      },
+      {
+        $unwind: {
+          path: '$roundevent',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      { $project: { 'roundevent._id': 0,'roundevent.createdAt': 0, 'roundevent.updatedAt': 0} },
+    ])
+
+    console.log(temp)
   }
 
   // 피넛을 소모. 수신투표 열기.

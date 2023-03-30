@@ -29,6 +29,10 @@ import {
 } from './schemas/round-event.schema';
 import { PollRoundEventDto } from './dtos/round-event.dto';
 import { EmojisService } from 'src/emojis/emojis.service';
+import {
+  POLL_MODULE_NAME,
+  POLL_ERROR_NOT_FOUND_ROUND_EVENT,
+} from './polls.constant';
 
 @Injectable()
 export class PollsService {
@@ -75,15 +79,30 @@ export class PollsService {
       throw new WrappedError('투표를 12개 이상 선택해주세요.').reject();
     }
 
+    var round = new Round();
     if (body.pollRoundEventId) {
       if (!body.startedAt || !body.endedAt) {
         throw new WrappedError('시작일, 종료일을 입력해 주세요.').reject();
       }
+
+      let exist = await this.pollRoundEventModel.findById(body.pollRoundEventId);
+      if (!exist) {
+        throw new WrappedError(
+          POLL_MODULE_NAME,
+          POLL_ERROR_NOT_FOUND_ROUND_EVENT,
+          ).notFound()
+      }
+
+      round.pollRoundEventId = new Types.ObjectId(body.pollRoundEventId);
+    } else {
+      round.pollRoundEventId = null
     }
 
-    body.pollRoundEventId = null;
-    
-    const result = await new this.roundModel(body).save();
+    round.title = body.title;
+    round.enabled = body.enabled;
+    round.pollIds = body.pollIds;
+
+    const result = await new this.roundModel(round).save();
     return result._id.toString();
   }
 
@@ -247,7 +266,7 @@ export class PollsService {
     dto.title = doc.title;
     dto.index = doc.index;
     dto.enabled = doc.enabled;
-    dto.pollRoundEventId = doc.pollRoundEventId;
+    dto.pollRoundEventId = doc.pollRoundEventId.toHexString();
     dto.pollIds = doc.pollIds;
     dto.startedAt = doc.startedAt;
     dto.endedAt = doc.endedAt;

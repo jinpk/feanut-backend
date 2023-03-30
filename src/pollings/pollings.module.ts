@@ -23,6 +23,7 @@ import { FriendshipsModule } from 'src/friendships/friendships.module';
     ]),
     MongooseModule.forFeature([{ name: Poll.name, schema: PollSchema }]),
     MongooseModule.forFeature([{ name: Round.name, schema: RoundSchema }]),
+    MongooseModule.forFeature([{ name: Round.name, schema: RoundSchema }]),
     ProfilesModule,
     UsersModule,
     CoinsModule,

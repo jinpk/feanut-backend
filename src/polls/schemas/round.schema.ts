@@ -8,7 +8,7 @@ export type RoundDocument = HydratedDocument<Round>;
 @Schema({ collection: POLL_ROUND_SCHEMA_NAME, timestamps: true })
 export class Round {
   // pk
-  _id: Types.ObjectId;
+  _id?: Types.ObjectId;
 
   @Prop({})
   title: string;
@@ -18,7 +18,7 @@ export class Round {
 
   // 속한 이벤트 ID
   @Prop({defaul: null})
-  pollRoundEventId?: string;
+  pollRoundEventId: Types.ObjectId;
 
   // 활성화 여부
   @Prop({ default: false })
