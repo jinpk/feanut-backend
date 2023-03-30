@@ -64,7 +64,7 @@ export class PollingResultDto {
   @ApiProperty({ default: false })
   userroundCompleted: boolean;
 
-  @ApiProperty({ default: 0 })
+  @ApiProperty({})
   roundEvent: PollRoundEventDto;
 }
 

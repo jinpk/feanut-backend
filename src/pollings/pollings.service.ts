@@ -687,12 +687,17 @@ export class PollingsService {
       $set: update,
     });
 
-    var res = new PollingResultDto();
+    var res: PollingResultDto = {
+      userroundCompleted: false,
+      roundEvent: new PollRoundEventDto(),
+    }
     const userround = await this.userroundModel.findById(polling.userRoundId);
 
     const checked = await this.checkUserroundComplete(user_id, userround);
+    res.userroundCompleted = checked;
+
     if (checked) {
-      const complete = await this.updateComplete(
+      await this.updateComplete(
         user_id,
         userround._id.toString(),
       );
@@ -719,7 +724,6 @@ export class PollingsService {
       ]);
 
       res.roundEvent = round[0].roundevent;
-      res.userroundCompleted = checked;
     }
 
     return res

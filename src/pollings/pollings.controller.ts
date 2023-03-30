@@ -231,11 +231,11 @@ export class PollingsController {
         ).reject();
     }
 
-    if (!exist.selectedProfileId || !exist.skipped) {
+    if ((exist.selectedProfileId) || (exist.skipped)){
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_ALREADY_DONE,
-      ).reject();
+      ).reject();      
     }
 
     return await this.pollingsService.updatePollingResult(
