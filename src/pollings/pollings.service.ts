@@ -40,7 +40,8 @@ import {
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
   POLLING_ERROR_WAITING_30_MIN,
-  POLLING_ERROR_WAITING_NEXT_DAY
+  POLLING_ERROR_WAITING_NEXT_DAY,
+  POLLING_ERROR_EXCEED_SKIP
 
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
@@ -526,14 +527,7 @@ export class PollingsService {
       { $match: filter },
       ...lookups,
     ]);
-    console.log(cursor)
-    console.log(cursor.length)
-    // console.log(cursor[0].friendIds)
-    // console.log(cursor[1].friendIds)
-    // console.log(cursor[2].friendIds)
-    // console.log(cursor[3].friendIds)
-    // console.log(cursor[4].friendIds)
-    // console.log(cursor[5].friendIds)
+
     if (cursor.length < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
@@ -693,6 +687,23 @@ export class PollingsService {
   ): Promise<PollingResultDto> {
     let update = {}
     if (body.skipped) {
+      let polling = await this.pollingModel.findOne({
+        _id: new Types.ObjectId(polling_id)
+      });
+
+      const user_round = await this.pollingModel.find({
+        userRoundId: polling.userRoundId,
+        userId: new Types.ObjectId(user_id),
+        skipped: { $eq: true },
+      });
+
+      if (user_round.length >= 3) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_EXCEED_SKIP,
+          '건너뛰기 횟수 3회 초과 입니다.'
+        ).reject()
+      } 
       update = {
           skipped: body.skipped,
           updatedAt: now(),
@@ -716,7 +727,7 @@ export class PollingsService {
     }
     const userround = await this.userroundModel.findById(polling.userRoundId);
 
-    const checked = await this.checkUserroundComplete(user_id, userround);
+    let checked = await this.checkUserroundComplete(user_id, userround);
     res.userroundCompleted = checked;
 
     if (checked) {
@@ -996,7 +1007,6 @@ export class PollingsService {
 
           res.remainTime = timecheck;
         }
-
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
@@ -1041,6 +1051,7 @@ export class PollingsService {
   async checkUserroundComplete(user_id: string, userround) {
     const pollings = await this.pollingModel.find({
       userRoundId: userround._id,
+      userId: new Types.ObjectId(user_id),
       completedAt: { $ne: null },
     });
 

@@ -38,6 +38,7 @@ import {
   POLLING_ERROR_NOT_AUTHORIZED,
   POLLING_ERROR_ALREADY_DONE,
   MAX_DAILY_COUNT,
+  POLLING_ERROR_EMPTY_BODY
 } from './pollings.constant';
 
 @ApiTags('Polling')
@@ -231,6 +232,14 @@ export class PollingsController {
     @Body() body: UpdatePollingDto,
     @Request() req,
   ) {
+    if ((!body.selectedProfileId) && (!body.skipped)){
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_EMPTY_BODY,
+        '친구 혹은 건너뛰기 중 하나를 선택해주세요.'
+      ).badRequest();      
+    }
+
     const exist = await this.pollingsService.findPollingById(pollingId);
     if (exist.userId != req.user.id) {
       throw new WrappedError(
