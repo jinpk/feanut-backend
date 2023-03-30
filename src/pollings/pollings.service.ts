@@ -39,8 +39,6 @@ import {
   POLLING_ERROR_EXCEED_REFRESH,
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
-  POLLING_ERROR_WAITING_30_MIN,
-  POLLING_ERROR_WAITING_NEXT_DAY,
   POLLING_ERROR_EXCEED_SKIP
 
 } from './pollings.constant';
@@ -1006,11 +1004,7 @@ export class PollingsService {
             const result = await this.createUserRound(user_id);
             res.data = result;
           } else{
-            throw new WrappedError(
-              POLLING_MODULE_NAME,
-              POLLING_ERROR_WAITING_30_MIN,
-              res.remainTime.toString()
-            ).reject();
+            res.data = userrounds[0];
           }
         }
       } else if (res.todayCount == 3) {
@@ -1022,11 +1016,8 @@ export class PollingsService {
         } else {
           if (timecheck < 0) {
           } else {
-            throw new WrappedError(
-              POLLING_MODULE_NAME,
-              POLLING_ERROR_WAITING_NEXT_DAY,
-              res.remainTime.toString()
-            ).reject();
+            res.recentCompletedAt = userrounds[0].completedAt;
+            res.data = userrounds[0];
           }
         }
       }
