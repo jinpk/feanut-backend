@@ -889,7 +889,7 @@ export class PollingsService {
       });
 
       res.todayCount = todayRounds.length;
-
+      
       if (res.todayCount == 0) {
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];

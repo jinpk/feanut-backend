@@ -95,7 +95,9 @@ export class PollingsController {
   })
   async getUserRound(@Request() req) {
     const result = await this.pollingsService.findUserRound(req.user.id);
-    result.data = this.pollingsService.userRoundToDto(result.data);
+    if (result.data){
+      result.data = this.pollingsService.userRoundToDto(result.data);
+    }
     return result;
   }
 
