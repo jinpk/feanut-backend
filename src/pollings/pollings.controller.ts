@@ -35,6 +35,8 @@ import {
   POLLING_ERROR_NOT_FOUND_USERROUND,
   POLLING_ERROR_EXIST_POLLING,
   POLLING_ERROR_NOT_INCLUDES_POLLID,
+  POLLING_ERROR_NOT_AUTHORIZED,
+  POLLING_ERROR_ALREADY_DONE,
 } from './pollings.constant';
 
 @ApiTags('Polling')
@@ -223,11 +225,17 @@ export class PollingsController {
   ) {
     const exist = await this.pollingsService.findPollingById(pollingId);
     if (exist.userId != req.user.id) {
-      throw new WrappedError('권한이 없습니다.');
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_AUTHORIZED,
+        ).reject();
     }
 
     if (!exist.selectedProfileId || !exist.skipped) {
-      throw new WrappedError('completed already.').alreadyExist();
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_ALREADY_DONE,
+      ).reject();
     }
 
     return await this.pollingsService.updatePollingResult(
