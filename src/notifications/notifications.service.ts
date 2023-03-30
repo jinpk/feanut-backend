@@ -9,6 +9,8 @@ import {
   NotificationUserConfig,
   NotificationUserConfigDocument,
 } from './schemas/notification-user-config.schema';
+import { FirebaseService } from 'src/common/providers';
+import { ProfilesService } from 'src/profiles/profiles.service';
 
 @Injectable()
 export class NotificationsService {
@@ -16,6 +18,8 @@ export class NotificationsService {
   constructor(
     @InjectModel(NotificationUserConfig.name)
     private notificationUserConfigModel: mongoose.Model<NotificationUserConfigDocument>,
+    private firebaseService: FirebaseService,
+    private profilesService: ProfilesService,
   ) {}
 
   async initNotificationUserConfig(userId: string | mongoose.Types.ObjectId) {
@@ -60,6 +64,26 @@ export class NotificationsService {
     });
 
     return config;
+  }
+
+  async sendInboxPullAlert(profileId, pollingId: string){
+    let profile = await this.profilesService.getById(profileId)
+    if (!profile.ownerId) {
+    } else {
+      let userConfig = await this.getNotificationUserConfig(profile.ownerId);
+
+      if ((!userConfig.fcmToken) || (!userConfig.receivePull)) {
+      } else {
+        let tokens = []
+        tokens.push(userConfig.fcmToken);
+
+        await this.firebaseService.sendPush({
+          tokens, 
+          title: "친구가 "+ profile.name + "님을 투표했어요.",
+          message: "message",
+        });
+      }
+    }
   }
 
   notificationUserConfigDocToDto(

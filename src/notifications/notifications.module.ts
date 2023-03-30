@@ -6,6 +6,7 @@ import {
   NotificationUserConfig,
   NotificationUserConfigSchema,
 } from './schemas/notification-user-config.schema';
+import { ProfilesModule } from 'src/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import {
         schema: NotificationUserConfigSchema,
       },
     ]),
+    ProfilesModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
