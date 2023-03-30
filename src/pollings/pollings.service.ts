@@ -121,13 +121,16 @@ export class PollingsService {
       {
         $lookup: {
           from: 'friendships',
-          let: { friend_id: '$friendIds' },
+          let: { friend_id: '$friendIds', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+              $match: { $expr: {$and: [
+                { $eq: ['$friends.profileId', '$$friend_id'] },
+                { $eq: ['$userId', '$$user_id'] }
+              ]}},
             },
             {
               $lookup: {
@@ -263,13 +266,16 @@ export class PollingsService {
       {
         $lookup: {
           from: 'friendships',
-          let: { friend_id: '$friendIds' },
+          let: { friend_id: '$friendIds', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+              $match: { $expr: {$and: [
+                { $eq: ['$friends.profileId', '$$friend_id'] },
+                { $eq: ['$userId', '$$user_id'] }
+              ]}},
             },
             {
               $lookup: {
@@ -461,13 +467,16 @@ export class PollingsService {
       {
         $lookup: {
           from: 'friendships',
-          let: { friend_id: '$friendIds' },
+          let: { friend_id: '$friendIds', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+              $match: { $expr: {$and: [
+                { $eq: ['$friends.profileId', '$$friend_id'] },
+                { $eq: ['$userId', '$$user_id'] }
+              ]}},
             },
             {
               $lookup: {
@@ -517,7 +526,14 @@ export class PollingsService {
       { $match: filter },
       ...lookups,
     ]);
-
+    console.log(cursor)
+    console.log(cursor.length)
+    // console.log(cursor[0].friendIds)
+    // console.log(cursor[1].friendIds)
+    // console.log(cursor[2].friendIds)
+    // console.log(cursor[3].friendIds)
+    // console.log(cursor[4].friendIds)
+    // console.log(cursor[5].friendIds)
     if (cursor.length < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
@@ -573,13 +589,16 @@ export class PollingsService {
       {
         $lookup: {
           from: 'friendships',
-          let: { friend_id: '$friendIds' },
+          let: { friend_id: '$friendIds', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: { $eq: ['$friends.profileId', '$$friend_id'] } },
+              $match: { $expr: {$and: [
+                { $eq: ['$friends.profileId', '$$friend_id'] },
+                { $eq: ['$userId', '$$user_id'] }
+              ]}},
             },
             {
               $lookup: {
