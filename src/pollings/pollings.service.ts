@@ -687,17 +687,8 @@ export class PollingsService {
   ): Promise<PollingResultDto> {
     let update = {}
     if (body.skipped) {
-      let polling = await this.pollingModel.findOne({
-        _id: new Types.ObjectId(polling_id)
-      });
-
-      const user_round = await this.pollingModel.find({
-        userRoundId: polling.userRoundId,
-        userId: new Types.ObjectId(user_id),
-        skipped: { $eq: true },
-      });
-
-      if (user_round.length >= 3) {
+      let skipCount = await this.checkUserroundSkip(user_id, polling_id);
+      if (skipCount >= 3) {
         throw new WrappedError(
           POLLING_MODULE_NAME,
           POLLING_ERROR_EXCEED_SKIP,
@@ -1061,6 +1052,62 @@ export class PollingsService {
     }
 
     return false;
+  }
+
+  async checkUserroundSkip(user_id, polling_id:string) {
+    let polling = await this.pollingModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(polling_id),
+          userId: new Types.ObjectId(user_id)
+        }
+      },
+      {
+        $lookup: {
+          from: 'polling_user_rounds',
+          localField: 'userRoundId',
+          foreignField: '_id',
+          as: 'userrounds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$userrounds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'pollings',
+          localField: 'userrounds.pollingIds',
+          foreignField: '_id',
+          as: 'pollings',
+        },
+      },
+      { $project: {
+        'pollings._id': 0,
+        'pollings.userId': 0,
+        'pollings.pollId': 0,
+        'pollings.userRoundIds': 0,
+        'pollings.friendIds': 0,
+        'pollings.selectedProfileId': 0,
+        'pollings.refreshCount': 0,
+        'pollings.completedAt': 0,
+        'pollings.isOpened': 0,
+        'pollings.useCoinId': 0,
+        'pollings.createdAt': 0,
+        'pollings.updatedAt': 0}
+      },
+    ]);
+    let count = 0
+    if (polling.length > 0) {
+      polling[0].pollings.forEach(element => {
+        if (element.skipped == true) {
+          count += 1;
+        }
+      })
+    }
+    return count
   }
 
   async updateComplete(user_id, userround_id: string): Promise<string> {
