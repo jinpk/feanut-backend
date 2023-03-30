@@ -221,20 +221,19 @@ export class PollingsController {
     @Body() body: UpdatePollingDto,
     @Request() req,
   ) {
-    await this.pollingsService.aggtest();
-    // const exist = await this.pollingsService.findPollingById(pollingId);
-    // if (exist.userId != req.user.id) {
-    //   throw new WrappedError('권한이 없습니다.');
-    // }
+    const exist = await this.pollingsService.findPollingById(pollingId);
+    if (exist.userId != req.user.id) {
+      throw new WrappedError('권한이 없습니다.');
+    }
 
-    // if (!exist.selectedProfileId || !exist.skipped) {
-    //   throw new WrappedError('completed already.').alreadyExist();
-    // }
+    if (!exist.selectedProfileId || !exist.skipped) {
+      throw new WrappedError('completed already.').alreadyExist();
+    }
 
-    // return await this.pollingsService.updatePollingResult(
-    //   req.user.id,
-    //   pollingId,
-    //   body,
-    // );
+    return await this.pollingsService.updatePollingResult(
+      req.user.id,
+      pollingId,
+      body,
+    );
   }
 }

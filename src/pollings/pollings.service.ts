@@ -725,31 +725,6 @@ export class PollingsService {
     return res
   }
 
-  async aggtest(){
-    const temp = await this.roundModel.aggregate([
-      {
-        $match: {_id: new Types.ObjectId('642424f857c2a61efe5b1f83')},
-      },
-      {
-        $lookup: {
-          from: 'polls_round_events',
-          localField: 'pollRoundEventId',
-          foreignField: '_id',
-          as: 'roundevent',
-        },
-      },
-      {
-        $unwind: {
-          path: '$roundevent',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      { $project: { 'roundevent._id': 0,'roundevent.createdAt': 0, 'roundevent.updatedAt': 0} },
-    ])
-
-    console.log(temp)
-  }
-
   // 피넛을 소모. 수신투표 열기.
   async updatePollingOpen(user_id, polling_id: string): Promise<string> {
     //userId 사용하여 get profile
