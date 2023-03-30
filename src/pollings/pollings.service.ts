@@ -897,13 +897,14 @@ export class PollingsService {
           const result = await this.createUserRound(user_id, userrounds);
           res.data = result;
         }
-      } else if (res.todayCount == (1 || 2)) {
+      } else if (res.todayCount < 3) {
         if (todayRounds[0].completedAt) {
           res.remainTime =
             todayRounds[0].completedAt.getTime() +
             30 * 60 * 1000 -
             now().getTime();
         }
+
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {

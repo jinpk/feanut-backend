@@ -33,6 +33,9 @@ export class FindUserRoundDto {
   @ApiProperty({})
   todayCount: number;
 
+  @ApiProperty({default: 3})
+  maxDailyCount: number;
+
   @ApiProperty({})
   recentCompletedAt: Date;
 
