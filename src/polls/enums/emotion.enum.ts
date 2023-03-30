@@ -1,5 +1,5 @@
 export const Emotion = {
-  happiness: 'happiness',
+  joy: 'joy',
   gratitude: 'gratitude',
   serenity: 'serenity',
   interest: 'interest',

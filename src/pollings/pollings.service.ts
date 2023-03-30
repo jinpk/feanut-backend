@@ -726,10 +726,10 @@ export class PollingsService {
       ]);
 
       res.roundEvent = round[0].roundevent;
-
+      
       // reward 지급
-      if (round[0].roundevent.roundevent) {
-        const rewardAmount = round[0].roundevent.roundevent.reward;
+      if (round[0].roundevent != null) {
+        const rewardAmount = round[0].roundevent.reward;
         await this.coinService.updateCoinAccum(user_id, rewardAmount)
       }
     }
@@ -833,6 +833,9 @@ export class PollingsService {
         if (eventRounds[i]._id.toString() == ur.roundId) {
           eventRounds.splice(i, 1);
           i--;
+          if (i < 0) {
+            break;
+          }
         }
       }
     }
@@ -963,27 +966,39 @@ export class PollingsService {
           res.data = result;
         }
       } else if (res.todayCount < 3) {
+        let timecheck = 0;
         if (todayRounds[0].completedAt) {
-          res.remainTime =
+          timecheck =
             todayRounds[0].completedAt.getTime() +
-            30 * 60 * 1000 -
-            now().getTime();
+            1 * 60 * 1000 - 
+            now().getTime(); // 30분 30 * 60 * 1000
+
+          res.remainTime = timecheck;
         }
 
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          res.recentCompletedAt = userrounds[0].completedAt;
-          const result = await this.createUserRound(user_id);
-          res.data = result;
+          if (timecheck < 0) {
+            res.recentCompletedAt = userrounds[0].completedAt;
+            const result = await this.createUserRound(user_id);
+            res.data = result;
+          } else{
+            res.data = userrounds[0];
+          }
         }
       } else if (res.todayCount == 3) {
-        res.remainTime = end.getTime() - now().getTime();
+        let timecheck = 0;
+        timecheck = end.getTime() - now().getTime();
+        res.remainTime = timecheck;
         if (!userrounds[0].completedAt) {
           res.data = userrounds[0];
         } else {
-          res.recentCompletedAt = userrounds[0].completedAt;
-          res.data = userrounds[0];
+          if (timecheck < 0) {
+          } else {
+            res.recentCompletedAt = userrounds[0].completedAt;
+            res.data = userrounds[0];
+          }
         }
       }
     } else {
