@@ -147,7 +147,7 @@ export class PollingsController {
       req.user.id,
       body,
     );
-    console.log(exist)
+
     if (!exist) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
@@ -165,6 +165,7 @@ export class PollingsController {
     const pollingExist = await this.pollingsService.existPollingByUserId(
       req.user.id,
       body.userRoundId,
+      body.pollId,
     );
 
     if (pollingExist) {

@@ -55,10 +55,11 @@ export class PollingsService {
     private utilsService: UtilsService,
   ) {}
 
-  async existPollingByUserId(user_id, userround_id: string): Promise<boolean> {
+  async existPollingByUserId(user_id, userround_id, poll_id: string): Promise<boolean> {
     const exist = await this.pollingModel.findOne({
       userId: new Types.ObjectId(user_id),
       userRoundId: new Types.ObjectId(userround_id),
+      pollId: new Types.ObjectId(poll_id),
     });
     if (!exist) {
       return false;
@@ -595,7 +596,6 @@ export class PollingsService {
     polling_id: string,
     body,
   ): Promise<PollRoundEventDto> {
-
     let update = {}
     if (body.skipped) {
       update = {
@@ -616,8 +616,8 @@ export class PollingsService {
     });
 
     const userround = await this.userroundModel.findById(polling.userRoundId);
-    const checked = await this.checkUserroundComplete(user_id, userround);
 
+    const checked = await this.checkUserroundComplete(user_id, userround);
     if (checked) {
       const complete = await this.updateComplete(
         user_id,
@@ -854,9 +854,6 @@ export class PollingsService {
       },
     );
 
-    // 투표 완료: 코인 획득
-    // pollround event 로 수정예정
-    // await this.coinService.updateCoinAccum(user_id, ROUND_REWARD);
     await this.coinService.updateCoinAccum(user_id, 2);
 
     return result._id.toString();
