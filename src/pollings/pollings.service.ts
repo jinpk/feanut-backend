@@ -14,17 +14,13 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
-import {
-  PollingDto,
-  PollingResultDto,
-} from './dtos/polling.dto';
+import { PollingDto, PollingResultDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
   GetListReceivePollingDto,
 } from './dtos/get-polling.dto';
 import { UseCoinDto } from '../coins/dtos/coin.dto';
-import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
@@ -43,6 +39,8 @@ import {
   POLLING_ERROR_NOT_OPENED,
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PollingVotedEvent } from './events';
 
 @Injectable()
 export class PollingsService {
@@ -53,13 +51,17 @@ export class PollingsService {
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
     private profilesService: ProfilesService,
-    private userService: UsersService,
     private coinService: CoinsService,
     private friendShipsService: FriendshipsService,
     private utilsService: UtilsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  async existPollingByUserId(user_id, userround_id, poll_id: string): Promise<boolean> {
+  async existPollingByUserId(
+    user_id,
+    userround_id,
+    poll_id: string,
+  ): Promise<boolean> {
     const exist = await this.pollingModel.findOne({
       userId: new Types.ObjectId(user_id),
       userRoundId: new Types.ObjectId(userround_id),
@@ -95,9 +97,9 @@ export class PollingsService {
 
     const result = await new this.pollingModel(polling).save();
 
-    await this.userroundModel.findByIdAndUpdate(result.userRoundId,{
-      $push: {pollingIds: result._id}
-    })
+    await this.userroundModel.findByIdAndUpdate(result.userRoundId, {
+      $push: { pollingIds: result._id },
+    });
 
     const pollingId = result._id;
     const filter: FilterQuery<PollingDocument> = {
@@ -126,10 +128,14 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: {$and: [
-                { $eq: ['$friends.profileId', '$$friend_id'] },
-                { $eq: ['$userId', '$$user_id'] }
-              ]}},
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
             },
             {
               $lookup: {
@@ -172,7 +178,14 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -220,7 +233,7 @@ export class PollingsService {
         throw new WrappedError(
           POLLING_MODULE_NAME,
           POLLING_ERROR_EXCEED_REFRESH,
-          ).reject();
+        ).reject();
       }
     }
 
@@ -271,10 +284,14 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: {$and: [
-                { $eq: ['$friends.profileId', '$$friend_id'] },
-                { $eq: ['$userId', '$$user_id'] }
-              ]}},
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
             },
             {
               $lookup: {
@@ -317,7 +334,14 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -329,7 +353,7 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
-        ).notFound();
+      ).notFound();
     }
 
     let mergedList = [];
@@ -472,10 +496,14 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: {$and: [
-                { $eq: ['$friends.profileId', '$$friend_id'] },
-                { $eq: ['$userId', '$$user_id'] }
-              ]}},
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
             },
             {
               $lookup: {
@@ -518,7 +546,14 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -530,7 +565,7 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
-        ).notFound();
+      ).notFound();
     }
 
     let mergedList = [];
@@ -586,10 +621,14 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: {$and: [
-                { $eq: ['$friends.profileId', '$$friend_id'] },
-                { $eq: ['$userId', '$$user_id'] }
-              ]}},
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
             },
             {
               $lookup: {
@@ -632,7 +671,14 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0} },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -644,7 +690,7 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
-        ).notFound();
+      ).notFound();
     }
 
     let mergedList = [];
@@ -654,7 +700,8 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_OPENED,
-        'Not Opened').reject();
+        'Not Opened',
+      ).reject();
     }
 
     for (const v of cursors) {
@@ -675,7 +722,7 @@ export class PollingsService {
 
     cursor.at(-1).friendIds = mergedList;
 
-    return cursor.at(-1)
+    return cursor.at(-1);
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
@@ -690,27 +737,27 @@ export class PollingsService {
     polling_id: string,
     body,
   ): Promise<PollingResultDto> {
-    let update = {}
+    let update: {
+      selectedProfileId?: Types.ObjectId;
+      skipped?: boolean;
+      updatedAt: Date;
+      completedAt: Date;
+    } = {
+      updatedAt: now(),
+      completedAt: now(),
+    };
     if (body.skipped) {
       let skipCount = await this.checkUserroundSkip(user_id, polling_id);
       if (skipCount >= 3) {
         throw new WrappedError(
           POLLING_MODULE_NAME,
           POLLING_ERROR_EXCEED_SKIP,
-          '건너뛰기 횟수 3회 초과 입니다.'
-        ).reject()
-      } 
-      update = {
-          skipped: body.skipped,
-          updatedAt: now(),
-          completedAt: now(),
+          '건너뛰기 횟수 3회 초과 입니다.',
+        ).reject();
       }
+      update.skipped = true;
     } else {
-      update = {
-          selectedProfileId: new Types.ObjectId(body.selectedProfileId),
-          updatedAt: now(),
-          completedAt: now(),
-        }
+      update.selectedProfileId = new Types.ObjectId(body.selectedProfileId);
     }
 
     let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
@@ -720,21 +767,18 @@ export class PollingsService {
     var res: PollingResultDto = {
       userroundCompleted: false,
       roundEvent: new PollRoundEventDto(),
-    }
+    };
     const userround = await this.userroundModel.findById(polling.userRoundId);
 
     let checked = await this.checkUserroundComplete(user_id, userround);
     res.userroundCompleted = checked;
 
     if (checked) {
-      await this.updateComplete(
-        user_id,
-        userround._id.toString(),
-      );
+      await this.updateComplete(user_id, userround._id.toString());
 
       const round = await this.roundModel.aggregate([
         {
-          $match: {_id: new Types.ObjectId(userround.roundId)},
+          $match: { _id: new Types.ObjectId(userround.roundId) },
         },
         {
           $lookup: {
@@ -750,7 +794,13 @@ export class PollingsService {
             preserveNullAndEmptyArrays: true,
           },
         },
-        { $project: { 'roundevent._id': 0,'roundevent.createdAt': 0, 'roundevent.updatedAt': 0} },
+        {
+          $project: {
+            'roundevent._id': 0,
+            'roundevent.createdAt': 0,
+            'roundevent.updatedAt': 0,
+          },
+        },
       ]);
 
       res.roundEvent = round[0].roundevent;
@@ -758,11 +808,15 @@ export class PollingsService {
       // reward 지급
       if (round[0].roundevent != null) {
         const rewardAmount = round[0].roundevent.reward;
-        await this.coinService.updateCoinAccum(user_id, rewardAmount)
+        await this.coinService.updateCoinAccum(user_id, rewardAmount);
       }
     }
 
-    return res
+    this.eventEmitter.emit(
+      PollingVotedEvent.name,
+      new PollingVotedEvent(polling._id, update.selectedProfileId || null),
+    );
+    return res;
   }
 
   // 피넛을 소모. 수신투표 열기.
@@ -777,7 +831,8 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_LACK_COIN_AMOUNT,
-        'Lack of total feanut amount').reject();
+        'Lack of total feanut amount',
+      ).reject();
     } else {
       const exist = await this.pollingModel.findOne({
         _id: new Types.ObjectId(polling_id),
@@ -794,7 +849,8 @@ export class PollingsService {
         throw new WrappedError(
           POLLING_MODULE_NAME,
           POLLING_ERROR_ALREADY_DONE,
-          'Already Opened').reject();
+          'Already Opened',
+        ).reject();
       }
 
       let usecoin: UseCoinDto = new UseCoinDto();
@@ -814,9 +870,9 @@ export class PollingsService {
           $set: { isOpened: true, updatedAt: now() },
         },
       );
-      
+
       const usecoin_id = await this.coinService.createUseCoin(usecoin);
-      if (usecoin_id){
+      if (usecoin_id) {
         await this.coinService.updateCoinAccum(user_id, -1 * 3);
       }
 
@@ -842,10 +898,10 @@ export class PollingsService {
   // userRound
   async createUserRound(user_id: string): Promise<UserRoundDto> {
     const userrounds = await this.userroundModel
-    .find({
-      userId: user_id,
-    })
-    .sort({ createdAt: -1 });
+      .find({
+        userId: user_id,
+      })
+      .sort({ createdAt: -1 });
 
     const friendList = await this.friendShipsService.listFriend(user_id);
     if (friendList.total < 4) {
@@ -855,8 +911,7 @@ export class PollingsService {
         null,
       ).reject();
     }
-    const rounds = await this.roundModel.find()
-    .sort({ index: 1})
+    const rounds = await this.roundModel.find().sort({ index: 1 });
 
     // 이벤트 라운드 체크
     var eventRounds = [];
@@ -886,7 +941,7 @@ export class PollingsService {
     var nextRound = new Round();
     if (eventRounds.length > 0) {
       nextRound = eventRounds[0];
-      for (const v of eventRounds){
+      for (const v of eventRounds) {
         if (v.index == 0) {
           nextRound = v;
           break;
@@ -900,11 +955,13 @@ export class PollingsService {
             currentRound = r;
           }
         }
-        let filtered = normalRounds.filter((element) => (element.index > currentRound.index));
+        let filtered = normalRounds.filter(
+          (element) => element.index > currentRound.index,
+        );
         if (filtered.length > 0) {
           nextRound = filtered[0];
         } else {
-          nextRound = normalRounds[0];          
+          nextRound = normalRounds[0];
         }
       } else {
         nextRound = normalRounds[0];
@@ -918,10 +975,10 @@ export class PollingsService {
       userId: user_id,
       roundId: nextRound._id.toString(),
       pollIds: shuffledPollIds,
-      pollingIds: []
+      pollingIds: [],
     };
     const result = await new this.userroundModel(userround).save();
-    
+
     return result;
   }
 
@@ -956,7 +1013,7 @@ export class PollingsService {
           as: 'pollingIds',
         },
       },
-      { 
+      {
         $project: {
           'pollingIds.userId': 0,
           'pollingIds.userRoundId': 0,
@@ -967,7 +1024,7 @@ export class PollingsService {
           'pollingIds.useCoinId': 0,
           'pollingIds.createdAt': 0,
           'pollingIds.updatedAt': 0,
-        }
+        },
       },
     ]);
 
@@ -977,21 +1034,21 @@ export class PollingsService {
       const end = new Date();
       end.setHours(23, 59, 59, 999);
 
-      userrounds[0].pollingIds.forEach(element => {
+      userrounds[0].pollingIds.forEach((element) => {
         if (element.completedAt) {
           element.isVoted = true;
         } else {
           element.isVoted = false;
         }
         delete element.completedAt;
-      })
+      });
 
       var todayRounds = [];
       userrounds.forEach((element) => {
         if (element.completedAt == null) {
           todayRounds.push(element);
         }
-        if ((element.completedAt >= start) && (element.completedAt <= end)) {
+        if (element.completedAt >= start && element.completedAt <= end) {
           todayRounds.push(element);
         }
       });
@@ -1010,7 +1067,7 @@ export class PollingsService {
         if (todayRounds[0].completedAt) {
           timecheck =
             todayRounds[0].completedAt.getTime() +
-            1 * 60 * 1000 - 
+            1 * 60 * 1000 -
             now().getTime(); // 30분 30 * 60 * 1000
 
           res.remainTime = timecheck;
@@ -1022,7 +1079,7 @@ export class PollingsService {
             res.recentCompletedAt = userrounds[0].completedAt;
             const result = await this.createUserRound(user_id);
             res.data = result;
-          } else{
+          } else {
             res.data = userrounds[0];
           }
         }
@@ -1064,13 +1121,13 @@ export class PollingsService {
     return false;
   }
 
-  async checkUserroundSkip(user_id, polling_id:string) {
+  async checkUserroundSkip(user_id, polling_id: string) {
     let polling = await this.pollingModel.aggregate([
       {
         $match: {
           _id: new Types.ObjectId(polling_id),
-          userId: new Types.ObjectId(user_id)
-        }
+          userId: new Types.ObjectId(user_id),
+        },
       },
       {
         $lookup: {
@@ -1094,30 +1151,32 @@ export class PollingsService {
           as: 'pollings',
         },
       },
-      { $project: {
-        'pollings._id': 0,
-        'pollings.userId': 0,
-        'pollings.pollId': 0,
-        'pollings.userRoundIds': 0,
-        'pollings.friendIds': 0,
-        'pollings.selectedProfileId': 0,
-        'pollings.refreshCount': 0,
-        'pollings.completedAt': 0,
-        'pollings.isOpened': 0,
-        'pollings.useCoinId': 0,
-        'pollings.createdAt': 0,
-        'pollings.updatedAt': 0}
+      {
+        $project: {
+          'pollings._id': 0,
+          'pollings.userId': 0,
+          'pollings.pollId': 0,
+          'pollings.userRoundIds': 0,
+          'pollings.friendIds': 0,
+          'pollings.selectedProfileId': 0,
+          'pollings.refreshCount': 0,
+          'pollings.completedAt': 0,
+          'pollings.isOpened': 0,
+          'pollings.useCoinId': 0,
+          'pollings.createdAt': 0,
+          'pollings.updatedAt': 0,
+        },
       },
     ]);
-    let count = 0
+    let count = 0;
     if (polling.length > 0) {
-      polling[0].pollings.forEach(element => {
+      polling[0].pollings.forEach((element) => {
         if (element.skipped == true) {
           count += 1;
         }
-      })
+      });
     }
-    return count
+    return count;
   }
 
   async updateComplete(user_id, userround_id: string): Promise<string> {

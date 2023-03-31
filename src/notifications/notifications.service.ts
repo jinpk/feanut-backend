@@ -66,21 +66,24 @@ export class NotificationsService {
     return config;
   }
 
-  async sendInboxPullAlert(profileId, pollingId: string){
-    let profile = await this.profilesService.getById(profileId)
+  async sendInboxPull(
+    pollingId: string | mongoose.Types.ObjectId,
+    profileId: string | mongoose.Types.ObjectId,
+  ) {
+    let profile = await this.profilesService.getById(profileId);
     if (!profile.ownerId) {
     } else {
       let userConfig = await this.getNotificationUserConfig(profile.ownerId);
 
-      if ((!userConfig.fcmToken) || (!userConfig.receivePull)) {
+      if (!userConfig.fcmToken || !userConfig.receivePull) {
       } else {
-        let tokens = []
+        let tokens = [];
         tokens.push(userConfig.fcmToken);
 
         await this.firebaseService.sendPush({
-          tokens, 
-          title: "친구가 "+ profile.name + "님을 투표했어요.",
-          message: "message",
+          tokens,
+          title: '친구가 ' + profile.name + '님을 투표했어요.',
+          message: 'message',
         });
       }
     }

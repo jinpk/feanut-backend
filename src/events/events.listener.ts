@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { PollingVotedEvent } from 'src/pollings/events';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { UserCreatedEvent } from 'src/users/events';
 
@@ -63,6 +64,18 @@ export class EventsListener {
         `${UserCreatedEvent.name} got error with ${
           event.userId
         }.: ${JSON.stringify(error)}`,
+      );
+    }
+  }
+
+  @OnEvent(PollingVotedEvent.name)
+  async handlePollingVotedEvent(event: PollingVotedEvent) {
+    this.logger.log(`${PollingVotedEvent.name} triggered: ${event.pollingId}`);
+    // 수신자 있는 경우 수신자에게 푸시알림 전송
+    if (event.selectedProfileId) {
+      this.notificationsService.sendInboxPull(
+        event.pollingId,
+        event.selectedProfileId,
       );
     }
   }
