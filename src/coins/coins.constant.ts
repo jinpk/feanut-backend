@@ -4,6 +4,8 @@ export const BUYCOIN_NAME = 'buycoins';
 
 export const OPEN_POLLING = 3;
 
+export const COIN_ERROR_NOT_AN_ADMIN = 2;
+
 export const IAP_PURCHASE_ITEM_AMOUNT_MAP = {
   'feanut.iap.coin.5': 5,
   'feanut.iap.coin.10': 10,

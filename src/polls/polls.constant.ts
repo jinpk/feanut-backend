@@ -12,3 +12,4 @@ export const POLL_ERROR_NOT_FOUND_ROUND_EVENT = 6;
 export const POLL_ERROR_NOT_FOUND_EMOJIID = 7;
 export const POLL_ERROR_LACK_POLLS = 8;
 export const POLL_ERROR_DATE_REQUIRED = 9;
+export const POLL_ERROR_NOT_AN_ADMIN = 10;
