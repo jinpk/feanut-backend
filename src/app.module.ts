@@ -1,5 +1,5 @@
 import configuration from './config/configuration';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -20,6 +20,7 @@ import { AdminModule } from './admin/admin.module';
 import { EmojisModule } from './emojis/emojis.module';
 import { CommonModule } from './common/common.module';
 import { EventsModule } from './events/events.module';
+import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
@@ -61,4 +62,8 @@ import { EventsModule } from './events/events.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

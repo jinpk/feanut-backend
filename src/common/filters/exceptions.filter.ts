@@ -29,7 +29,6 @@ export class ExceptionsFilter implements ExceptionFilter {
       code: -1,
       message: 'internal server error',
     };
-    console.log(exception);
     if (exception instanceof WrappedError) {
       httpStatus = exception.status || 500;
       responseBody.module = exception.module || '';
