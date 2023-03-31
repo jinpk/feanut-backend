@@ -208,7 +208,7 @@ export class ProfilesService {
       {
         $lookup: {
           from: 'polls',
-          localField: 'pollsId',
+          localField: 'pollId',
           foreignField: '_id',
           as: 'polls',
         },
@@ -222,26 +222,20 @@ export class ProfilesService {
     ];
 
     const projection = {
-      _id: 1,
-      pollIds: 1,
       emotion: '$polls.emotion',
       completedAt: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
       ...lookups,
       { $project: projection },
-      // this.utilsService.getCommonMongooseFacet(query),
     ]);
 
-    if (cursor[0]) {
-      const data = cursor[0].data;
-
-      data.array.forEach((element) => {
-        if (element.emotion == 'joy') {
-          myCard.joy += 1;
+    if (cursor.length > 0) {
+      cursor.forEach((element) => {
+        if (Object.keys(myCard).includes(element.emotion)){
+          myCard[element.emotion] += 1
         }
       });
     }
