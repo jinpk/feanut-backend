@@ -593,7 +593,6 @@ export class PollingsService {
 
   async findInboxPollingByUserId(user_id, polling_id: string) {
     const profile = await this.profilesService.getByUserId(user_id);
-
     const filter: FilterQuery<PollingDocument> = {
       _id: new Types.ObjectId(polling_id),
       selectedProfileId: profile._id,
@@ -621,14 +620,10 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$friends.profileId', '$$friend_id'] },
-                    { $eq: ['$userId', '$$user_id'] },
-                  ],
-                },
-              },
+              $match: { $expr: {$and: [
+                { $eq: ['$friends.profileId', '$$friend_id'] },
+                { $eq: ['$userId', '$$user_id'] }
+              ]}},
             },
             {
               $lookup: {
@@ -672,12 +667,32 @@ export class PollingsService {
         },
       },
       {
-        $project: {
-          'pollId._id': 0,
-          'pollId.isOpenedCount': 0,
-          'pollId.createdAt': 0,
-          'pollId.updatedAt': 0,
+        $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0}
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'voter',
         },
+      },
+      {
+        $unwind: {
+          path: '$voter',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'voter._id': 0,
+          'voter.phoneNumber': 0,
+          'voter.birth': 0,
+          'voter.ownerId': 0,
+          'voter.__v': 0,
+          'voter.createdAt': 0,
+          'voter.updatedAt': 0,
+        }
       },
     ];
 
@@ -690,18 +705,13 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
-      ).notFound();
+        ).notFound();
     }
 
     let mergedList = [];
     const cursors = cursor.slice(-4);
 
     if (!cursors[0].isOpened) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_NOT_OPENED,
-        'Not Opened',
-      ).reject();
     }
 
     for (const v of cursors) {
@@ -718,11 +728,15 @@ export class PollingsService {
         temp.imageFileId = v.friendIds.profile.imageFileId;
       }
       mergedList.push(temp);
+
+      if (!v.isOpened) {
+        delete v.voter.name;
+        delete v.voter.imageFileId;
+      }
     }
 
     cursor.at(-1).friendIds = mergedList;
-
-    return cursor.at(-1);
+    return cursor.at(-1)
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
