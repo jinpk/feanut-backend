@@ -848,10 +848,12 @@ export class PollingsService {
       }
       mergedList.push(temp);
 
-      v.voter.imageFileKey = v.files.key;
+      v.voter.imageFileKey = null;
+      if (v.voter.imageFileId){
+        v.voter.imageFileKey = v.files.key;
+      }
       if (!v.isOpened) {
         delete v.voter.name;
-        v.voter.imageFileKey = null;
       }
       delete v.voter.imageFileId;
       delete v.files;
