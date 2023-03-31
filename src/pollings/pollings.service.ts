@@ -797,9 +797,6 @@ export class PollingsService {
         amount: OPEN_POLLING,
       };
 
-      const usecoin_id = await this.coinService.createUseCoin(usecoin);
-      await this.coinService.updateCoinAccum(user_id, -1 * 3);
-
       const result = await this.pollingModel.findOneAndUpdate(
         {
           _id: new Types.ObjectId(polling_id),
@@ -807,7 +804,22 @@ export class PollingsService {
           isOpened: false,
         },
         {
-          $set: { isOpened: true, useCoinId: usecoin_id, updatedAt: now() },
+          $set: { isOpened: true, updatedAt: now() },
+        },
+      );
+      
+      const usecoin_id = await this.coinService.createUseCoin(usecoin);
+      if (usecoin_id){
+        await this.coinService.updateCoinAccum(user_id, -1 * 3);
+      }
+
+      await this.pollingModel.findOneAndUpdate(
+        {
+          _id: result._id,
+          selectedProfileId: profile._id,
+        },
+        {
+          $set: { useCoinId: usecoin_id, updatedAt: now() },
         },
       );
 
