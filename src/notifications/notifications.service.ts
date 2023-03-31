@@ -75,7 +75,7 @@ export class NotificationsService {
     const profile = await this.profilesService.getById(profileId);
     if (profile.ownerId) {
       const userConfig = await this.getNotificationUserConfig(profile.ownerId);
-      if (userConfig.fcmToken && userConfig.receivePull) {
+      if (userConfig && userConfig.fcmToken && userConfig.receivePull) {
         const poll = await this.pollsService.findPollById(pollId);
         await this.firebaseService.sendPush({
           tokens: [userConfig.fcmToken],

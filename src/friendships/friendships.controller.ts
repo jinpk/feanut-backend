@@ -20,7 +20,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   AddFriendDto,
   FriendDto,
-  FriendshipStatusDto,
+  FriendshipStatsDto,
   GetFriendsDto,
   HiddenFriendDto,
 } from './dtos';
@@ -36,15 +36,15 @@ import { FriendshipsService } from './friendships.service';
 export class FriendshipsController {
   constructor(private friendshipsService: FriendshipsService) {}
 
-  @Get(':userId/status')
+  @Get(':userId/stats')
   @ApiOperation({
     summary: 'Friendship 조회',
   })
-  @ApiOkResponse({ type: FriendshipStatusDto })
+  @ApiOkResponse({ type: FriendshipStatsDto })
   async friendShipStatus(
     @Request() req,
     @Param('userId') userId: string,
-  ): Promise<FriendshipStatusDto> {
+  ): Promise<FriendshipStatsDto> {
     if (req.user.id !== userId) {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
