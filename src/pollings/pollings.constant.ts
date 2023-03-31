@@ -15,5 +15,6 @@ export const POLLING_ERROR_ALREADY_DONE = 10;
 export const POLLING_ERROR_LACK_COIN_AMOUNT = 11;
 export const POLLING_ERROR_EXCEED_SKIP = 12;
 export const POLLING_ERROR_EMPTY_BODY = 13;
+export const POLLING_ERROR_NOT_OPENED = 14;
 
 export const MAX_DAILY_COUNT = 3;

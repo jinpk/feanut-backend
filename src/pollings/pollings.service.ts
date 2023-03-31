@@ -39,8 +39,8 @@ import {
   POLLING_ERROR_EXCEED_REFRESH,
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
-  POLLING_ERROR_EXCEED_SKIP
-
+  POLLING_ERROR_EXCEED_SKIP,
+  POLLING_ERROR_NOT_OPENED,
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
@@ -562,7 +562,6 @@ export class PollingsService {
     const filter: FilterQuery<PollingDocument> = {
       _id: new Types.ObjectId(polling_id),
       selectedProfileId: profile._id,
-      isOpened: true,
     };
 
     const lookups: PipelineStage[] = [
@@ -650,6 +649,14 @@ export class PollingsService {
 
     let mergedList = [];
     const cursors = cursor.slice(-4);
+
+    if (!cursors[0].isOpened) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_OPENED,
+        'Not Opened').reject();
+    }
+
     for (const v of cursors) {
       let temp = { profileId: null, name: null, imageFileId: null };
       temp.profileId = v.friendIds.friends.profileId;
