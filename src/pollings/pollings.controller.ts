@@ -71,7 +71,7 @@ export class PollingsController {
     return await this.pollingsService.findMyPollingStatus(req.user.id);
   }
 
-  @Get('recieve')
+  @Get('receive')
   @ApiOperation({
     summary: '나의 수신 리스트 조회',
     description: 'completedAt 최신순서 정렬되어 response',
@@ -84,7 +84,7 @@ export class PollingsController {
     return await this.pollingsService.findListInboxByUserId(req.user.id, query);
   }
 
-  @Get('recieve/:pollingId')
+  @Get('receive/:pollingId')
   @ApiOperation({
     summary: '나의 수신함 상세 조회',
     description: 'selecteProfileId, pollingId 일치.',
