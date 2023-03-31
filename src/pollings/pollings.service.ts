@@ -434,6 +434,20 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profiles.imageFileId',
+          foreignField: '_id',
+          as: 'files',
+        },
+      },
+      {
+        $unwind: {
+          path: '$files',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     const projection: ProjectionFields<PollingDto> = {
@@ -441,9 +455,10 @@ export class PollingsService {
       userId: 1,
       pollId: 1,
       isOpened: 1,
+      completedAt: 1,
       name: '$profiles.name',
       gender: '$profiles.gender',
-      imageFileId: '$profiles.imageFileId',
+      imageFileKey: '$files.key',
     };
 
     const cursor = await this.pollingModel.aggregate([
@@ -460,7 +475,7 @@ export class PollingsService {
     data.forEach((element) => {
       if (!element.isOpened) {
         delete element.name;
-        delete element.imageFilePath;
+        delete element.imageFileKey;
       }
     });
 
@@ -521,7 +536,38 @@ export class PollingsService {
               },
             },
             {
-              $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
             },
           ],
           as: 'friendIds',
@@ -572,7 +618,7 @@ export class PollingsService {
     let mergedList = [];
     const cursors = cursor.slice(-4);
     for (const v of cursors) {
-      let temp = { profileId: null, name: null, imageFileId: null };
+      let temp = { profileId: null, name: null, imageFileKey: null };
       temp.profileId = v.friendIds.friends.profileId;
 
       if (v.friendIds.profile.name) {
@@ -582,7 +628,7 @@ export class PollingsService {
       }
 
       if (v.friendIds.profile.imageFileId) {
-        temp.imageFileId = v.friendIds.profile.imageFileId;
+        temp.imageFileKey = v.friendIds.files.key;
       }
       mergedList.push(temp);
     }
@@ -641,7 +687,38 @@ export class PollingsService {
               },
             },
             {
-              $project: { _id: 0, userId: 0, createdAt: 0, updatedAt: 0 },
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
             },
           ],
           as: 'friendIds',
@@ -695,6 +772,30 @@ export class PollingsService {
           'voter.updatedAt': 0,
         }
       },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'voter.imageFileId',
+          foreignField: '_id',
+          as: 'files',
+        },
+      },
+      {
+        $unwind: {
+          path: '$files',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'files._id': 0,
+          'files.ownerId': 0,
+          'files.type': 0,
+          'files.__v': 0,
+          'files.createdAt': 0,
+          'files.updatedAt': 0,
+        }
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -712,11 +813,8 @@ export class PollingsService {
     let mergedList = [];
     const cursors = cursor.slice(-4);
 
-    if (!cursors[0].isOpened) {
-    }
-
     for (const v of cursors) {
-      let temp = { profileId: null, name: null, imageFileId: null };
+      let temp = { profileId: null, name: null, imageFileKey: null };
       temp.profileId = v.friendIds.friends.profileId;
 
       if (v.friendIds.profile.name) {
@@ -726,14 +824,17 @@ export class PollingsService {
       }
 
       if (v.friendIds.profile.imageFileId) {
-        temp.imageFileId = v.friendIds.profile.imageFileId;
+        temp.imageFileKey = v.friendIds.files.key;
       }
       mergedList.push(temp);
 
+      v.voter.imageFileKey = v.files.key;
       if (!v.isOpened) {
         delete v.voter.name;
-        delete v.voter.imageFileId;
+        v.voter.imageFileKey = null;
       }
+      delete v.voter.imageFileId;
+      delete v.files;
     }
 
     cursor.at(-1).friendIds = mergedList;
