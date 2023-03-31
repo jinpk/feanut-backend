@@ -42,6 +42,10 @@ export class ProfilesController {
   @ApiOperation({
     summary: '프로필 피넛 카드 조회',
   })
+  @ApiOkResponse({
+    status: 200,
+    type: FeanutCardDto,
+  })
   async getFeanutCard(@Req() req): Promise<FeanutCardDto> {
     const profile = await this.profileService.getByUserId(req.user.id);
     if (!profile) {

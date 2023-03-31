@@ -40,6 +40,7 @@ import {
   MAX_DAILY_COUNT,
   POLLING_ERROR_EMPTY_BODY
 } from './pollings.constant';
+import { MyPollingStatusDto } from './dtos/pollingstatus.dto';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -57,6 +58,18 @@ export class PollingsController {
   async getPollingList(@Query() query: GetListPollingDto) {
     return await this.pollingsService.findListPolling(query);
   }*/
+
+  @Get('status')
+  @ApiOperation({
+    summary: '내 투표 참여/수신 카운트 조회',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: MyPollingStatusDto
+  })
+  async getMyPollingStatus(@Request() req) {
+    return await this.pollingsService.findMyPollingStatus(req.user.id);
+  }
 
   @Get('recieve')
   @ApiOperation({
