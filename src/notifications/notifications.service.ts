@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import {
@@ -15,7 +15,6 @@ import { PollsService } from 'src/polls/polls.service';
 
 @Injectable()
 export class NotificationsService {
-  private readonly logger = new Logger(NotificationsService.name);
   constructor(
     @InjectModel(NotificationUserConfig.name)
     private notificationUserConfigModel: mongoose.Model<NotificationUserConfigDocument>,
@@ -82,6 +81,10 @@ export class NotificationsService {
           tokens: [userConfig.fcmToken],
           title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
           message: poll.contentText,
+          payload: {
+            pollId,
+            pollingId,
+          },
         });
       }
     }
