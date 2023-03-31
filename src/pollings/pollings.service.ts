@@ -879,38 +879,35 @@ export class PollingsService {
         amount: OPEN_POLLING,
       };
 
-      const result = await this.pollingModel.findOneAndUpdate(
-        {
-          _id: new Types.ObjectId(polling_id),
-          selectedProfileId: profile._id,
-          isOpened: false,
-        },
-        {
-          $set: { isOpened: true, updatedAt: now() },
-        },
-      );
-
       const usecoin_id = await this.coinService.createUseCoin(usecoin);
       if (usecoin_id) {
-        await this.coinService.updateCoinAccum(user_id, -1 * 3);
+        const result = await this.pollingModel.findOneAndUpdate(
+          {
+            _id: exist._id,
+            selectedProfileId: profile._id,
+            isOpened: null,
+          },
+          {
+            $set: { isOpened: true, useCoinId: usecoin_id, updatedAt: now() },
+          },
+        );
+
+        if (result) {
+        } else {
+          await this.coinService.updateCoinAccum(user_id, OPEN_POLLING);
+          throw new WrappedError(
+            POLLING_MODULE_NAME,
+            POLLING_ERROR_NOT_FOUND_POLLING,
+          ).notFound();
+        }
+
+        // poll isOpenedCount 업데이트
+        await this.pollModel.findByIdAndUpdate(result.pollId, {
+          $inc: { isOpened: 1 },
+        });
+
+        return result._id.toString();
       }
-
-      await this.pollingModel.findOneAndUpdate(
-        {
-          _id: result._id,
-          selectedProfileId: profile._id,
-        },
-        {
-          $set: { useCoinId: usecoin_id, updatedAt: now() },
-        },
-      );
-
-      // poll isOpenedCount 업데이트
-      await this.pollModel.findByIdAndUpdate(result.pollId, {
-        $inc: { isOpened: 1 },
-      });
-
-      return result._id.toString();
     }
   }
 
