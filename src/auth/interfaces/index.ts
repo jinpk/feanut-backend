@@ -1,5 +1,5 @@
 export interface FeanutJwtPayload {
-  sub: number;
+  id: number;
   isAdmin: boolean;
 }
 
