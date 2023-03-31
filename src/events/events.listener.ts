@@ -75,6 +75,7 @@ export class EventsListener {
     if (event.selectedProfileId) {
       this.notificationsService.sendInboxPull(
         event.pollingId,
+        event.pollId,
         event.selectedProfileId,
       );
     }

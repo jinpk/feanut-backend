@@ -11,6 +11,7 @@ import {
 } from './schemas/notification-user-config.schema';
 import { FirebaseService } from 'src/common/providers';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { PollsService } from 'src/polls/polls.service';
 
 @Injectable()
 export class NotificationsService {
@@ -20,6 +21,7 @@ export class NotificationsService {
     private notificationUserConfigModel: mongoose.Model<NotificationUserConfigDocument>,
     private firebaseService: FirebaseService,
     private profilesService: ProfilesService,
+    private pollsService: PollsService,
   ) {}
 
   async initNotificationUserConfig(userId: string | mongoose.Types.ObjectId) {
@@ -68,22 +70,18 @@ export class NotificationsService {
 
   async sendInboxPull(
     pollingId: string | mongoose.Types.ObjectId,
+    pollId: string | mongoose.Types.ObjectId,
     profileId: string | mongoose.Types.ObjectId,
   ) {
-    let profile = await this.profilesService.getById(profileId);
-    if (!profile.ownerId) {
-    } else {
-      let userConfig = await this.getNotificationUserConfig(profile.ownerId);
-
-      if (!userConfig.fcmToken || !userConfig.receivePull) {
-      } else {
-        let tokens = [];
-        tokens.push(userConfig.fcmToken);
-
+    const profile = await this.profilesService.getById(profileId);
+    if (profile.ownerId) {
+      const userConfig = await this.getNotificationUserConfig(profile.ownerId);
+      if (userConfig.fcmToken && userConfig.receivePull) {
+        const poll = await this.pollsService.findPollById(pollId);
         await this.firebaseService.sendPush({
-          tokens,
-          title: '친구가 ' + profile.name + '님을 투표했어요.',
-          message: 'message',
+          tokens: [userConfig.fcmToken],
+          title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
+          message: poll.contentText,
         });
       }
     }

@@ -814,7 +814,11 @@ export class PollingsService {
 
     this.eventEmitter.emit(
       PollingVotedEvent.name,
-      new PollingVotedEvent(polling._id, update.selectedProfileId || null),
+      new PollingVotedEvent(
+        polling._id,
+        polling.pollId,
+        update.selectedProfileId || null,
+      ),
     );
     return res;
   }

@@ -7,6 +7,7 @@ import {
   NotificationUserConfigSchema,
 } from './schemas/notification-user-config.schema';
 import { ProfilesModule } from 'src/profiles/profiles.module';
+import { PollsModule } from 'src/polls/polls.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
       },
     ]),
     ProfilesModule,
+    PollsModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
