@@ -816,6 +816,16 @@ export class PollingsService {
           'files.updatedAt': 0,
         }
       },
+      {
+        $project: {
+          userId: 0,
+          skipped: 0,
+          refreshCount: 0,
+          useCoinId: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        }
+      },
     ];
 
     const cursor = await this.pollingModel.aggregate([
@@ -849,11 +859,12 @@ export class PollingsService {
       mergedList.push(temp);
 
       v.voter.imageFileKey = null;
-      if (v.voter.imageFileId){
-        v.voter.imageFileKey = v.files.key;
-      }
       if (!v.isOpened) {
-        delete v.voter.name;
+        v.voter.name = null;
+      } else {
+        if (v.voter.imageFileId){
+          v.voter.imageFileKey = v.files.key;
+        }
       }
       delete v.voter.imageFileId;
       delete v.files;
