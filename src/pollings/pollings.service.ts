@@ -1101,7 +1101,7 @@ export class PollingsService {
       var currentRound = new Round();
       if (userrounds.length > 0) {
         for (let r of rounds) {
-          if (r._id.toString() == userrounds[0].roundId) {
+          if (r._id == userrounds[0].roundId) {
             currentRound = r;
           }
         }
@@ -1122,14 +1122,16 @@ export class PollingsService {
 
     let userround = new UserRound();
     userround = {
-      userId: user_id,
-      roundId: nextRound._id.toString(),
+      userId: new Types.ObjectId(user_id),
+      roundId: nextRound._id,
       pollIds: shuffledPollIds,
       pollingIds: [],
     };
+
     const result = await new this.userroundModel(userround).save();
 
-    return result;
+    let dto = this.userRoundToDto(result);
+    return dto;
   }
 
   async findRecentUserRound(user_id: string) {
@@ -1372,8 +1374,8 @@ export class PollingsService {
   userRoundToDto(doc: UserRound | UserRoundDocument): UserRoundDto {
     const dto = new UserRoundDto();
     dto.id = doc._id.toHexString();
-    dto.userId = doc.userId;
-    dto.roundId = doc.roundId;
+    dto.userId = doc.userId.toHexString();;
+    dto.roundId = doc.roundId.toHexString();;
     dto.pollIds = doc.pollIds;
     dto.pollingIds = doc.pollingIds;
     dto.complete = doc.complete;

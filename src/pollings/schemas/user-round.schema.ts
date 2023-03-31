@@ -10,11 +10,11 @@ export class UserRound {
   _id?: Types.ObjectId;
   // userId
   @Prop({})
-  userId: string;
+  userId: Types.ObjectId;
 
   // roundId
   @Prop({})
-  roundId: string;
+  roundId: Types.ObjectId;
 
   // poll 목록
   @Prop({})

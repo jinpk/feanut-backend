@@ -110,9 +110,6 @@ export class PollingsController {
   })
   async getUserRound(@Request() req) {
     const result = await this.pollingsService.findUserRound(req.user.id);
-    if (result.data){
-      result.data = this.pollingsService.userRoundToDto(result.data);
-    }
 
     result.maxDailyCount = MAX_DAILY_COUNT;
     return result;

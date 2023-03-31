@@ -67,6 +67,102 @@ export class NotificationsService {
     return config;
   }
 
+  async getListNotificationUsers() {
+    const users = await this.notificationUserConfigModel.aggregate([
+      { $match: {
+        receivePoll: true,
+        fcmToken: {$ne: null},
+        } 
+      },
+      {
+        $project: {
+          _id: 0,
+          receivePull: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
+        }
+      },
+      {
+        $lookup: {
+          from: 'polling_user_rounds',
+          let: { user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$userId', '$$user_id']
+                }
+              }
+            },
+            {
+              $sort: {createdAt: -1}
+            },
+            {
+              $limit: 1
+            },
+          ],
+          as: 'userrounds'
+        },
+      },
+      {
+        $unwind: {
+          path: '$userrounds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'poll_rounds',
+          let: { round_id: '$userrounds.roundId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$round_id']
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 0, userId: 0, title: 0
+              }
+            }
+          ],
+          as: 'round'
+        },
+      },
+      {
+        $unwind: {
+          path: '$round',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'round._id': 0,
+          'round.title': 0,
+          'round.pollRoundEventId': 0,
+          'round.enabled': 0,
+          'round.pollIds': 0,
+          'round.startedAt': 0,
+          'round.endedAt': 0,
+          'round.createdAt': 0,
+          'round.updatedAt': 0,
+          'round.__v': 0,
+          'userrounds': 0,
+        }
+      }
+    ]);
+
+    // let rounds = await this.pollsService.findListRound({page:1, limit: 1000})
+
+    // rounds.data.forEach(element =>{
+    // })
+
+    return []
+  }
+
   async sendInboxPull(
     pollingId: string | mongoose.Types.ObjectId,
     pollId: string | mongoose.Types.ObjectId,
