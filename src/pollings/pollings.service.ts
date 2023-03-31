@@ -1049,7 +1049,7 @@ export class PollingsService {
   async createUserRound(user_id: string): Promise<UserRoundDto> {
     const userrounds = await this.userroundModel
       .find({
-        userId: user_id,
+        userId: new Types.ObjectId(user_id),
       })
       .sort({ createdAt: -1 });
 
@@ -1137,7 +1137,7 @@ export class PollingsService {
   async findRecentUserRound(user_id: string) {
     const recent = await this.userroundModel
       .findOne({
-        userId: user_id,
+        userId: new Types.ObjectId(user_id),
       })
       .sort({ createdAt: -1 });
 
@@ -1149,7 +1149,7 @@ export class PollingsService {
 
     const userrounds = await this.userroundModel.aggregate([
       {
-        $match: { userId: user_id },
+        $match: { userId: new Types.ObjectId(user_id) },
       },
       {
         $sort: { createdAt: -1 },
@@ -1350,7 +1350,7 @@ export class PollingsService {
   async findUserRoundById(user_id: string, body) {
     const res = await this.userroundModel.findOne({
       _id: new Types.ObjectId(body.userRoundId),
-      userId: user_id,
+      userId: new Types.ObjectId(user_id),
     });
 
     return res;
