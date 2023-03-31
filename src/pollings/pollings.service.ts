@@ -442,6 +442,7 @@ export class PollingsService {
       pollId: 1,
       isOpened: 1,
       name: '$profiles.name',
+      gender: '$profiles.gender',
       imageFileId: '$profiles.imageFileId',
     };
 
