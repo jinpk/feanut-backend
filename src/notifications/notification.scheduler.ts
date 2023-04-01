@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { FirebaseService } from 'src/common/providers';
 import { NotificationsService } from 'src/notifications/notifications.service';
-import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class SchedulerService {
@@ -10,11 +9,10 @@ export class SchedulerService {
 
   constructor(
     private notificationService: NotificationsService,
-    private usernService: UsersService,
     private firebaseService: FirebaseService,
   ) {}
 
-  @Cron('0 30 12 * * 1-7')
+  @Cron('0 30 12 * * 0-6')
   handleEveryLaunch() {
     this.logger.log('scheduling every launch time!');
     this.notificationService
@@ -39,7 +37,7 @@ export class SchedulerService {
       });
   }
 
-  @Cron('0 30 17 * * 1-7')
+  @Cron('0 30 17 * * 0-6')
   handleEveryDinner() {
     this.logger.log('scheduling every dinner time!');
     this.notificationService
