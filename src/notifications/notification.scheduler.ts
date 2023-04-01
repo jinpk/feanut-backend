@@ -19,57 +19,51 @@ export class SchedulerService {
     this.logger.log('scheduling every launch time!');
     this.notificationService
       .getListNotificationUsers()
-      .then(async (notifications) => {
-        this.logger.log(`found ${notifications.length} pending notifications!`);
-        if (!notifications.length) {
+      .then(async (users) => {
+        this.logger.log(`found ${users.length} pending notifications!`);
+        if (!users.length) {
           return;
         }
 
-    //     // // const tokens = await this.usernService.getActiveFCMUsers();
-    //     // this.logger.log(`found ${tokens.length} notification receviers!`);
-    //     // if (!tokens.length) {
-    //     //   return;
-    //     // }
-
-    //     notifications.forEach((notification) => {
-    //       this.firebaseService.sendPush({
-    //         tokens,
-    //         title: notification.title,
-    //         message: notification.message,
-    //       });
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     console.error(`get pending notifications error: `, error);
+        users.forEach((user) => {
+        this.firebaseService.sendPush({
+            tokens: [user.fcmToken],
+            title: user.round.title,
+            message: '참여할 수 있는 새로운 투표가 시작되었어요!',
+            payload: {}
+            });
+        });
+      })
+      .catch((error) => {
+        console.error(`get pending notifications error: `, error);
       });
-  }
+    }
 
-  @Cron('* * * * * *')
-  handleEveryDinner() {
-    this.logger.log('scheduling every dinner time!');
-    this.notificationService
-    .getListNotificationUsers()
-    .then(async (notifications) => {
-      this.logger.log(`found ${notifications.length} pending notifications!`);
-      if (!notifications.length) {
-        return;
-      }
+//   @Cron('* * * * * *')
+//   handleEveryDinner() {
+//     this.logger.log('scheduling every dinner time!');
+//     this.notificationService
+//     .getListNotificationUsers()
+//     .then(async (notifications) => {
+//       this.logger.log(`found ${notifications.length} pending notifications!`);
+//       if (!notifications.length) {
+//         return;
+//       }
 
-  //     // this.logger.log(`found ${tokens.length} notification receviers!`);
-  //     // if (!tokens.length) {
-  //     //   return;
-  //     // }
+//       this.logger.log(`found ${tokens.length} notification receviers!`);
+//       if (!tokens.length) {
+//         return;
+//       }
 
-  //     notifications.forEach((notification) => {
-  //       this.firebaseService.sendPush({
-  //         tokens,
-  //         title: notification.title,
-  //         message: notification.message,
-  //       });
-  //     });
-  //   })
-  //   .catch((error) => {
-  //     console.error(`get pending notifications error: `, error);
-    });
-}
+//       notifications.forEach((notification) => {
+//         this.firebaseService.sendPush({
+//           tokens,
+//           title: notification.title,
+//           message: notification.message,
+//         });
+//       });
+//     })
+//     .catch((error) => {
+//       console.error(`get pending notifications error: `, error);
+//     });
 }

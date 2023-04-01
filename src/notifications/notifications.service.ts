@@ -155,12 +155,43 @@ export class NotificationsService {
       }
     ]);
 
-    // let rounds = await this.pollsService.findListRound({page:1, limit: 1000})
+    let rounds = await this.pollsService.findAllActiveEventRound();
 
-    // rounds.data.forEach(element =>{
-    // })
+    for (let user of users) {
+      for (let i = 0; i < rounds.eventRound.length; i++) {
+        if (user.round) {
+          if (user.round.index == rounds.eventRound[i].index) {
+            if (i == 0){
+            } else {
+              user.round.title = rounds.eventRound[i - 1].title;    
+            }
+          }
+        } else {
+          user['round'] = {title: rounds.eventRound[rounds.eventRound.length - 1].title};
+          break;
+        }
+      }
 
-    return []
+      if (user.round.title){
+      } else {
+        for (let i = 0; i < rounds.normalRound.length; i++) {
+          if (user.round.index) {
+            if (user.round.index == rounds.eventRound[i].index) {
+              if (i == rounds.normalRound.length -1){
+                user.round.title = rounds.normalRound[0].title;
+              } else {
+                user.round.title = rounds.normalRound[i + 1].title;
+              }
+            }
+          } else {
+            user['round'] = {title: rounds.eventRound[rounds.eventRound.length - 1].title};
+            break;
+          }
+        }
+      }
+    }
+
+    return users
   }
 
   async sendInboxPull(

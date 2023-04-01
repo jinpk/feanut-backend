@@ -267,6 +267,38 @@ export class PollsService {
     };
   }
 
+  async findAllActiveEventRound() {
+    let rounds = await this.roundModel.aggregate([
+      {
+        $match: {
+          enabled: true,
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          enabled: 0,
+          pollIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
+        }
+      }
+    ]).sort({ startedAt: -1});
+
+    let eventRound = rounds.filter(element => (element.startedAt != null))
+    let normalRound = rounds
+    .filter(element => (element.startedAt == null))
+    .sort(
+      (v1, v2) => 
+      (v1.index < v2.index) ? -1 : (v1.index > v2.index) ? 1 : 0);
+
+    return {
+      eventRound: eventRound,
+      normalRound: normalRound,
+    }
+  }
+
   pollToDto(doc: Poll | PollDocument): PollDto {
     const dto = new PollDto();
     dto.id = doc._id.toHexString();
