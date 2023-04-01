@@ -21,6 +21,7 @@ import { EmojisModule } from './emojis/emojis.module';
 import { CommonModule } from './common/common.module';
 import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './logger.middleware';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { LoggerMiddleware } from './logger.middleware';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     EventsModule,
     CommonModule,
@@ -43,7 +45,6 @@ import { LoggerMiddleware } from './logger.middleware';
     AuthModule,
     CoinsModule,
     FriendshipsModule,
-    NotificationsModule,
     FilesModule,
     PollingsModule,
     PollsModule,
