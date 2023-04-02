@@ -122,8 +122,8 @@ export class CoinsService {
   async createCoin(user_id: string) {
     await new this.coinModel({
       userId: user_id,
-      total: 3,
-      accumLogs: [3],
+      total: 0,
+      accumLogs: [0],
     }).save();
   }
 
