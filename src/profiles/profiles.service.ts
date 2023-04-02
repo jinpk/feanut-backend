@@ -7,7 +7,12 @@ import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
 import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
-import { PROFILE_MODULE_NAME, PROFILE_SCHEMA_NAME } from './profiles.constant';
+import {
+  PROFILES_ERROR_NOT_FOUND,
+  PROFILES_ERROR_OWNER_LESS,
+  PROFILE_MODULE_NAME,
+  PROFILE_SCHEMA_NAME,
+} from './profiles.constant';
 import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 
 @Injectable()
@@ -17,6 +22,26 @@ export class ProfilesService {
     @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
     private filesService: FilesService,
   ) {}
+
+  async getOwnerIdById(
+    profileId: string | Types.ObjectId,
+  ): Promise<Types.ObjectId> {
+    const profile = await this.profileModel.findById(profileId);
+
+    if (!profile) {
+      throw new WrappedError(
+        PROFILE_MODULE_NAME,
+        PROFILES_ERROR_NOT_FOUND,
+      ).notFound();
+    } else if (!profile.ownerId) {
+      throw new WrappedError(
+        PROFILE_MODULE_NAME,
+        PROFILES_ERROR_OWNER_LESS,
+      ).reject();
+    }
+
+    return profile.ownerId;
+  }
 
   // 소유권지정
   async makeOwnerShipById(
@@ -183,9 +208,7 @@ export class ProfilesService {
     return profile.toObject();
   }
 
-  async findMyFeanutCard(
-    profile_id: Object,
-  ): Promise<FeanutCardDto> {
+  async findMyFeanutCard(profile_id: Object): Promise<FeanutCardDto> {
     var myCard = new FeanutCardDto();
     myCard = {
       joy: 0,
@@ -234,8 +257,8 @@ export class ProfilesService {
 
     if (cursor.length > 0) {
       cursor.forEach((element) => {
-        if (Object.keys(myCard).includes(element.emotion)){
-          myCard[element.emotion] += 1
+        if (Object.keys(myCard).includes(element.emotion)) {
+          myCard[element.emotion] += 1;
         }
       });
     }

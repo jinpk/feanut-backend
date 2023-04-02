@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class MyPollingStatusDto {
+export class MyPollingStatsDto {
   @ApiProperty({description: "참여한 투표 수"})
-  participated: number;
+  pollsCount: number;
 
   @ApiProperty({description: "받은 투표 수"})
-  received: number;
+  pullsCount: number;
 }

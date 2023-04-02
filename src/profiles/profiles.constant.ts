@@ -1,2 +1,5 @@
 export const PROFILE_MODULE_NAME = 'profiles';
 export const PROFILE_SCHEMA_NAME = PROFILE_MODULE_NAME;
+
+export const PROFILES_ERROR_NOT_FOUND = 1;
+export const PROFILES_ERROR_OWNER_LESS = 2;

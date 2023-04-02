@@ -17,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
+import { ProfilesService } from 'src/profiles/profiles.service';
 import {
   AddFriendDto,
   FriendDto,
@@ -34,7 +35,25 @@ import { FriendshipsService } from './friendships.service';
 @Controller(FRIENDSHIPS_MODULE_NAME)
 @ApiBearerAuth()
 export class FriendshipsController {
-  constructor(private friendshipsService: FriendshipsService) {}
+  constructor(
+    private friendshipsService: FriendshipsService,
+    private profilesService: ProfilesService,
+  ) {}
+
+  @Get(':profileId/stats/byprofile')
+  @ApiOperation({
+    summary: 'Friendship 조회 by profileId',
+  })
+  @ApiOkResponse({ type: FriendshipStatsDto })
+  async friendShipStatusByProfileId(
+    @Param('profileId') profileId: string,
+  ): Promise<FriendshipStatsDto> {
+    const userId = await this.profilesService.getOwnerIdById(profileId);
+
+    return {
+      friendsCount: await this.friendshipsService.getFriendsCount(userId),
+    };
+  }
 
   @Get(':userId/stats')
   @ApiOperation({

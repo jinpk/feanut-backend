@@ -55,6 +55,28 @@ export class ProfilesController {
     return await this.profileService.findMyFeanutCard(profile._id);
   }
 
+  @Get(':profileId')
+  @ApiOperation({
+    summary: '프로필 조회',
+  })
+  @ApiOkResponse({ type: ProfileDto })
+  async getProfile(@Req() req, @Param('profileId') profileId: string) {
+    const profile = await this.profileService.getById(profileId);
+    if (!profile) {
+      throw new WrappedError(PROFILE_MODULE_NAME).notFound();
+    }
+
+    const dto = this.profileService.docToDto(profile);
+
+    if (profile.imageFileId) {
+      dto.profileImageKey = await this.profileService.getProfileImageKey(
+        profile.imageFileId,
+      );
+    }
+
+    return dto;
+  }
+
   @Patch(':profileId')
   @ApiOperation({
     summary: '프로필 정보 수정',

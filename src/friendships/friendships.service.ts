@@ -31,6 +31,7 @@ export class FriendshipsService {
     private usersService: UsersService,
   ) {}
 
+
   async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
     const friendship = await this.friendShipModel.findOne(
       {

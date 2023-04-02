@@ -38,12 +38,12 @@ import {
   POLLING_ERROR_EXCEED_SKIP,
   POLLING_ERROR_NOT_OPENED,
   POLLING_ERROR_NOT_FOUND_POLL,
-  POLLING_ERROR_NOT_FOUND_USERROUND
+  POLLING_ERROR_NOT_FOUND_USERROUND,
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PollingVotedEvent } from './events';
-import { MyPollingStatusDto } from './dtos/pollingstatus.dto';
+import { MyPollingStatsDto } from './dtos/pollingstatus.dto';
 
 @Injectable()
 export class PollingsService {
@@ -60,23 +60,29 @@ export class PollingsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async findMyPollingStatus(user_id: string): Promise<MyPollingStatusDto> {
-    let profile = await this.profilesService.getByUserId(user_id);
-
-    let participateCount = await this.pollingModel.find({
-      userId: new Types.ObjectId(user_id)
-    }).count();
-
-    let receiveCount = await this.pollingModel.find({
-      selectedProfileId: profile._id
-    }).count();
-
-    let status: MyPollingStatusDto = {
-      participated: participateCount,
-      received: receiveCount,
+  async findMyPollingStats(user_id: string): Promise<MyPollingStatsDto> {
+    const profile = await this.profilesService.getByUserId(user_id);
+    if(!profile){
     }
 
-    return status
+    const pollsCount = await this.pollingModel
+      .find({
+        userId: new Types.ObjectId(user_id),
+      })
+      .count();
+
+    const pullsCount = await this.pollingModel
+      .find({
+        selectedProfileId: profile._id,
+      })
+      .count();
+
+    const status: MyPollingStatsDto = {
+      pollsCount: pollsCount,
+      pullsCount: pullsCount,
+    };
+
+    return status;
   }
 
   async existPollingByUserId(
@@ -581,7 +587,7 @@ export class PollingsService {
   async existPollingById(polling_id: string) {
     const polling = await this.pollingModel.findById(polling_id);
 
-    return polling
+    return polling;
   }
 
   async findPollingById(polling_id: string) {
@@ -766,10 +772,14 @@ export class PollingsService {
               $unwind: '$friends',
             },
             {
-              $match: { $expr: {$and: [
-                { $eq: ['$friends.profileId', '$$friend_id'] },
-                { $eq: ['$userId', '$$user_id'] }
-              ]}},
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
             },
             {
               $lookup: {
@@ -844,7 +854,12 @@ export class PollingsService {
         },
       },
       {
-        $project: { 'pollId._id': 0, 'pollId.isOpenedCount': 0, 'pollId.createdAt': 0, 'pollId.updatedAt': 0}
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
       },
       {
         $lookup: {
@@ -869,7 +884,7 @@ export class PollingsService {
           'voter.__v': 0,
           'voter.createdAt': 0,
           'voter.updatedAt': 0,
-        }
+        },
       },
       {
         $lookup: {
@@ -893,7 +908,7 @@ export class PollingsService {
           'files.__v': 0,
           'files.createdAt': 0,
           'files.updatedAt': 0,
-        }
+        },
       },
       {
         $project: {
@@ -903,7 +918,7 @@ export class PollingsService {
           useCoinId: 0,
           createdAt: 0,
           updatedAt: 0,
-        }
+        },
       },
     ];
 
@@ -916,7 +931,7 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
-        ).notFound();
+      ).notFound();
     }
 
     let mergedList = [];
@@ -941,7 +956,7 @@ export class PollingsService {
       if (!v.isOpened) {
         v.voter.name = null;
       } else {
-        if (v.voter.imageFileId){
+        if (v.voter.imageFileId) {
           v.voter.imageFileKey = v.files.key;
         }
       }
@@ -950,7 +965,7 @@ export class PollingsService {
     }
 
     cursor.at(-1).friendIds = mergedList;
-    return cursor.at(-1)
+    return cursor.at(-1);
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
@@ -1418,7 +1433,10 @@ export class PollingsService {
     return count;
   }
 
-  async updateComplete(user_id: string, userround_id: Types.ObjectId): Promise<string> {
+  async updateComplete(
+    user_id: string,
+    userround_id: Types.ObjectId,
+  ): Promise<string> {
     const result = await this.userroundModel.findOneAndUpdate(
       {
         _id: userround_id,
@@ -1459,8 +1477,8 @@ export class PollingsService {
   userRoundToDto(doc: UserRound | UserRoundDocument): UserRoundDto {
     const dto = new UserRoundDto();
     dto.id = doc._id.toHexString();
-    dto.userId = doc.userId.toHexString();;
-    dto.roundId = doc.roundId.toHexString();;
+    dto.userId = doc.userId.toHexString();
+    dto.roundId = doc.roundId.toHexString();
     dto.pollIds = doc.pollIds;
     dto.pollingIds = doc.pollingIds;
     dto.complete = doc.complete;
