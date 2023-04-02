@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage, FilterQuery, Types, ObjectId } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Gender } from './enums';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
-import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
-import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
+import { ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
 import {
@@ -19,7 +18,6 @@ import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 export class ProfilesService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
-    @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
     private filesService: FilesService,
   ) {}
 
@@ -206,64 +204,6 @@ export class ProfilesService {
     if (!profile) return null;
 
     return profile.toObject();
-  }
-
-  async findMyFeanutCard(profile_id: Object): Promise<FeanutCardDto> {
-    var myCard = new FeanutCardDto();
-    myCard = {
-      joy: 0,
-      gratitude: 0,
-      serenity: 0,
-      interest: 0,
-      hope: 0,
-      pride: 0,
-      amusement: 0,
-      inspiration: 0,
-      awe: 0,
-      love: 0,
-    };
-
-    const filter: FilterQuery<PollingDocument> = {
-      selectedProfileId: profile_id,
-    };
-
-    const lookups: PipelineStage[] = [
-      {
-        $lookup: {
-          from: 'polls',
-          localField: 'pollId',
-          foreignField: '_id',
-          as: 'polls',
-        },
-      },
-      {
-        $unwind: {
-          path: '$polls',
-          preserveNullAndEmptyArrays: false,
-        },
-      },
-    ];
-
-    const projection = {
-      emotion: '$polls.emotion',
-      completedAt: 1,
-    };
-
-    const cursor = await this.pollingModel.aggregate([
-      { $match: filter },
-      ...lookups,
-      { $project: projection },
-    ]);
-
-    if (cursor.length > 0) {
-      cursor.forEach((element) => {
-        if (Object.keys(myCard).includes(element.emotion)) {
-          myCard[element.emotion] += 1;
-        }
-      });
-    }
-
-    return myCard;
   }
 
   async getProfileImageKey(imageFileId: Types.ObjectId) {

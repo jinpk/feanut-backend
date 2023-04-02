@@ -25,10 +25,7 @@ import {
 import { FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import {
-  GetListPollingDto,
-  GetListReceivePollingDto,
-} from './dtos/get-polling.dto';
+import { GetListReceivePollingDto } from './dtos/get-polling.dto';
 import { WrappedError } from '../common/errors';
 import {
   POLLING_MODULE_NAME,
@@ -41,6 +38,7 @@ import {
   POLLING_ERROR_EMPTY_BODY,
 } from './pollings.constant';
 import { PollingStatsDto } from './dtos/pollingstatus.dto';
+import { FeanutCardDto } from './dtos';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -59,6 +57,20 @@ export class PollingsController {
     return await this.pollingsService.findListPolling(query);
   }*/
 
+  @Get(':profileId/card/byprofile')
+  @ApiOperation({
+    summary: '피넛 카드 조회',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: FeanutCardDto,
+  })
+  async getFeanutCard(
+    @Param('profileId') profileId: string,
+  ): Promise<FeanutCardDto> {
+    return await this.pollingsService.findFeanutCard(profileId);
+  }
+
   @Get(':profileId/stats/byprofile')
   @ApiOperation({
     summary: '투표 참여/수신 카운트 조회',
@@ -67,7 +79,7 @@ export class PollingsController {
     status: 200,
     type: PollingStatsDto,
   })
-  async getPollingStats(@Request() req, @Param('profileId') profileId: string) {
+  async getPollingStats(@Param('profileId') profileId: string) {
     return await this.pollingsService.findPollingStats(profileId);
   }
 

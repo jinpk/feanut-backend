@@ -36,7 +36,6 @@ import {
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
   POLLING_ERROR_EXCEED_SKIP,
-  POLLING_ERROR_NOT_OPENED,
   POLLING_ERROR_NOT_FOUND_POLL,
   POLLING_ERROR_NOT_FOUND_USERROUND,
 } from './pollings.constant';
@@ -44,6 +43,7 @@ import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PollingVotedEvent } from './events';
 import { PollingStatsDto } from './dtos/pollingstatus.dto';
+import { FeanutCardDto } from './dtos';
 
 @Injectable()
 export class PollingsService {
@@ -59,6 +59,62 @@ export class PollingsService {
     private utilsService: UtilsService,
     private eventEmitter: EventEmitter2,
   ) {}
+
+  async findFeanutCard(profileId: Object): Promise<FeanutCardDto> {
+    var myCard = new FeanutCardDto();
+    myCard.joy = 0;
+    myCard.gratitude = 0;
+    myCard.serenity = 0;
+    myCard.interest = 0;
+    myCard.hope = 0;
+    myCard.pride = 0;
+    myCard.amusement = 0;
+    myCard.inspiration = 0;
+    myCard.awe = 0;
+    myCard.love = 0;
+
+    const filter: FilterQuery<PollingDocument> = {
+      selectedProfileId: profileId,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'polls',
+        },
+      },
+      {
+        $unwind: {
+          path: '$polls',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+    ];
+
+    const projection = {
+      emotion: '$polls.emotion',
+      completedAt: 1,
+    };
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+      { $project: projection },
+    ]);
+
+    if (cursor.length > 0) {
+      cursor.forEach((element) => {
+        if (Object.keys(myCard).includes(element.emotion)) {
+          myCard[element.emotion] += 1;
+        }
+      });
+    }
+
+    return myCard;
+  }
 
   async findPollingStats(profileId: string): Promise<PollingStatsDto> {
     const ownerId = await this.profilesService.getOwnerIdById(profileId);
