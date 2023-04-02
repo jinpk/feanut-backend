@@ -37,6 +37,8 @@ import {
   POLLING_ERROR_ALREADY_DONE,
   POLLING_ERROR_EXCEED_SKIP,
   POLLING_ERROR_NOT_OPENED,
+  POLLING_ERROR_NOT_FOUND_POLL,
+  POLLING_ERROR_NOT_FOUND_USERROUND
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -95,6 +97,15 @@ export class PollingsService {
   }
 
   async createPolling(user_id: string, body): Promise<Polling> {
+    const PollExist = await this.pollModel.findById(body.pollId);
+
+    if (!PollExist) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLL,
+      ).notFound();
+    }
+
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
@@ -567,6 +578,12 @@ export class PollingsService {
     };
   }
 
+  async existPollingById(polling_id: string) {
+    const polling = await this.pollingModel.findById(polling_id);
+
+    return polling
+  }
+
   async findPollingById(polling_id: string) {
     const filter: FilterQuery<PollingDocument> = {
       _id: new Types.ObjectId(polling_id),
@@ -980,6 +997,13 @@ export class PollingsService {
       roundEvent: new PollRoundEventDto(),
     };
     const userround = await this.userroundModel.findById(polling.userRoundId);
+
+    if (!userround) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_USERROUND,
+      ).reject();
+    }
 
     let checked = await this.checkUserroundComplete(user_id, userround);
     res.userroundCompleted = checked;

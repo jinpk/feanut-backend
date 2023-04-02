@@ -215,7 +215,7 @@ export class PollingsController {
     @Param('pollingId') pollingId: string,
     @Request() req,
   ) {
-    const exist = await this.pollingsService.findPollingById(pollingId);
+    const exist = await this.pollingsService.existPollingById(pollingId);
     if (exist.userId != req.user.id) {
       throw new WrappedError('권한이 없습니다');
     }
@@ -250,7 +250,7 @@ export class PollingsController {
       ).badRequest();      
     }
 
-    const exist = await this.pollingsService.findPollingById(pollingId);
+    const exist = await this.pollingsService.existPollingById(pollingId);
     if (exist.userId != req.user.id) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
