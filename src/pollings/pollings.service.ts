@@ -974,6 +974,7 @@ export class PollingsService {
       updatedAt: now(),
       completedAt: now(),
     };
+
     if (body.skipped) {
       let skipCount = await this.checkUserroundSkip(user_id, polling_id);
       if (skipCount >= 3) {
@@ -1009,7 +1010,7 @@ export class PollingsService {
     res.userroundCompleted = checked;
 
     if (checked) {
-      await this.updateComplete(user_id, userround._id.toString());
+      await this.updateComplete(user_id, userround._id);
 
       const round = await this.roundModel.aggregate([
         {
@@ -1417,18 +1418,16 @@ export class PollingsService {
     return count;
   }
 
-  async updateComplete(user_id, userround_id: string): Promise<string> {
+  async updateComplete(user_id: string, userround_id: Types.ObjectId): Promise<string> {
     const result = await this.userroundModel.findOneAndUpdate(
       {
-        _id: new Types.ObjectId(userround_id),
-        userId: user_id,
+        _id: userround_id,
+        userId: new Types.ObjectId(user_id),
       },
       {
         $set: { complete: true, completedAt: now() },
       },
     );
-
-    await this.coinService.updateCoinAccum(user_id, 2);
 
     return result._id.toString();
   }
