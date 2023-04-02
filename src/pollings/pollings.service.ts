@@ -1285,8 +1285,7 @@ export class PollingsService {
 
     const result = await new this.userroundModel(userround).save();
 
-    let dto = this.userRoundToDto(result);
-    return dto;
+    return this.userRoundToDto(result);
   }
 
   async findRecentUserRound(user_id: string) {
@@ -1364,7 +1363,7 @@ export class PollingsService {
 
       if (res.todayCount == 0) {
         if (!userrounds[0].completedAt) {
-          res.data = userrounds[0];
+          res.data = this.userRoundToDto(userrounds[0]);
         } else {
           const result = await this.createUserRound(user_id);
           res.data = result;
@@ -1380,14 +1379,14 @@ export class PollingsService {
           res.remainTime = timecheck;
         }
         if (!userrounds[0].completedAt) {
-          res.data = userrounds[0];
+          res.data = this.userRoundToDto(userrounds[0]);
         } else {
           if (timecheck < 0) {
             res.recentCompletedAt = userrounds[0].completedAt;
             const result = await this.createUserRound(user_id);
             res.data = result;
           } else {
-            res.data = userrounds[0];
+            res.data = this.userRoundToDto(userrounds[0]);
           }
         }
       } else if (res.todayCount == 3) {
@@ -1395,12 +1394,12 @@ export class PollingsService {
         timecheck = end.getTime() - now().getTime();
         res.remainTime = timecheck;
         if (!userrounds[0].completedAt) {
-          res.data = userrounds[0];
+          res.data = this.userRoundToDto(userrounds[0]);
         } else {
           if (timecheck < 0) {
           } else {
             res.recentCompletedAt = userrounds[0].completedAt;
-            res.data = userrounds[0];
+            res.data = this.userRoundToDto(userrounds[0]);
           }
         }
       }
