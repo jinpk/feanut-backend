@@ -15,6 +15,12 @@ export class WrappedError {
     return this;
   }
 
+  // 처리할 수 없음
+  unProcessable() {
+    this._status = HttpStatus.UNPROCESSABLE_ENTITY;
+    return this;
+  }
+
   // 존재하지않는 데이터 접근
   notFound() {
     this._status = HttpStatus.NOT_FOUND;

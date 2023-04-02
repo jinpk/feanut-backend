@@ -1,31 +1,28 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now } from 'mongoose';
-import { USERROUND_NAME } from '../../pollings/pollings.constant';
+import { HydratedDocument, Types } from 'mongoose';
+import { POLLING_USER_ROUND_SCHEMA_NAME } from '../../pollings/pollings.constant';
 
 export type UserRoundDocument = HydratedDocument<UserRound>;
 
 // UserRound
-@Schema({ collection: USERROUND_NAME, timestamps: true })
+@Schema({ collection: POLLING_USER_ROUND_SCHEMA_NAME, timestamps: true })
 export class UserRound {
+  _id?: Types.ObjectId;
   // userId
   @Prop({})
-  userId: string;
+  userId: Types.ObjectId;
 
   // roundId
   @Prop({})
-  roundId: string;
+  roundId: Types.ObjectId;
 
   // poll 목록
   @Prop({})
   pollIds: string[];
 
-  // polling 목록
+  // pollingIds
   @Prop({})
-  pollingIds: any[];
-
-  // skipCount
-  @Prop({ default: 0 })
-  skipCount?: number;
+  pollingIds: Types.ObjectId[];
 
   // complete 여부
   @Prop({ default: false })

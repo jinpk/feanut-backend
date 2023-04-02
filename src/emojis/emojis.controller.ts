@@ -1,16 +1,11 @@
 import {
   Controller,
   Get,
-  Param,
-  Delete,
-  Patch,
-  Put,
   Post,
   Query,
-  NotFoundException,
-  UnauthorizedException,
   Body,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,12 +16,15 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators';
 import { EmojisService } from './emojis.service';
-import { EmojiDto, PublicEmojiDto } from './dtos/emoji.dto';
+import { EmojiDto } from './dtos/emoji.dto';
 import { GetListEmojiDto } from './dtos/get-emoji.dto';
-import { UpdateEmojiDto } from './dtos/update-emoji.dto';
-import { Emoji } from './schemas/emoji.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
+import { CreateEmojiDto } from './dtos';
+import {
+  EMOJI_MODULE_NAME,
+  EMOJI_ERROR_NOT_FOUND_FILEID,
+} from './emojis.constant';
 
 @ApiTags('Emoji')
 @Controller('emojis')
@@ -36,96 +34,41 @@ export class EmojisController {
 
   @Post('')
   @ApiOperation({
-    summary: '(ADMIN) New 이모지 등록',
+    summary: '이모지 등록',
   })
   @ApiBody({
-    type: EmojiDto,
+    type: CreateEmojiDto,
   })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
-  async postEmoji(@Body() body, @Request() req) {
+  async createEmoji(@Body() body: CreateEmojiDto, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new ForbiddenException('Not an Admin');
     }
     if (!(await this.emojisService.existFile(body.fileId))) {
-      throw new WrappedError('존재하지 않는 fileId입니다.').reject();
+      throw new WrappedError(
+        EMOJI_MODULE_NAME,
+        EMOJI_ERROR_NOT_FOUND_FILEID,
+        ).notFound();
     }
 
     return await this.emojisService.createEmoji(body);
   }
-
-  @Put(':emojiId/update')
-  @ApiOperation({
-    summary: '(ADMIN) Emoji 수정',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: String,
-  })
-  async putEmoji(
-    @Param('emojiId') emojiId: string,
-    @Body() body: UpdateEmojiDto,
-    @Request() req,
-  ) {
-    if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
-    }
-    if (!(await this.emojisService.existFile(body.fileId))) {
-      throw new WrappedError('존재하지 않는 fileId입니다.').reject();
-    }
-
-    const [exist, emoji] = await this.emojisService.existEmoji(emojiId);
-    if (!exist) {
-      throw new NotFoundException('not found emoji');
-    }
-
-    return await this.emojisService.updateEmoji(emojiId, emoji, body);
-  }
-
-  @Get(':emojiId')
-  @ApiOperation({
-    summary: '등록된 Emoji 상세 조회',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: Emoji,
-  })
-  async getEmojiDetail(@Param('emojiId') emojiId: string, @Request() req) {
-    if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
-    }
-    return await this.emojisService.findEmojiById(emojiId);
-  }
-
-  @Put(':emojiId/delete')
-  @ApiOperation({
-    summary: '등록된 Emoji 삭제',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: String,
-  })
-  async deleteEmoji(@Param('emojiId') emojiId: string, @Request() req) {
-    if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
-    }
-    return await this.emojisService.removeEmojiById(emojiId);
-  }
 }
 
 @ApiTags('Emoji')
-@Controller('public/emojis')
-export class PublicEmojisController {
+@Controller('emojis')
+export class EmojisPublicController {
   constructor(private readonly emojisService: EmojisService) {}
 
   @Get('')
   @Public()
   @ApiOperation({
-    summary: '(PUBLIC) emoji 리스트 조회',
+    summary: '전체 조회',
   })
-  @ApiOkResponsePaginated(PublicEmojiDto)
+  @ApiOkResponsePaginated(EmojiDto)
   async getListPublicEmoji(@Query() query: GetListEmojiDto) {
     return await this.emojisService.findListEmoji(query);
   }

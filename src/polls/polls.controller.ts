@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   NotFoundException,
-  UnauthorizedException,
   Body,
   Request,
 } from '@nestjs/common';
@@ -22,7 +21,7 @@ import {
 import { Public } from '../auth/decorators';
 import { PollsService } from './polls.service';
 import { PollDto } from './dtos/poll.dto';
-import { RoundDto } from './dtos/round.dto';
+import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import {
   UpdatePollDto,
   UpdateRoundDto,
@@ -36,6 +35,14 @@ import {
 import { Round } from './schemas/round.schema';
 import { Poll } from './schemas/poll.schema';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
+import { WrappedError } from 'src/common/errors';
+import { PollRoundEventDto } from './dtos/round-event.dto';
+import {
+  POLL_MODULE_NAME,
+  POLL_ERROR_NOT_FOUND_ROUND,
+  POLL_ERROR_NOT_FOUND_POLL,
+  POLL_ERROR_NOT_AN_ADMIN
+} from './polls.constant';
 
 @ApiTags('Poll')
 @Controller('polls')
@@ -43,22 +50,41 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
 
-  @Post('rounds')
+  @Post('pollroundevents')
   @ApiOperation({
-    summary: '(ADMIN) New 라운드 등록',
-    description:
-      'startedAt: 시작 날짜 00시00분, endedAt: 종료 날짜 23시 59분.\n\nendedAt이 없을 시 기본 1년',
-  })
-  @ApiBody({
-    type: RoundDto,
+    summary: '(ADMIN) New RoundEvent 등록',
+    description: 'required: message, subMessage, emojiId',
   })
   @ApiOkResponse({
     status: 200,
     type: String,
   })
-  async postRound(@Body() body, @Request() req) {
+  async postPollRoundEvent(@Body() body: PollRoundEventDto, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
+    }
+    return await this.pollsService.createPollRoundEvent(body);
+  }
+
+  @Post('rounds')
+  @ApiOperation({
+    summary: '(ADMIN) New 라운드 등록',
+    description:
+      'eventround로 등록하려면 날짜 required. startedAt, endedAt: YYYY-MM-DD 입력.\n\n시작날짜 00시00분, 종료날짜 00시00분 종료.\n\nendedAt이 없을 시 기본 1년',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: String,
+  })
+  async postRound(@Body() body: RoundDto, @Request() req) {
+    if (!req.user.isAdmin) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     return await this.pollsService.createRound(body);
   }
@@ -78,7 +104,10 @@ export class PollsController {
   })
   async postPoll(@Body() body, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     return await this.pollsService.createPoll(body);
   }
@@ -100,7 +129,10 @@ export class PollsController {
     @Request() req,
   ) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
 
     const [exist, round] = await this.pollsService.existRound(roundId);
@@ -124,7 +156,10 @@ export class PollsController {
   })
   async putPoll(@Param('pollId') pollId: string, @Body() body, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     const [exist, poll] = await this.pollsService.existPoll(pollId);
     if (!exist) {
@@ -141,7 +176,10 @@ export class PollsController {
   @ApiOkResponsePaginated(Round)
   async getListRound(@Query() query: GetListRoundDto, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     return await this.pollsService.findListRound(query);
   }
@@ -153,7 +191,10 @@ export class PollsController {
   @ApiOkResponsePaginated(Poll)
   async getListPoll(@Query() query: GetListPollDto, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     return await this.pollsService.findListPoll(query);
   }
@@ -165,13 +206,27 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: ResRoundDto,
   })
   async getRoundDetail(@Param('roundId') roundId: string, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
-    return await this.pollsService.findRoundById(roundId);
+    
+    const round = await this.pollsService.findRoundById(roundId);
+    if (!round) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_ROUND,
+        'Not Found Round').notFound();
+    }
+
+    const dto = this.pollsService.roundToDto(round);
+
+    return dto
   }
 
   @Get(':pollId')
@@ -180,13 +235,18 @@ export class PollsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: Poll,
+    type: PollDto,
   })
   async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
-    if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+    const poll = await this.pollsService.findPollById(pollId);
+    if (!poll) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_POLL,
+      ).notFound();
     }
-    return await this.pollsService.findPollById(pollId);
+    const dto = this.pollsService.pollToDto(poll);
+    return dto;
   }
 }
 

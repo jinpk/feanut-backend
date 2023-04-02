@@ -1,21 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { DynamicLinkQuery, PushParams } from '../interfaces';
+import { Injectable, Logger } from '@nestjs/common';
+import { PushParams } from '../interfaces';
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
-import {
-  ANDROID_PACKAGE_NAME,
-  DYNAMICLINK_POST_URL,
-  DYNAMICLINK_URL_PREFIX,
-  IOS_BUNDLE_ID,
-} from '../common.constant';
 
 @Injectable()
 export class FirebaseService {
-  constructor(
-    private configService: ConfigService,
-    private httpService: HttpService,
-  ) {
+  private readonly logger = new Logger(FirebaseService.name);
+  constructor(private configService: ConfigService) {
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: this.configService.get('firebaseProjectId'),
@@ -56,8 +47,17 @@ export class FirebaseService {
           },
         })),
       )
+      .then((res) => {
+        this.logger.log(
+          `Firebase Messaing successfully sent: ${res.responses
+            .map((x) => x.messageId)
+            .join(', ')}`,
+        );
+      })
       .catch((error) => {
-        console.error('Firebase Messaging sendAll errors: ', error);
+        this.logger.error(
+          `Firebase Messaing sendAll error: ${JSON.stringify(error)}`,
+        );
       });
   }
 }

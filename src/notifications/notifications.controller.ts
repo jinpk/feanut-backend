@@ -46,4 +46,9 @@ export class NotificationsController {
   async getUserNotificationSettings(@Param('userId') userId: string) {
     return await this.notificationsService.getNotificationUserConfig(userId);
   }
+
+  @Get('userslist/')
+  async getUtest() {
+    return await this.notificationsService.getListNotificationUsers();
+  }
 }

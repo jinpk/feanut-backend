@@ -17,10 +17,11 @@ import {
 } from '@nestjs/swagger';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
+import { ProfilesService } from 'src/profiles/profiles.service';
 import {
   AddFriendDto,
   FriendDto,
-  FriendshipStatusDto,
+  FriendshipStatsDto,
   GetFriendsDto,
   HiddenFriendDto,
 } from './dtos';
@@ -34,17 +35,35 @@ import { FriendshipsService } from './friendships.service';
 @Controller(FRIENDSHIPS_MODULE_NAME)
 @ApiBearerAuth()
 export class FriendshipsController {
-  constructor(private friendshipsService: FriendshipsService) {}
+  constructor(
+    private friendshipsService: FriendshipsService,
+    private profilesService: ProfilesService,
+  ) {}
 
-  @Get(':userId/status')
+  @Get(':profileId/stats/byprofile')
+  @ApiOperation({
+    summary: 'Friendship 조회 by profileId',
+  })
+  @ApiOkResponse({ type: FriendshipStatsDto })
+  async friendShipStatusByProfileId(
+    @Param('profileId') profileId: string,
+  ): Promise<FriendshipStatsDto> {
+    const userId = await this.profilesService.getOwnerIdById(profileId);
+
+    return {
+      friendsCount: await this.friendshipsService.getFriendsCount(userId),
+    };
+  }
+
+  @Get(':userId/stats')
   @ApiOperation({
     summary: 'Friendship 조회',
   })
-  @ApiOkResponse({ type: FriendshipStatusDto })
+  @ApiOkResponse({ type: FriendshipStatsDto })
   async friendShipStatus(
     @Request() req,
     @Param('userId') userId: string,
-  ): Promise<FriendshipStatusDto> {
+  ): Promise<FriendshipStatsDto> {
     if (req.user.id !== userId) {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
@@ -113,28 +132,12 @@ export class FriendshipsController {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
 
-    const { total, data } =
-      query.hidden === '1'
-        ? await this.friendshipsService.listHiddenFriend(
-            userId,
-            query.page,
-            query.limit,
-          )
-        : await this.friendshipsService.listFriend(
-            userId,
-            query.page,
-            query.limit,
-          );
-
-    const dtoData: FriendDto[] = [];
-    data.forEach((x, i) => {
-      dtoData.push(this.friendshipsService._friendDocToDto(x));
+    return await this.friendshipsService.listFriend(userId, {
+      page: query.page,
+      limit: query.limit,
+      keyword: query.keyword,
+      hidden: query.hidden === '1',
     });
-
-    return {
-      total,
-      data: dtoData,
-    };
   }
 
   @Post(':userId/friends')

@@ -49,6 +49,7 @@ export class IAPValidatorProvider {
   }
 
   async validateIOSPurchase(receipt: string): Promise<void> {
+    console.log(this.itunesVerifyURL, this.appStoreKey, receipt);
     const res = await this.httpService.axiosRef.post<ItunesValidationResponse>(
       this.itunesVerifyURL,
       {

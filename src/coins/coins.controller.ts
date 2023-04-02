@@ -7,8 +7,6 @@ import {
   Put,
   Post,
   Query,
-  NotFoundException,
-  UnauthorizedException,
   Body,
   Request,
 } from '@nestjs/common';
@@ -27,6 +25,12 @@ import { UpdateCoinDto } from './dtos/update-coin.dto';
 import { GetBuyCoinDto, GetUseCoinDto } from './dtos/get-coin.dto';
 import { BuyCoin } from './schemas/buycoin.schema';
 import { UseCoin } from './schemas/usecoin.schema';
+import { WrappedError } from 'src/common/errors';
+import {
+  COIN_MODULE_NAME,
+  COIN_ERROR_NOT_AN_ADMIN,
+
+} from './coins.constant';
 
 @ApiTags('Coin')
 @Controller('coins')
@@ -53,7 +57,10 @@ export class CoinsController {
   @ApiOkResponsePaginated(UseCoin)
   async getUsecoinList(@Query() query: GetUseCoinDto, @Request() req) {
     if (!req.user.isAdmin) {
-      throw new UnauthorizedException('Not an Admin');
+      throw new WrappedError(
+        COIN_MODULE_NAME,
+        COIN_ERROR_NOT_AN_ADMIN,
+        'Not an Admin');
     }
     return await this.coinsService.findListUsecoin(query);
   }
@@ -67,7 +74,10 @@ export class CoinsController {
   async getBuycoinList(@Query() query: GetBuyCoinDto, @Request() req) {
     if (!req.user.isAdmin) {
       if (query.userId != req.user.id) {
-        throw new UnauthorizedException('권한이 없습니다.');
+        throw new WrappedError(
+          COIN_MODULE_NAME,
+          COIN_ERROR_NOT_AN_ADMIN,
+          'Not an Admin');
       } else {
         return await this.coinsService.findListBuycoin(query);
       }

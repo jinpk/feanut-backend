@@ -6,7 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ProfilesService } from './profiles.service';
-import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
+import { ProfileDto, UpdateProfileDto } from './dtos';
 import { WrappedError } from 'src/common/errors';
 import { PROFILE_MODULE_NAME } from './profiles.constant';
 
@@ -38,17 +38,26 @@ export class ProfilesController {
     return dto;
   }
 
-  @Get('mycard')
+  @Get(':profileId')
   @ApiOperation({
-    summary: '프로필 피넛 카드 조회',
+    summary: '프로필 조회',
   })
-  async getFeanutCard(@Req() req): Promise<FeanutCardDto> {
-    const profile = await this.profileService.getByUserId(req.user.id);
+  @ApiOkResponse({ type: ProfileDto })
+  async getProfile(@Req() req, @Param('profileId') profileId: string) {
+    const profile = await this.profileService.getById(profileId);
     if (!profile) {
       throw new WrappedError(PROFILE_MODULE_NAME).notFound();
     }
 
-    return await this.profileService.findMyFeanutCard(req.user.id, profile._id);
+    const dto = this.profileService.docToDto(profile);
+
+    if (profile.imageFileId) {
+      dto.profileImageKey = await this.profileService.getProfileImageKey(
+        profile.imageFileId,
+      );
+    }
+
+    return dto;
   }
 
   @Patch(':profileId')

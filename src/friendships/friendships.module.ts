@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProfilesModule } from 'src/profiles/profiles.module';
+import { UsersModule } from 'src/users/users.module';
 import { FriendshipsController } from './friendships.controller';
 import { FriendshipsService } from './friendships.service';
 import { Friendship, FriendShipSchema } from './schemas/friendships.schema';
@@ -11,9 +12,10 @@ import { Friendship, FriendShipSchema } from './schemas/friendships.schema';
       { name: Friendship.name, schema: FriendShipSchema },
     ]),
     ProfilesModule,
+    UsersModule,
   ],
   controllers: [FriendshipsController],
   providers: [FriendshipsService],
   exports: [FriendshipsService],
 })
-export class FriendsModule {}
+export class FriendshipsModule {}

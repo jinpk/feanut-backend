@@ -1,13 +1,64 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DateReqDto } from 'src/common/dtos';
+import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
+import { Types, now } from 'mongoose';
 
 export class RoundDto {
+  @ApiProperty({ description: 'round ID' })
   id: string;
 
-  @ApiProperty({})
+  @ApiProperty({description: 'round 타이틀', default: 'title'})
+  title: string;
+
+  @ApiProperty({description: 'round 정렬 순서'})
+  index: number;
+
+  // 속한 이벤트 ID
+  @ApiProperty({description: '속한 이벤트 ID'})
+  pollRoundEventId?: string;
+
+  @ApiProperty({description: '활성화 여부', default: false})
   enabled: boolean;
 
-  @ApiProperty({})
+  @ApiProperty({description: 'round에 포함된 pollIds'})
+  pollIds: string[];
+
+  @ApiProperty({
+    description: '시작일 (YYYY-MM-DD)',
+    required: false,
+    default: 'YYYY-MM-DD'
+  })
+  @IsDateString()
+  @IsOptional()
+  startedAt?: string;
+
+  @ApiProperty({
+    description: '종료일 (YYYY-MM-DD)',
+    required: false,
+    default: 'YYYY-MM-DD'
+  })
+  @IsDateString()
+  @IsOptional()
+  endedAt?: string;
+}
+
+export class ResRoundDto {
+  @ApiProperty({ description: 'round ID' })
+  id: string;
+
+  @ApiProperty({description: 'round 타이틀', default: 'title'})
+  title: string;
+
+  @ApiProperty({description: 'round 정렬 순서'})
+  index: number;
+
+  // 속한 이벤트 ID
+  @ApiProperty({description: '속한 이벤트 ID'})
+  pollRoundEventId: string;
+
+  @ApiProperty({description: '활성화 여부', default: false})
+  enabled: boolean;
+
+  @ApiProperty({description: 'round에 포함된 pollIds'})
   pollIds: string[];
 
   @ApiProperty({})
@@ -15,7 +66,4 @@ export class RoundDto {
 
   @ApiProperty({})
   endedAt?: Date;
-
-  @ApiProperty({})
-  createdAt?: Date;
 }

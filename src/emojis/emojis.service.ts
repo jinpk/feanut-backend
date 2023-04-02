@@ -1,7 +1,6 @@
-import { Injectable, Body } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
-  now,
   FilterQuery,
   Model,
   PipelineStage,
@@ -9,12 +8,12 @@ import {
   Types,
 } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
-import { EmojiDto, PublicEmojiDto } from './dtos/emoji.dto';
+import { EmojiDto } from './dtos/emoji.dto';
 import { Emoji, EmojiDocument } from './schemas/emoji.schema';
 import { GetListEmojiDto } from './dtos/get-emoji.dto';
 import { UtilsService } from 'src/common/providers';
 import { FilesService } from 'src/files/files.service';
-import { UpdateEmojiDto } from './dtos';
+import { CreateEmojiDto } from './dtos';
 
 @Injectable()
 export class EmojisService {
@@ -28,14 +27,10 @@ export class EmojisService {
     return await this.filesService.hasById(fileId);
   }
 
-  async createEmoji(body: EmojiDto) {
-    let emoji = new Emoji();
-    emoji = {
-      emotion: body.emotion,
+  async createEmoji(body: CreateEmojiDto) {
+    const result = await new this.emojiModel({
       fileId: new Types.ObjectId(body.fileId),
-      isDeleted: false,
-    };
-    const result = await new this.emojiModel(emoji).save();
+    }).save();
 
     return result._id.toString();
   }
@@ -50,26 +45,10 @@ export class EmojisService {
     return [false, new Emoji()];
   }
 
-  async updateEmoji(emoji_id: string, emoji: Emoji, body: UpdateEmojiDto) {
-    await this.emojiModel.findByIdAndUpdate(emoji_id, {
-      $set: {
-        emotion: body.emotion,
-        fileId: body.fileId,
-        isDeleted: false,
-      },
-    });
-  }
-
-  async findListEmoji(
-    query: GetListEmojiDto,
-  ): Promise<PagingResDto<PublicEmojiDto>> {
+  async findListEmoji(query: GetListEmojiDto): Promise<PagingResDto<EmojiDto>> {
     const filter: FilterQuery<EmojiDocument> = {
       isDeleted: false,
     };
-
-    if (query.emotion != undefined) {
-      filter.emotion = query.emotion;
-    }
 
     const lookups: PipelineStage[] = [
       {
@@ -89,12 +68,9 @@ export class EmojisService {
     ];
 
     const projection: ProjectionFields<EmojiDto> = {
-      _id: 1,
-      emotion: 1,
-      assetKey: '$files.key',
-      friendIds: 1,
-      selectedAt: 1,
-      createdAt: 1,
+      id: '$_id',
+      _id: 0,
+      key: '$files.key',
     };
 
     const cursor = await this.emojiModel.aggregate([
@@ -118,15 +94,5 @@ export class EmojisService {
     const emoji = await this.emojiModel.findById(emoji_id);
     if (!emoji) return null;
     return emoji.toObject();
-  }
-
-  async removeEmojiById(emoji_id: string) {
-    const result = await this.emojiModel.findByIdAndUpdate(emoji_id, {
-      $set: {
-        isDeleted: true,
-      },
-    });
-
-    return result._id.toString();
   }
 }

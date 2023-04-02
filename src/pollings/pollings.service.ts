@@ -1,25 +1,49 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { now, FilterQuery, Model, ProjectionFields, Types } from 'mongoose';
+import {
+  now,
+  FilterQuery,
+  Model,
+  ProjectionFields,
+  Types,
+  PipelineStage,
+} from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
-import { UserRound, UserRoundDocument } from './schemas/userround.schema';
-import { PollingDto, PollingOpenDto, Opened } from './dtos/polling.dto';
+import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
+import { PollingDto, PollingResultDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
   GetListReceivePollingDto,
 } from './dtos/get-polling.dto';
 import { UseCoinDto } from '../coins/dtos/coin.dto';
-import { UsersService } from 'src/users/users.service';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
-import { UserRoundDto } from './dtos/userround.dto';
-import { KR_TIME_DIFF } from 'src/common/common.constant';
+import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
+import { WrappedError } from 'src/common/errors';
+import { OPEN_POLLING } from 'src/coins/coins.constant';
+import { UseType } from 'src/coins/enums';
+import {
+  POLLING_ERROR_MIN_FRIENDS,
+  POLLING_MODULE_NAME,
+  POLLING_ERROR_NOT_FOUND_POLLING,
+  POLLING_ERROR_EXCEED_REFRESH,
+  POLLING_ERROR_LACK_COIN_AMOUNT,
+  POLLING_ERROR_ALREADY_DONE,
+  POLLING_ERROR_EXCEED_SKIP,
+  POLLING_ERROR_NOT_FOUND_POLL,
+  POLLING_ERROR_NOT_FOUND_USERROUND,
+} from './pollings.constant';
+import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PollingVotedEvent } from './events';
+import { PollingStatsDto } from './dtos/pollingstatus.dto';
+import { FeanutCardDto } from './dtos';
 
 @Injectable()
 export class PollingsService {
@@ -30,28 +54,115 @@ export class PollingsService {
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
     private profilesService: ProfilesService,
-    private userService: UsersService,
     private coinService: CoinsService,
     private friendShipsService: FriendshipsService,
     private utilsService: UtilsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  async createPolling(user_id: string, userround) {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
+  async findFeanutCard(profileId: string): Promise<FeanutCardDto> {
+    var myCard = new FeanutCardDto();
+    myCard.joy = 0;
+    myCard.gratitude = 0;
+    myCard.serenity = 0;
+    myCard.interest = 0;
+    myCard.hope = 0;
+    myCard.pride = 0;
+    myCard.amusement = 0;
+    myCard.inspiration = 0;
+    myCard.awe = 0;
+    myCard.love = 0;
 
-    let isopened = new Opened();
-    isopened = { isOpened: false, useCoinId: null };
+    const filter: FilterQuery<PollingDocument> = {
+      selectedProfileId: new Types.ObjectId(profileId),
+    };
 
-    // userround의 pollIds에 추가 되지 않은 pollId sorting
-    const round = await this.roundModel.findById(userround.roundId);
+    const lookups: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'polls',
+        },
+      },
+      {
+        $unwind: {
+          path: '$polls',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+    ];
 
-    let newPollId = '';
-    for (let i = 0; i < round.pollIds.length; i++) {
-      if (userround.pollIds.includes(round.pollIds[i])) {
-      } else {
-        newPollId = round.pollIds[i];
-        break;
-      }
+    const projection = {
+      emotion: '$polls.emotion',
+      completedAt: 1,
+    };
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+      { $project: projection },
+    ]);
+
+    if (cursor.length > 0) {
+      cursor.forEach((element) => {
+        if (Object.keys(myCard).includes(element.emotion)) {
+          myCard[element.emotion] += 1;
+        }
+      });
+    }
+
+    return myCard;
+  }
+
+  async findPollingStats(profileId: string): Promise<PollingStatsDto> {
+    const ownerId = await this.profilesService.getOwnerIdById(profileId);
+    const pollsCount = await this.pollingModel
+      .find({
+        userId: ownerId,
+      })
+      .count();
+
+    const pullsCount = await this.pollingModel
+      .find({
+        selectedProfileId: new Types.ObjectId(profileId),
+      })
+      .count();
+
+    const status: PollingStatsDto = {
+      pollsCount: pollsCount,
+      pullsCount: pullsCount,
+    };
+
+    return status;
+  }
+
+  async existPollingByUserId(
+    user_id,
+    userround_id,
+    poll_id: string,
+  ): Promise<boolean> {
+    const exist = await this.pollingModel.findOne({
+      userId: new Types.ObjectId(user_id),
+      userRoundId: new Types.ObjectId(userround_id),
+      pollId: new Types.ObjectId(poll_id),
+    });
+    if (!exist) {
+      return false;
+    }
+
+    return true;
+  }
+
+  async createPolling(user_id: string, body): Promise<Polling> {
+    const PollExist = await this.pollModel.findById(body.pollId);
+
+    if (!PollExist) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLL,
+      ).notFound();
     }
 
     // 친구목록 불러오기/셔플
@@ -67,33 +178,169 @@ export class PollingsService {
 
     let polling = new Polling();
     polling = {
-      userId: user_id,
-      roundId: userround.roundId,
-      pollId: newPollId,
-      friendIds: friendIds,
-      opened: isopened,
-      createdAt: krtime,
+      userId: new Types.ObjectId(user_id),
+      userRoundId: new Types.ObjectId(body.userRoundId),
+      pollId: new Types.ObjectId(body.pollId),
+      friendIds: [friendIds],
+      isOpened: null,
     };
 
     const result = await new this.pollingModel(polling).save();
 
-    // userround에 pollId추가
-    await this.userroundModel.findByIdAndUpdate(userround._id, {
-      $set: {
-        pollIds: userround.pollIds.push(newPollId),
-        pollingIds: userround.pollingIds.push(result._id.toString()),
-      },
+    await this.userroundModel.findByIdAndUpdate(result.userRoundId, {
+      $push: { pollingIds: result._id },
     });
 
-    return result._id.toString();
+    const pollingId = result._id;
+    const filter: FilterQuery<PollingDocument> = {
+      _id: pollingId,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
+            },
+          ],
+          as: 'friendIds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileKey: null };
+      temp.profileId = v.friendIds.friends.profileId;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileKey = v.friendIds.files.key;
+      }
+      mergedList.push(temp);
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1);
   }
 
   async updateRefreshedPollingById(
     user_id,
     polling_id: string,
-  ): Promise<Polling | string> {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
-
+  ): Promise<Polling> {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
@@ -101,27 +348,187 @@ export class PollingsService {
     if (!polling.refreshCount) {
       polling.refreshCount = 1;
     } else {
-      if (polling.refreshCount < 2) {
+      if (polling.refreshCount < 3) {
         polling.refreshCount += 1;
       } else {
-        return 'Exceed your free refresh count';
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_EXCEED_REFRESH,
+        ).reject();
       }
     }
+
     // 친구목록 불러오기/셔플
+    let prevFriend = [];
+    for (const arr of polling.friendIds) {
+      prevFriend.push(arr);
+    }
+
     const friendList = await this.friendShipsService.listFriend(user_id);
     const temp_arr = friendList.data
+      .filter((friend) => !prevFriend.includes(friend.profileId))
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
+
     // polling friendlist 갱신
     const newIds = [];
     for (const friend of temp_arr) {
-      newIds.push(friend.profileId);
+      newIds.push(new Types.ObjectId(friend.profileId));
     }
-    polling.friendIds = newIds;
+    polling.friendIds.push(newIds);
 
     polling.save();
 
-    return polling;
+    const filter: FilterQuery<PollingDocument> = {
+      _id: polling._id,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
+            },
+          ],
+          as: 'friendIds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileKey: null };
+      temp.profileId = v.friendIds.friends.profileId;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileKey = v.friendIds.files.key;
+      }
+      mergedList.push(temp);
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1);
   }
 
   async findListPolling(
@@ -134,7 +541,7 @@ export class PollingsService {
       userId: 1,
       roundId: 1,
       friendIds: 1,
-      selectedAt: 1,
+      completedAt: 1,
       createdAt: 1,
     };
 
@@ -154,7 +561,7 @@ export class PollingsService {
     };
   }
 
-  async findListPollingByProfileId(
+  async findListInboxByUserId(
     user_id: string,
     query: GetListReceivePollingDto,
   ): Promise<PagingResDto<PollingDto>> {
@@ -164,25 +571,65 @@ export class PollingsService {
       selectedProfileId: profile._id,
     };
 
+    const lookups: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'profiles',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profiles',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profiles.imageFileId',
+          foreignField: '_id',
+          as: 'files',
+        },
+      },
+      {
+        $unwind: {
+          path: '$files',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
+
     const projection: ProjectionFields<PollingDto> = {
       _id: 1,
       userId: 1,
-      roundId: 1,
-      pollIds: 1,
-      friendIds: 1,
-      selectedAt: 1,
-      createdAt: 1,
+      pollId: 1,
+      isOpened: 1,
+      completedAt: 1,
+      name: '$profiles.name',
+      gender: '$profiles.gender',
+      imageFileKey: '$files.key',
     };
 
     const cursor = await this.pollingModel.aggregate([
       { $match: filter },
+      { $sort: { completedAt: -1 } },
+      ...lookups,
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
+
+    data.forEach((element) => {
+      if (!element.isOpened) {
+        delete element.name;
+        delete element.imageFileKey;
+      }
+    });
 
     return {
       total: metdata[0]?.total || 0,
@@ -190,9 +637,388 @@ export class PollingsService {
     };
   }
 
+  async existPollingById(polling_id: string) {
+    const polling = await this.pollingModel.findById(polling_id);
+
+    return polling;
+  }
+
   async findPollingById(polling_id: string) {
-    const result = await this.pollingModel.findById(polling_id);
-    return result;
+    const filter: FilterQuery<PollingDocument> = {
+      _id: new Types.ObjectId(polling_id),
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
+            },
+          ],
+          as: 'friendIds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileKey: null };
+      temp.profileId = v.friendIds.friends.profileId;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileKey = v.friendIds.files.key;
+      }
+      mergedList.push(temp);
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+
+    return cursor.at(-1);
+  }
+
+  async findInboxPollingByUserId(user_id, polling_id: string) {
+    const profile = await this.profilesService.getByUserId(user_id);
+    const filter: FilterQuery<PollingDocument> = {
+      _id: new Types.ObjectId(polling_id),
+      selectedProfileId: profile._id,
+    };
+
+    const lookups: PipelineStage[] = [
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'profiles',
+                localField: 'friends.profileId',
+                foreignField: '_id',
+                as: 'profile',
+              },
+            },
+            {
+              $unwind: {
+                path: '$profile',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'files',
+                localField: 'profile.imageFileId',
+                foreignField: '_id',
+                as: 'files',
+              },
+            },
+            {
+              $unwind: {
+                path: '$files',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: 0,
+                createdAt: 0,
+                updatedAt: 0,
+                'profile._id': 0,
+                'profile.__v': 0,
+                'profile.phoneNumber': 0,
+                'profile.ownerId': 0,
+                'profile.createdAt': 0,
+                'profile.updatedAt': 0,
+                'files._id': 0,
+                'files.__v': 0,
+                'files.type': 0,
+                'files.ownerId': 0,
+                'files.createdAt': 0,
+                'files.updatedAt': 0,
+              },
+            },
+          ],
+          as: 'friendIds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendIds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'pollId',
+        },
+      },
+      {
+        $unwind: {
+          path: '$pollId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'pollId._id': 0,
+          'pollId.isOpenedCount': 0,
+          'pollId.createdAt': 0,
+          'pollId.updatedAt': 0,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'voter',
+        },
+      },
+      {
+        $unwind: {
+          path: '$voter',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'voter._id': 0,
+          'voter.phoneNumber': 0,
+          'voter.birth': 0,
+          'voter.ownerId': 0,
+          'voter.__v': 0,
+          'voter.createdAt': 0,
+          'voter.updatedAt': 0,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'voter.imageFileId',
+          foreignField: '_id',
+          as: 'files',
+        },
+      },
+      {
+        $unwind: {
+          path: '$files',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'files._id': 0,
+          'files.ownerId': 0,
+          'files.type': 0,
+          'files.__v': 0,
+          'files.createdAt': 0,
+          'files.updatedAt': 0,
+        },
+      },
+      {
+        $project: {
+          userId: 0,
+          skipped: 0,
+          refreshCount: 0,
+          useCoinId: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      },
+    ];
+
+    const cursor = await this.pollingModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
+    let mergedList = [];
+    const cursors = cursor.slice(-4);
+
+    for (const v of cursors) {
+      let temp = { profileId: null, name: null, imageFileKey: null };
+      temp.profileId = v.friendIds.friends.profileId;
+
+      if (v.friendIds.profile.name) {
+        temp.name = v.friendIds.profile.name;
+      } else {
+        temp.name = v.friendIds.friends.name;
+      }
+
+      if (v.friendIds.profile.imageFileId) {
+        temp.imageFileKey = v.friendIds.files.key;
+      }
+      mergedList.push(temp);
+
+      v.voter.imageFileKey = null;
+      if (!v.isOpened) {
+        v.voter.name = null;
+      } else {
+        if (v.voter.imageFileId) {
+          v.voter.imageFileKey = v.files.key;
+        }
+      }
+      delete v.voter.imageFileId;
+      delete v.files;
+    }
+
+    cursor.at(-1).friendIds = mergedList;
+    return cursor.at(-1);
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {
@@ -202,249 +1028,513 @@ export class PollingsService {
     return result._id.toString();
   }
 
-  async updateSelectedProfile(user_id, polling_id, profile_id: string) {
-    const result = await this.pollingModel.findByIdAndUpdate(polling_id, {
-      $set: {
-        selectedProfileId: new Types.ObjectId(profile_id),
-        updatedAt: now(),
-      },
-    });
-
-    const userround = await this.userroundModel
-      .findOne({
-        userId: user_id,
-      })
-      .sort({ createdAt: -1 });
-
-    const count = await this.checkUserroundComplete(user_id, userround);
-
-    let completed = false;
-    if (count >= 12) {
-      completed = true;
-      await this.updateComplete(user_id, userround._id.toString());
-    }
-
-    const res = {
-      userroundId: userround._id.toString(),
-      userroundCompleted: completed,
-      pollingId: result._id.toString(),
+  async updatePollingResult(
+    user_id,
+    polling_id: string,
+    body,
+  ): Promise<PollingResultDto> {
+    let update: {
+      selectedProfileId?: Types.ObjectId;
+      skipped?: boolean;
+      updatedAt: Date;
+      completedAt: Date;
+    } = {
+      updatedAt: now(),
+      completedAt: now(),
     };
 
-    return res;
-  }
+    if (body.skipped) {
+      let skipCount = await this.checkUserroundSkip(user_id, polling_id);
+      if (skipCount >= 3) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_EXCEED_SKIP,
+          '건너뛰기 횟수 3회 초과 입니다.',
+        ).reject();
+      }
+      update.skipped = true;
+    } else {
+      update.selectedProfileId = new Types.ObjectId(body.selectedProfileId);
+    }
 
-  async checkUserroundComplete(user_id: string, userround) {
-    const round = await this.userroundModel
-      .findOne({
-        userId: user_id,
-      })
-      .sort({ createdAt: -1 });
+    let polling = await this.pollingModel.findByIdAndUpdate(polling_id, {
+      $set: update,
+    });
 
-    const result = await this.pollingModel.find({ $in: userround.pollingIds });
+    var res: PollingResultDto = {
+      userroundCompleted: false,
+      roundEvent: new PollRoundEventDto(),
+    };
+    const userround = await this.userroundModel.findById(polling.userRoundId);
 
-    let selecteCount = 0;
-    for (const value of result) {
-      if (value.selectedProfileId) {
-        selecteCount += 1;
+    if (!userround) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_USERROUND,
+      ).reject();
+    }
+
+    let checked = await this.checkUserroundComplete(user_id, userround);
+    res.userroundCompleted = checked;
+
+    if (checked) {
+      await this.updateComplete(user_id, userround._id);
+
+      const round = await this.roundModel.aggregate([
+        {
+          $match: { _id: new Types.ObjectId(userround.roundId) },
+        },
+        {
+          $lookup: {
+            from: 'polls_round_events',
+            localField: 'pollRoundEventId',
+            foreignField: '_id',
+            as: 'roundevent',
+          },
+        },
+        {
+          $unwind: {
+            path: '$roundevent',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            'roundevent._id': 0,
+            'roundevent.createdAt': 0,
+            'roundevent.updatedAt': 0,
+          },
+        },
+      ]);
+
+      res.roundEvent = round[0].roundevent;
+
+      // reward 지급
+      if (round[0].roundevent != null) {
+        const rewardAmount = round[0].roundevent.reward;
+        await this.coinService.updateCoinAccum(user_id, rewardAmount);
       }
     }
 
-    return selecteCount;
+    this.eventEmitter.emit(
+      PollingVotedEvent.name,
+      new PollingVotedEvent(
+        polling._id,
+        polling.pollId,
+        update.selectedProfileId || null,
+      ),
+    );
+    return res;
   }
 
   // 피넛을 소모. 수신투표 열기.
-  async updatePollingOpen(user_id, polling_id: string, body: PollingOpenDto) {
-    let opened = new Opened();
-
+  async updatePollingOpen(user_id, polling_id: string): Promise<string> {
     //userId 사용하여 get profile
     const profile = await this.profilesService.getByUserId(user_id);
 
     // user_id의 feanut 개수 체크/차감
     const usercoin = await this.coinService.findUserCoin(user_id);
 
-    if (usercoin.total < 3) {
-      return 'Lack of total feanut amount';
+    if (usercoin.total < OPEN_POLLING) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_LACK_COIN_AMOUNT,
+        'Lack of total feanut amount',
+      ).reject();
     } else {
+      const exist = await this.pollingModel.findOne({
+        _id: new Types.ObjectId(polling_id),
+        selectedProfileId: profile._id,
+      });
+
+      if (!exist) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_NOT_FOUND_POLLING,
+        ).notFound();
+      }
+      if (exist.isOpened) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_ALREADY_DONE,
+          'Already Opened',
+        ).reject();
+      }
+
       let usecoin: UseCoinDto = new UseCoinDto();
       usecoin = {
         userId: user_id,
-        useType: body.useType,
-        amount: 3,
+        useType: UseType.Open,
+        amount: OPEN_POLLING,
       };
 
-      const usecoin_result = await this.coinService.createUseCoin(usecoin);
-      await this.coinService.updateCoinAccum(user_id, -1 * 3);
+      const usecoin_id = await this.coinService.createUseCoin(usecoin);
+      if (usecoin_id) {
+        const result = await this.pollingModel.findOneAndUpdate(
+          {
+            _id: exist._id,
+            selectedProfileId: profile._id,
+            isOpened: null,
+          },
+          {
+            $set: { isOpened: true, useCoinId: usecoin_id, updatedAt: now() },
+          },
+        );
 
-      // polling isOpened 상태 업데이트
-      opened = {
-        isOpened: true,
-        useCoinId: usecoin_result,
-      };
+        if (result) {
+        } else {
+          await this.coinService.updateCoinAccum(user_id, OPEN_POLLING);
+          throw new WrappedError(
+            POLLING_MODULE_NAME,
+            POLLING_ERROR_NOT_FOUND_POLLING,
+          ).notFound();
+        }
+
+        // poll isOpenedCount 업데이트
+        await this.pollModel.findByIdAndUpdate(result.pollId, {
+          $inc: { isOpened: 1 },
+        });
+
+        return result._id.toString();
+      }
     }
-
-    const result = await this.pollingModel.findOneAndUpdate(
-      {
-        _id: new Types.ObjectId(polling_id),
-        selectedProfileId: profile._id,
-      },
-      {
-        $set: { opened: opened, updatedAt: now() },
-      },
-    );
-
-    // poll isOpenedCount 업데이트
-    await this.pollModel.findByIdAndUpdate(result.pollId, {
-      $inc: { isOpened: 1 },
-    });
-
-    return result._id.toString();
   }
 
   // userRound
-  async createUserRound(user_id: string, userrounds): Promise<UserRoundDto> {
-    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
+  async createUserRound(user_id: string): Promise<UserRoundDto> {
+    const userrounds = await this.userroundModel
+      .find({
+        userId: new Types.ObjectId(user_id),
+      })
+      .sort({ createdAt: -1 });
 
-    // userrounds에서 roundId 추출
-    const completeRoundIds = [];
-    userrounds.data.forEach((element) => {
-      completeRoundIds.push(element.roundId);
+    const friendList = await this.friendShipsService.listFriend(user_id);
+    if (friendList.total < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        null,
+      ).reject();
+    }
+    const rounds = await this.roundModel.find().sort({ index: 1 });
+
+    // 이벤트 라운드 체크
+    var eventRounds = [];
+    eventRounds = rounds.filter((element) => element.startedAt);
+
+    eventRounds.sort((prev, next) => {
+      if (prev.startedAt > next.startedAt) return -1;
+      if (prev.startedAt < next.startedAt) return 1;
+      return 0;
     });
 
-    // roundModel에서 enable, startedAt, endedAt 조건 roundId
-    const enbaleRoundIds = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    today.setTime(today.getTime() + KR_TIME_DIFF);
-    const enbaleRounds = await this.roundModel.find({
-      enabled: true,
-      startedAt: { $lte: today },
-      endedAt: { $gt: today },
-    });
-    enbaleRounds.forEach((element) => {
-      enbaleRoundIds.push(element._id.toString());
-    });
-
-    // roundModel중 userrounds roundId들 삭제.
-    for (let i = 0; i < enbaleRoundIds.length; i++) {
-      for (let j = 0; j < completeRoundIds.length; j++) {
-        if (enbaleRoundIds.includes(completeRoundIds[j])) {
-          enbaleRoundIds.splice(i, 1);
+    for (var i = 0; i < eventRounds.length; i++) {
+      for (const ur of userrounds) {
+        if (eventRounds[i]._id.toString() == ur.roundId) {
+          eventRounds.splice(i, 1);
           i--;
+          if (i < 0) {
+            break;
+          }
         }
       }
     }
 
-    // 남은 것 중 랜덤으로 하나의 라운드 아이디 선정
-    const randomIndex = Math.floor(Math.random() * enbaleRoundIds.length);
-    const RandomRoundId = enbaleRoundIds[randomIndex];
+    var normalRounds = [];
+    normalRounds = rounds.filter((element) => !element.startedAt);
 
-    // 해당 라운드에 속한 pollId 12개 생성
-    let polls = [];
-    enbaleRounds.forEach((element) => {
-      if (element._id.toString() == RandomRoundId) {
-        let temp = [];
-        temp = element.pollIds.sort(() => Math.random() - 0.5);
-        polls = temp.slice(-12);
+    var nextRound = new Round();
+    if (eventRounds.length > 0) {
+      nextRound = eventRounds[0];
+      for (const v of eventRounds) {
+        if (v.index == 0) {
+          nextRound = v;
+          break;
+        }
       }
-    });
+    } else {
+      var currentRound = new Round();
+      if (userrounds.length > 0) {
+        for (let r of rounds) {
+          if (r._id == userrounds[0].roundId) {
+            currentRound = r;
+          }
+        }
+        let filtered = normalRounds.filter(
+          (element) => element.index > currentRound.index,
+        );
+        if (filtered.length > 0) {
+          nextRound = filtered[0];
+        } else {
+          nextRound = normalRounds[0];
+        }
+      } else {
+        nextRound = normalRounds[0];
+      }
+    }
 
-    // pollId에 매핑 된 polling 12개 생성
-    const pollings = await this.createFirstDozen(user_id, RandomRoundId, polls);
+    let shuffledPollIds = nextRound.pollIds.sort(() => Math.random() - 0.5);
 
     let userround = new UserRound();
     userround = {
-      userId: user_id,
-      roundId: RandomRoundId,
-      pollIds: polls.slice(0, 12),
-      pollingIds: pollings,
-      createdAt: krtime,
+      userId: new Types.ObjectId(user_id),
+      roundId: nextRound._id,
+      pollIds: shuffledPollIds,
+      pollingIds: [],
     };
-    await new this.userroundModel(userround).save();
-    return userround;
+
+    const result = await new this.userroundModel(userround).save();
+
+    let dto = this.userRoundToDto(result);
+    return dto;
   }
 
   async findRecentUserRound(user_id: string) {
-    const round = await this.userroundModel
+    const recent = await this.userroundModel
       .findOne({
-        userId: user_id,
+        userId: new Types.ObjectId(user_id),
       })
       .sort({ createdAt: -1 });
 
-    return round;
+    return recent;
   }
 
-  async findUserRound(user_id: string) {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    start.setTime(start.getTime() + KR_TIME_DIFF);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    end.setTime(end.getTime() + KR_TIME_DIFF);
+  async findUserRound(user_id: string): Promise<FindUserRoundDto> {
+    var res = new FindUserRoundDto();
 
-    const rounds = await this.userroundModel
-      .find({
-        userId: user_id,
-        createdAt: { $gte: start, $lt: end },
-      })
-      .sort({ createdAt: -1 });
+    const userrounds = await this.userroundModel.aggregate([
+      {
+        $match: { userId: new Types.ObjectId(user_id) },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $limit: 4,
+      },
+      {
+        $lookup: {
+          from: 'pollings',
+          localField: 'pollingIds',
+          foreignField: '_id',
+          as: 'pollingIds',
+        },
+      },
+      {
+        $project: {
+          'pollingIds.userId': 0,
+          'pollingIds.userRoundId': 0,
+          'pollingIds.friendIds': 0,
+          'pollingIds.selectedProfileId': 0,
+          'pollingIds.skipped': 0,
+          'pollingIds.isOpened': 0,
+          'pollingIds.useCoinId': 0,
+          'pollingIds.createdAt': 0,
+          'pollingIds.updatedAt': 0,
+        },
+      },
+    ]);
 
-    const result = {
-      todayCount: rounds.length,
-      data: rounds,
-    };
+    if (userrounds.length > 0) {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
 
-    return result;
+      userrounds[0].pollingIds.forEach((element) => {
+        if (element.completedAt) {
+          element.isVoted = true;
+        } else {
+          element.isVoted = false;
+        }
+        delete element.completedAt;
+      });
+
+      var todayRounds = [];
+      userrounds.forEach((element) => {
+        if (element.completedAt == null) {
+          todayRounds.push(element);
+        }
+        if (element.completedAt >= start && element.completedAt <= end) {
+          todayRounds.push(element);
+        }
+      });
+
+      res.todayCount = todayRounds.length;
+
+      if (res.todayCount == 0) {
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          const result = await this.createUserRound(user_id);
+          res.data = result;
+        }
+      } else if (res.todayCount < 3) {
+        let timecheck = 0;
+        if (todayRounds[0].completedAt) {
+          timecheck =
+            todayRounds[0].completedAt.getTime() +
+            1 * 60 * 1000 -
+            now().getTime(); // 30분 30 * 60 * 1000
+
+          res.remainTime = timecheck;
+        }
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          if (timecheck < 0) {
+            res.recentCompletedAt = userrounds[0].completedAt;
+            const result = await this.createUserRound(user_id);
+            res.data = result;
+          } else {
+            res.data = userrounds[0];
+          }
+        }
+      } else if (res.todayCount == 3) {
+        let timecheck = 0;
+        timecheck = end.getTime() - now().getTime();
+        res.remainTime = timecheck;
+        if (!userrounds[0].completedAt) {
+          res.data = userrounds[0];
+        } else {
+          if (timecheck < 0) {
+          } else {
+            res.recentCompletedAt = userrounds[0].completedAt;
+            res.data = userrounds[0];
+          }
+        }
+      }
+    } else {
+      const result = await this.createUserRound(user_id);
+      res.data = result;
+      res.todayCount = 1;
+    }
+
+    return res;
   }
 
-  async updateComplete(user_id, userround_id: string) {
+  async checkUserroundComplete(user_id: string, userround) {
+    const pollings = await this.pollingModel.find({
+      userRoundId: userround._id,
+      userId: new Types.ObjectId(user_id),
+      completedAt: { $ne: null },
+    });
+
+    // userround의 pollids길이 만큼 완료가 됐는지 확인
+    if (pollings.length >= userround.pollIds.length) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async checkUserroundSkip(user_id, polling_id: string) {
+    let polling = await this.pollingModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(polling_id),
+          userId: new Types.ObjectId(user_id),
+        },
+      },
+      {
+        $lookup: {
+          from: 'polling_user_rounds',
+          localField: 'userRoundId',
+          foreignField: '_id',
+          as: 'userrounds',
+        },
+      },
+      {
+        $unwind: {
+          path: '$userrounds',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'pollings',
+          localField: 'userrounds.pollingIds',
+          foreignField: '_id',
+          as: 'pollings',
+        },
+      },
+      {
+        $project: {
+          'pollings._id': 0,
+          'pollings.userId': 0,
+          'pollings.pollId': 0,
+          'pollings.userRoundIds': 0,
+          'pollings.friendIds': 0,
+          'pollings.selectedProfileId': 0,
+          'pollings.refreshCount': 0,
+          'pollings.completedAt': 0,
+          'pollings.isOpened': 0,
+          'pollings.useCoinId': 0,
+          'pollings.createdAt': 0,
+          'pollings.updatedAt': 0,
+        },
+      },
+    ]);
+    let count = 0;
+    if (polling.length > 0) {
+      polling[0].pollings.forEach((element) => {
+        if (element.skipped == true) {
+          count += 1;
+        }
+      });
+    }
+    return count;
+  }
+
+  async updateComplete(
+    user_id: string,
+    userround_id: Types.ObjectId,
+  ): Promise<string> {
     const result = await this.userroundModel.findOneAndUpdate(
       {
-        _id: new Types.ObjectId(userround_id),
-        userId: user_id,
+        _id: userround_id,
+        userId: new Types.ObjectId(user_id),
       },
       {
         $set: { complete: true, completedAt: now() },
       },
     );
 
-    // 투표 완료: 코인 획득
-    await this.coinService.updateCoinAccum(user_id, 2);
     return result._id.toString();
   }
 
-  async createFirstDozen(user_id, round_id: string, polls: string[]) {
-    const krtime = new Date(now().getTime() + 9 * 60 * 60 * 1000);
+  async findUserRoundById(user_id: string, body) {
+    const res = await this.userroundModel.findOne({
+      _id: new Types.ObjectId(body.userRoundId),
+      userId: new Types.ObjectId(user_id),
+    });
 
-    let polling = new Polling();
-    let isopened = new Opened();
-    isopened = { isOpened: false, useCoinId: null };
+    return res;
+  }
 
-    const friendList = await this.friendShipsService.listFriend(user_id);
-
-    const pollingIds = [];
-    for (const poll_id of polls) {
-      // 친구목록 불러오기/셔플
-      const temp_arr = friendList.data
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
-
-      const friendIds = [];
-      for (const friend of temp_arr) {
-        friendIds.push(friend.profileId);
-      }
-
-      polling = {
-        userId: user_id,
-        roundId: round_id,
-        pollId: poll_id,
-        friendIds: friendIds,
-        opened: isopened,
-        createdAt: krtime,
-      };
-
-      const savepolling = await new this.pollingModel(polling).save();
-      await pollingIds.push(savepolling._id);
+  pollingToDto(doc: Polling | PollingDocument): PollingDto {
+    const dto = new PollingDto();
+    dto.id = doc._id.toHexString();
+    dto.userId = doc.userId;
+    dto.userRoundId = doc.userRoundId;
+    dto.pollId = doc.pollId;
+    dto.friendIds = doc.friendIds;
+    if (doc.completedAt) {
+      dto.isVoted = true;
+    } else {
+      dto.isVoted = false;
     }
-    return pollingIds;
+    return dto;
+  }
+
+  userRoundToDto(doc: UserRound | UserRoundDocument): UserRoundDto {
+    const dto = new UserRoundDto();
+    dto.id = doc._id.toHexString();
+    dto.userId = doc.userId.toHexString();
+    dto.roundId = doc.roundId.toHexString();
+    dto.pollIds = doc.pollIds;
+    dto.pollingIds = doc.pollingIds;
+    dto.complete = doc.complete;
+    return dto;
   }
 }

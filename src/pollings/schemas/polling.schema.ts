@@ -1,43 +1,51 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types, now } from 'mongoose';
-import { Opened } from '../dtos/polling.dto';
-import { POLLING_MODULE_NAME } from '../../pollings/pollings.constant';
+import { POLLING_SCHEMA_NAME } from '../../pollings/pollings.constant';
 
 export type PollingDocument = HydratedDocument<Polling>;
 
 // Polling
-@Schema({ collection: POLLING_MODULE_NAME, timestamps: true })
+@Schema({ collection: POLLING_SCHEMA_NAME, timestamps: true })
 export class Polling {
+  _id?: Types.ObjectId;
   // userId
   @Prop({ required: true })
-  userId: string;
+  userId: Types.ObjectId;
 
-  // roundId
+  // userRoundId
   @Prop({ required: true })
-  roundId: string;
+  userRoundId: Types.ObjectId;
 
   // pollId
   @Prop({ required: true })
-  pollId: string;
+  pollId: Types.ObjectId;
 
   // friendList
-  @Prop({ required: true })
-  friendIds: Types.ObjectId[];
+  @Prop({ required: true, type: [[Types.ObjectId]] })
+  friendIds: Types.ObjectId[][];
 
   // selectedId
   @Prop({ type: Types.ObjectId, default: null })
-  selectedProfileId?: string;
+  selectedProfileId?: Types.ObjectId;
 
-  @Prop({ defaul: 0 })
+  // 건너뛰기 여부
+  @Prop({ default: null })
+  skipped?: boolean;
+
+  @Prop({ default: 0 })
   refreshCount?: number;
 
-  // selectedAt
-  @Prop({ defaul: null })
-  selectedAt?: Date;
+  // completedAt
+  @Prop({ default: null })
+  completedAt?: Date;
 
   // isOpened
-  @Prop({ default: Opened })
-  opened?: Opened;
+  @Prop({ default: null })
+  isOpened?: boolean;
+
+  // isOpened
+  @Prop({ default: null })
+  useCoinId?: Types.ObjectId;
 
   // 생성시간
   @Prop({})

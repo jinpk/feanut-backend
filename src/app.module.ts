@@ -1,12 +1,12 @@
 import configuration from './config/configuration';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CoinsModule } from './coins/coins.module';
-import { FriendsModule } from './friendships/friendships.module';
+import { FriendshipsModule } from './friendships/friendships.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PollingsModule } from './pollings/pollings.module';
 import { PollsModule } from './polls/polls.module';
@@ -17,8 +17,11 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { FilesModule } from './files/files.module';
 import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { AdminModule } from './admin/admin.module';
-import { SchedulerModule } from './scheduler/scheduler.module';
 import { EmojisModule } from './emojis/emojis.module';
+import { CommonModule } from './common/common.module';
+import { EventsModule } from './events/events.module';
+import { LoggerMiddleware } from './logger.middleware';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -34,17 +37,18 @@ import { EmojisModule } from './emojis/emojis.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    EventsModule,
+    CommonModule,
     UsersModule,
     AuthModule,
     CoinsModule,
-    FriendsModule,
-    NotificationsModule,
+    FriendshipsModule,
     FilesModule,
     PollingsModule,
     PollsModule,
     AdminModule,
-    SchedulerModule,
     EmojisModule,
   ],
   controllers: [AppController],
@@ -59,4 +63,8 @@ import { EmojisModule } from './emojis/emojis.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

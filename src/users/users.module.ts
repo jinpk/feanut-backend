@@ -2,23 +2,14 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
 import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
-import { ProfilesModule } from 'src/profiles/profiles.module';
-import { FriendsModule } from 'src/friendships/friendships.module';
-import { CoinsModule } from 'src/coins/coins.module';
-import { UsersExistenceController } from './users-existence.controller';
-import { NotificationsModule } from 'src/notifications/notifications.module';
+import { UsersController, UsersPublicController } from './users.controller';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    ProfilesModule,
-    FriendsModule,
-    CoinsModule,
-    NotificationsModule,
   ],
   providers: [UsersService],
-  controllers: [UsersController, UsersExistenceController],
+  controllers: [UsersController, UsersPublicController],
   exports: [UsersService],
 })
 export class UsersModule {}

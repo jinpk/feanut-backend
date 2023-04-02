@@ -1,8 +1,9 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { now } from 'mongoose';
+import { Types, now } from 'mongoose';
 import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 
 export class UserRoundDto {
+  id?: string;
   // userId
   @ApiProperty({})
   userId: string;
@@ -15,11 +16,9 @@ export class UserRoundDto {
   @ApiProperty({})
   pollIds: string[];
 
+  // pollingIds 목록
   @ApiProperty({})
-  pollingIds: any[];
-
-  @ApiProperty({})
-  skipCount?: number;
+  pollingIds: Types.ObjectId[];
 
   // complete
   @ApiProperty({ default: false })
@@ -28,6 +27,23 @@ export class UserRoundDto {
   // completedAt
   @ApiProperty({})
   completedAt?: Date;
+}
+
+export class FindUserRoundDto {
+  @ApiProperty({})
+  todayCount: number;
+
+  @ApiProperty({default: 3})
+  maxDailyCount: number;
+
+  @ApiProperty({})
+  recentCompletedAt: Date;
+
+  @ApiProperty({})
+  remainTime: number;
+  
+  @ApiProperty({})
+  data: UserRoundDto;
 }
 
 export class PayUserRoundDto extends OmitType(UseCoinDto, [

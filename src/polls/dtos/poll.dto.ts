@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Emotion } from '../enums';
 
 export class PollDto {
+  @ApiProperty({ description: 'poll ID' })
+  id: string;
+
   @ApiProperty({ description: 'poll emotion' })
   emotion: Emotion;
 

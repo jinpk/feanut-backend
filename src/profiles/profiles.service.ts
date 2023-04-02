@@ -1,22 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage, FilterQuery, Types, ObjectId } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Gender } from './enums';
 import { Profile, ProfileDocument } from './schemas/profile.schema';
-import { Polling, PollingDocument } from '../pollings/schemas/polling.schema';
-import { FeanutCardDto, ProfileDto, UpdateProfileDto } from './dtos';
+import { ProfileDto, UpdateProfileDto } from './dtos';
 import { FilesService } from 'src/files/files.service';
 import { WrappedError } from 'src/common/errors';
-import { PROFILE_MODULE_NAME, PROFILE_SCHEMA_NAME } from './profiles.constant';
+import {
+  PROFILES_ERROR_NOT_FOUND,
+  PROFILES_ERROR_OWNER_LESS,
+  PROFILE_MODULE_NAME,
+  PROFILE_SCHEMA_NAME,
+} from './profiles.constant';
 import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
-    @InjectModel(Polling.name) private pollingModel: Model<PollingDocument>,
     private filesService: FilesService,
   ) {}
+
+  async getOwnerIdById(
+    profileId: string | Types.ObjectId,
+  ): Promise<Types.ObjectId> {
+    const profile = await this.profileModel.findById(profileId);
+
+    if (!profile) {
+      throw new WrappedError(
+        PROFILE_MODULE_NAME,
+        PROFILES_ERROR_NOT_FOUND,
+      ).notFound();
+    } else if (!profile.ownerId) {
+      throw new WrappedError(
+        PROFILE_MODULE_NAME,
+        PROFILES_ERROR_OWNER_LESS,
+      ).reject();
+    }
+
+    return profile.ownerId;
+  }
 
   // 소유권지정
   async makeOwnerShipById(
@@ -53,6 +76,7 @@ export class ProfilesService {
       {
         $unwind: {
           path: '$user',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -180,70 +204,6 @@ export class ProfilesService {
     if (!profile) return null;
 
     return profile.toObject();
-  }
-
-  async findMyFeanutCard(user_id: string, profile_id: Object): Promise<FeanutCardDto> {
-    var myCard = new FeanutCardDto();
-    myCard = {
-      joy: 0,
-      gratitude: 0,
-      serenity: 0,
-      interest: 0,
-      hope: 0,
-      pride: 0,
-      amusement: 0,
-      inspiration: 0,
-      awe: 0,
-      love: 0,
-    }
-
-    const filter: FilterQuery<PollingDocument> = {
-      selectedProfileId: profile_id,
-    };
-
-    const lookups: PipelineStage[] = [
-      {
-        $lookup: {
-          from: 'polls',
-          localField: 'pollsId',
-          foreignField: '_id',
-          as: 'polls',
-        },
-      },
-      {
-        $unwind: {
-          path: '$polls',
-          preserveNullAndEmptyArrays: false,
-        },
-      },
-    ];
-
-    const projection = {
-      _id: 1,
-      pollIds: 1,
-      emotion: '$polls.emotion',
-      selectedAt: 1,
-      createdAt: 1,
-    };
-
-    const cursor = await this.pollingModel.aggregate([
-      { $match: filter },
-      ...lookups,
-      { $project: projection },
-      // this.utilsService.getCommonMongooseFacet(query),
-    ]);
-
-    if (cursor[0]) {
-      const data = cursor[0].data;
-
-      data.array.forEach((element) => {
-        if (element.emotion == 'joy') {
-          myCard.joy += 1;
-        }
-      });
-    }
-
-    return myCard;
   }
 
   async getProfileImageKey(imageFileId: Types.ObjectId) {

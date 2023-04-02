@@ -7,5 +7,6 @@ export const AUTH_ERROR_VERIFICATION_TIMEOUT = 4;
 export const AUTH_ERROR_INVALID_LOGIN = 5;
 export const AUTH_ERROR_NOT_FOUND_USERNAME = 6;
 export const AUTH_ERROR_COOL_TIME = 7;
+export const AUTH_ERROR_NOT_FOUND_USER = 8;
 
 export const INSTAGRAM_AUTH_REDIRECT_PATH = '/oauth/instagram';

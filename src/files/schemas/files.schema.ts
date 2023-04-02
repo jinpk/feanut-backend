@@ -2,12 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/users/schemas/user.schema';
 import { FilePurpose, SupportContentType } from '../enums';
-import { FILE_MODULE_NAME } from '../files.constant';
+import { FILE_SCHEMA_NAME } from '../files.constant';
 
 export type FileDocument = HydratedDocument<File>;
 
 // 파일
-@Schema({ collection: FILE_MODULE_NAME, timestamps: true })
+@Schema({ collection: FILE_SCHEMA_NAME, timestamps: true })
 export class File {
   // pk
   _id: Types.ObjectId;

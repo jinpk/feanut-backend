@@ -11,7 +11,7 @@ import {
 import { PagingResDto } from 'src/common/dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { PollDto } from './dtos/poll.dto';
-import { RoundDto } from './dtos/round.dto';
+import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
 import { Round, RoundDocument } from './schemas/round.schema';
 import {
@@ -22,39 +22,103 @@ import {
 import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto';
 import { UtilsService } from 'src/common/providers';
 import { KR_TIME_DIFF } from 'src/common/common.constant';
+import { WrappedError } from 'src/common/errors';
+import {
+  PollRoundEvent,
+  PollRoundEventDocument,
+} from './schemas/round-event.schema';
+import { PollRoundEventDto } from './dtos/round-event.dto';
+import { EmojisService } from 'src/emojis/emojis.service';
+import {
+  POLL_MODULE_NAME,
+  POLL_ERROR_NOT_FOUND_ROUND_EVENT,
+  POLL_ERROR_NOT_FOUND_POLL,
+  POLL_ERROR_NOT_FOUND_EMOJIID,
+  POLL_ERROR_LACK_POLLS,
+  POLL_ERROR_DATE_REQUIRED
+} from './polls.constant';
 
 @Injectable()
 export class PollsService {
   constructor(
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
-    private profilesService: ProfilesService,
+    @InjectModel(PollRoundEvent.name)
+    private pollRoundEventModel: Model<PollRoundEventDocument>,
     private utilsService: UtilsService,
+    private emojisService: EmojisService,
   ) {}
 
+  async createPollRoundEvent(body:PollRoundEventDto) {
+    const exist = await this.emojisService.findEmojiById(body.emojiId);
+    if (!exist) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_EMOJIID,
+      ).notFound();
+    }
+
+    let pollroundevent = new PollRoundEvent();
+    pollroundevent = {
+      message: body.message,
+      subMessage: body.subMessage,
+      markingText: body.markingText,
+      emojiId: new Types.ObjectId(body.emojiId),
+      reward: body.reward,
+    }
+    const res = await new this.pollRoundEventModel(pollroundevent).save();
+    return res._id.toString();
+  }
+
   async createPoll(body: PollDto): Promise<string> {
-    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
-    body.createdAt = krtime;
+    const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
+    if (!exist) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_EMOJIID,
+      ).notFound();
+    }
 
     const result = await new this.pollModel(body).save();
     return result._id.toString();
   }
 
   async createRound(body: RoundDto): Promise<string> {
-    const krtime = new Date(now().getTime() + KR_TIME_DIFF);
-    body.createdAt = krtime;
-
-    // pollids가 12개 이하이면 비활성화
+    // pollids가 12개 이하인지 확인
     if (body.pollIds.length < 12) {
-      body.enabled = false;
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_LACK_POLLS,
+        '투표를 12개 이상 선택해주세요.').reject();
     }
 
-    if (!body.endedAt) {
-      const start = new Date(body.startedAt);
-      body.endedAt = new Date(start.getTime() + 365 * 24 * 60 * 60 * 1000);
+    var round = new Round();
+    if (body.pollRoundEventId) {
+      if (!body.startedAt || !body.endedAt) {
+        throw new WrappedError(
+          POLL_MODULE_NAME,
+          POLL_ERROR_DATE_REQUIRED,
+          '시작일, 종료일을 입력해 주세요.').reject();
+      }
+
+      let exist = await this.pollRoundEventModel.findById(body.pollRoundEventId);
+      if (!exist) {
+        throw new WrappedError(
+          POLL_MODULE_NAME,
+          POLL_ERROR_NOT_FOUND_ROUND_EVENT,
+          ).notFound()
+      }
+
+      round.pollRoundEventId = new Types.ObjectId(body.pollRoundEventId);
+    } else {
+      round.pollRoundEventId = null
     }
 
-    const result = await new this.roundModel(body).save();
+    round.title = body.title;
+    round.enabled = body.enabled;
+    round.pollIds = body.pollIds;
+
+    const result = await new this.roundModel(round).save();
     return result._id.toString();
   }
 
@@ -201,5 +265,59 @@ export class PollsService {
       total: metdata[0]?.total || 0,
       data: data,
     };
+  }
+
+  async findAllActiveEventRound() {
+    let rounds = await this.roundModel.aggregate([
+      {
+        $match: {
+          enabled: true,
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          enabled: 0,
+          pollIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
+        }
+      }
+    ]).sort({ startedAt: -1});
+
+    let eventRound = rounds.filter(element => (element.startedAt != null))
+    let normalRound = rounds
+    .filter(element => (element.startedAt == null))
+    .sort(
+      (v1, v2) => 
+      (v1.index < v2.index) ? -1 : (v1.index > v2.index) ? 1 : 0);
+
+    return {
+      eventRound: eventRound,
+      normalRound: normalRound,
+    }
+  }
+
+  pollToDto(doc: Poll | PollDocument): PollDto {
+    const dto = new PollDto();
+    dto.id = doc._id.toHexString();
+    dto.emotion = doc.emotion;
+    dto.emojiId = doc.emojiId;
+    dto.contentText = doc.contentText;
+    return dto;
+  }
+
+  roundToDto(doc: Round | RoundDocument): ResRoundDto {
+    const dto = new ResRoundDto();
+    dto.id = doc._id.toHexString();
+    dto.title = doc.title;
+    dto.index = doc.index;
+    dto.enabled = doc.enabled;
+    dto.pollRoundEventId = doc.pollRoundEventId.toHexString();
+    dto.pollIds = doc.pollIds;
+    dto.startedAt = doc.startedAt;
+    dto.endedAt = doc.endedAt;
+    return dto;
   }
 }
