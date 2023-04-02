@@ -98,11 +98,13 @@ export class CoinsService {
     }
 
     if (body.os === 'ios') {
-      await this.iapValidatorProvider.validateIOSPurchase(body.purchaseReceipt);
+      await this.iapValidatorProvider.validateIOSPurchase(body.receipt);
     } else {
+      console.log(body.receipt);
+      throw new Error('안드로이드는 아직 지원하지 않습니다.');
       await this.iapValidatorProvider.validateGooglePurchase(
         body.productId,
-        body.purchaseReceipt,
+        body.receipt,
       );
     }
 

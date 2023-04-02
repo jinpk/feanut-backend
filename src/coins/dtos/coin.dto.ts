@@ -22,9 +22,9 @@ export class PurchaseCoinDto {
 
   @ApiProperty({
     required: true,
-    description: 'android - token, ios - receipt',
+    description: 'transaction receipt',
   })
-  purchaseReceipt: string;
+  receipt: string;
 
   @ApiProperty({
     required: true,
