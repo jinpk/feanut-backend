@@ -38,9 +38,9 @@ import {
   POLLING_ERROR_NOT_AUTHORIZED,
   POLLING_ERROR_ALREADY_DONE,
   MAX_DAILY_COUNT,
-  POLLING_ERROR_EMPTY_BODY
+  POLLING_ERROR_EMPTY_BODY,
 } from './pollings.constant';
-import { MyPollingStatsDto } from './dtos/pollingstatus.dto';
+import { PollingStatsDto } from './dtos/pollingstatus.dto';
 
 @ApiTags('Polling')
 @Controller('pollings')
@@ -59,16 +59,16 @@ export class PollingsController {
     return await this.pollingsService.findListPolling(query);
   }*/
 
-  @Get('stats')
+  @Get(':profileId/stats/byprofile')
   @ApiOperation({
-    summary: '내 투표 참여/수신 카운트 조회',
+    summary: '투표 참여/수신 카운트 조회',
   })
   @ApiOkResponse({
     status: 200,
-    type: MyPollingStatsDto
+    type: PollingStatsDto,
   })
-  async getMyPollingStats(@Request() req) {
-    return await this.pollingsService.findMyPollingStats(req.user.id);
+  async getPollingStats(@Request() req, @Param('profileId') profileId: string) {
+    return await this.pollingsService.findPollingStats(profileId);
   }
 
   @Get('receive')
@@ -133,7 +133,8 @@ export class PollingsController {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_AUTHORIZED,
-        '권한이 없습니다.').unauthorized();
+        '권한이 없습니다.',
+      ).unauthorized();
     }
 
     const dto = this.pollingsService.pollingToDto(polling);
@@ -242,12 +243,12 @@ export class PollingsController {
     @Body() body: UpdatePollingDto,
     @Request() req,
   ) {
-    if ((!body.selectedProfileId) && (!body.skipped)){
+    if (!body.selectedProfileId && !body.skipped) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_EMPTY_BODY,
-        '친구 혹은 건너뛰기 중 하나를 선택해주세요.'
-      ).badRequest();      
+        '친구 혹은 건너뛰기 중 하나를 선택해주세요.',
+      ).badRequest();
     }
 
     const exist = await this.pollingsService.existPollingById(pollingId);
@@ -255,14 +256,14 @@ export class PollingsController {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_AUTHORIZED,
-        ).reject();
+      ).reject();
     }
 
-    if ((exist.selectedProfileId) || (exist.skipped)){
+    if (exist.selectedProfileId || exist.skipped) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_ALREADY_DONE,
-      ).reject();      
+      ).reject();
     }
 
     return await this.pollingsService.updatePollingResult(

@@ -43,7 +43,7 @@ import {
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PollingVotedEvent } from './events';
-import { MyPollingStatsDto } from './dtos/pollingstatus.dto';
+import { PollingStatsDto } from './dtos/pollingstatus.dto';
 
 @Injectable()
 export class PollingsService {
@@ -60,24 +60,21 @@ export class PollingsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async findMyPollingStats(user_id: string): Promise<MyPollingStatsDto> {
-    const profile = await this.profilesService.getByUserId(user_id);
-    if(!profile){
-    }
-
+  async findPollingStats(profileId: string): Promise<PollingStatsDto> {
+    const ownerId = await this.profilesService.getOwnerIdById(profileId);
     const pollsCount = await this.pollingModel
       .find({
-        userId: new Types.ObjectId(user_id),
+        userId: ownerId,
       })
       .count();
 
     const pullsCount = await this.pollingModel
       .find({
-        selectedProfileId: profile._id,
+        selectedProfileId: new Types.ObjectId(profileId),
       })
       .count();
 
-    const status: MyPollingStatsDto = {
+    const status: PollingStatsDto = {
       pollsCount: pollsCount,
       pullsCount: pullsCount,
     };
