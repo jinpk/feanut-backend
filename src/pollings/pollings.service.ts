@@ -60,7 +60,7 @@ export class PollingsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async findFeanutCard(profileId: Object): Promise<FeanutCardDto> {
+  async findFeanutCard(profileId: string): Promise<FeanutCardDto> {
     var myCard = new FeanutCardDto();
     myCard.joy = 0;
     myCard.gratitude = 0;
@@ -74,7 +74,7 @@ export class PollingsService {
     myCard.love = 0;
 
     const filter: FilterQuery<PollingDocument> = {
-      selectedProfileId: profileId,
+      selectedProfileId: new Types.ObjectId(profileId),
     };
 
     const lookups: PipelineStage[] = [
