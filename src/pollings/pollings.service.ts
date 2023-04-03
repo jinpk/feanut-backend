@@ -364,15 +364,21 @@ export class PollingsService {
       prevFriend.push(arr);
     }
 
+    let friendTempArr: any[] = []
     const friendList = await this.friendShipsService.listFriend(user_id);
-    const temp_arr = friendList.data
+
+    // 친구 수 12명 이하이면 slice없이 셔플.(리프레쉬 횟수 3회 이므로.)
+    if (friendList.data.length <= 12) {
+    } else {
+      friendTempArr = friendList.data
       .filter((friend) => !prevFriend.includes(friend.profileId))
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
+    }
 
     // polling friendlist 갱신
     const newIds = [];
-    for (const friend of temp_arr) {
+    for (const friend of friendTempArr) {
       newIds.push(new Types.ObjectId(friend.profileId));
     }
     polling.friendIds.push(newIds);
