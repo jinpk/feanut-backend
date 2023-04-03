@@ -40,18 +40,12 @@ export class FirebaseService {
             title: params.title,
             body: params.message,
           },
-          data: {
-            title: params.title,
-            body: params.message,
-            ...params.payload,
-          },
+          data: { ...params.payload },
         })),
       )
       .then((res) => {
         this.logger.log(
-          `Firebase Messaing successfully sent: ${res.responses
-            .map((x) => x.messageId)
-            .join(', ')}`,
+          `Firebase Messaing successfully sent: ${JSON.stringify(res)}$`,
         );
       })
       .catch((error) => {

@@ -69,10 +69,11 @@ export class NotificationsService {
 
   async getListNotificationUsers() {
     const users = await this.notificationUserConfigModel.aggregate([
-      { $match: {
-        receivePoll: true,
-        fcmToken: {$ne: null},
-        } 
+      {
+        $match: {
+          receivePoll: true,
+          fcmToken: { $ne: null },
+        },
       },
       {
         $project: {
@@ -81,7 +82,7 @@ export class NotificationsService {
           createdAt: 0,
           updatedAt: 0,
           __v: 0,
-        }
+        },
       },
       {
         $lookup: {
@@ -91,18 +92,18 @@ export class NotificationsService {
             {
               $match: {
                 $expr: {
-                  $eq: ['$userId', '$$user_id']
-                }
-              }
+                  $eq: ['$userId', '$$user_id'],
+                },
+              },
             },
             {
-              $sort: {createdAt: -1}
+              $sort: { createdAt: -1 },
             },
             {
-              $limit: 1
+              $limit: 1,
             },
           ],
-          as: 'userrounds'
+          as: 'userrounds',
         },
       },
       {
@@ -119,17 +120,19 @@ export class NotificationsService {
             {
               $match: {
                 $expr: {
-                  $eq: ['$_id', '$$round_id']
-                }
-              }
+                  $eq: ['$_id', '$$round_id'],
+                },
+              },
             },
             {
               $project: {
-                _id: 0, userId: 0, title: 0
-              }
-            }
+                _id: 0,
+                userId: 0,
+                title: 0,
+              },
+            },
           ],
-          as: 'round'
+          as: 'round',
         },
       },
       {
@@ -150,9 +153,9 @@ export class NotificationsService {
           'round.createdAt': 0,
           'round.updatedAt': 0,
           'round.__v': 0,
-          'userrounds': 0,
-        }
-      }
+          userrounds: 0,
+        },
+      },
     ]);
 
     let rounds = await this.pollsService.findAllActiveEventRound();
@@ -161,37 +164,41 @@ export class NotificationsService {
       for (let i = 0; i < rounds.eventRound.length; i++) {
         if (user.round) {
           if (user.round.index == rounds.eventRound[i].index) {
-            if (i == 0){
+            if (i == 0) {
             } else {
-              user.round.title = rounds.eventRound[i - 1].title;    
+              user.round.title = rounds.eventRound[i - 1].title;
             }
           }
         } else {
-          user['round'] = {title: rounds.eventRound[rounds.eventRound.length - 1].title};
+          user['round'] = {
+            title: rounds.eventRound[rounds.eventRound.length - 1].title,
+          };
           break;
         }
       }
 
-      if (user.round.title){
+      if (user.round.title) {
       } else {
         for (let i = 0; i < rounds.normalRound.length; i++) {
           if (user.round.index) {
             if (user.round.index == rounds.eventRound[i].index) {
-              if (i == rounds.normalRound.length -1){
+              if (i == rounds.normalRound.length - 1) {
                 user.round.title = rounds.normalRound[0].title;
               } else {
                 user.round.title = rounds.normalRound[i + 1].title;
               }
             }
           } else {
-            user['round'] = {title: rounds.eventRound[rounds.eventRound.length - 1].title};
+            user['round'] = {
+              title: rounds.eventRound[rounds.eventRound.length - 1].title,
+            };
             break;
           }
         }
       }
     }
 
-    return users
+    return users;
   }
 
   async sendInboxPull(
@@ -204,13 +211,13 @@ export class NotificationsService {
       const userConfig = await this.getNotificationUserConfig(profile.ownerId);
       if (userConfig && userConfig.fcmToken && userConfig.receivePull) {
         const poll = await this.pollsService.findPollById(pollId);
-        await this.firebaseService.sendPush({
+        this.firebaseService.sendPush({
           tokens: [userConfig.fcmToken],
           title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
           message: poll.contentText,
           payload: {
-            pollId,
-            pollingId,
+            action: 'pull',
+            value: pollingId,
           },
         });
       }
