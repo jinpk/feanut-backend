@@ -28,28 +28,30 @@ export class IAPValidatorProvider {
   }
 
   async validateGooglePurchase(
-    product_id: string,
-    token: string,
+    productId: string,
+    purchaseToken: string,
   ): Promise<void> {
     const googleReceiptVerify = new GoogleReceiptVerify({
       email: this.email,
       key: this.playKey,
     });
 
-    googleReceiptVerify.verifyINAPP;
     const response = await googleReceiptVerify.verifyINAPP({
       packageName: ANDROID_PACKAGE_NAME,
-      productId: product_id,
-      purchaseToken: token,
+      productId: productId,
+      purchaseToken: purchaseToken,
     });
 
     if (!response?.isSuccessful) {
       throw new Error(response.errorMessage);
     }
+
+    this.logger.log(
+      `Google Playstore IAP Verification Response: ${JSON.stringify(response)}`,
+    );
   }
 
   async validateIOSPurchase(receipt: string): Promise<void> {
-    console.log(this.itunesVerifyURL, this.appStoreKey, receipt);
     const res = await this.httpService.axiosRef.post<ItunesValidationResponse>(
       this.itunesVerifyURL,
       {

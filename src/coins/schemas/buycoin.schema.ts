@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, now } from 'mongoose';
+import { OS } from 'src/common/enums';
 import { BUYCOIN_NAME } from '../coins.constant';
 
 export type BuyCoinDocument = HydratedDocument<BuyCoin>;
@@ -15,9 +16,12 @@ export class BuyCoin {
   @Prop({})
   productId: string;
 
-  // token
+  // receipt
   @Prop({})
-  purchaseReceipt: string;
+  receipt: string;
+
+  @Prop({ enum: OS })
+  os: OS;
 
   // 생성시간
   @Prop({})

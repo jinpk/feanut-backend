@@ -1,13 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  now,
-  FilterQuery,
-  Model,
-  PipelineStage,
-  ProjectionFields,
-  Types,
-} from 'mongoose';
+import { now, FilterQuery, Model, ProjectionFields, Types } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { CoinDto, PurchaseCoinDto, UseCoinDto } from './dtos';
 import { Coin, CoinDocument } from './schemas/coin.schema';
@@ -21,6 +14,7 @@ import { IAP_PURCHASE_ITEM_AMOUNT_MAP } from './coins.constant';
 
 @Injectable()
 export class CoinsService {
+  private readonly logger = new Logger(CoinsService.name);
   constructor(
     @InjectModel(Coin.name) private coinModel: Model<CoinDocument>,
     @InjectModel(BuyCoin.name) private buycoinModel: Model<BuyCoinDocument>,
@@ -29,8 +23,8 @@ export class CoinsService {
     private utilsService: UtilsService,
   ) {}
 
-  async findUserCoin(user_id: string): Promise<CoinDto> {
-    const result = await this.coinModel.findOne({ userId: user_id });
+  async findUserCoin(userId: string): Promise<CoinDto> {
+    const result = await this.coinModel.findOne({ userId: userId });
 
     return this.docToDto(result);
   }
@@ -91,26 +85,36 @@ export class CoinsService {
     };
   }
 
-  async createBuyCoin(user_id: string, body: PurchaseCoinDto) {
+  async createBuyCoin(userId: string, body: PurchaseCoinDto) {
     const amount = IAP_PURCHASE_ITEM_AMOUNT_MAP[body.productId];
     if (!amount) {
       throw new Error('유효하지 않은 productId 입니다.');
     }
 
-    if (body.os === 'ios') {
-      await this.iapValidatorProvider.validateIOSPurchase(body.receipt);
-    } else {
-      console.log(body.receipt);
-      throw new Error('안드로이드는 아직 지원하지 않습니다.');
-      await this.iapValidatorProvider.validateGooglePurchase(
-        body.productId,
-        body.receipt,
-      );
+    this.logger.log(JSON.stringify(body));
+
+    try {
+      if (body.os === 'ios') {
+        await this.iapValidatorProvider.validateIOSPurchase(body.receipt);
+      } else {
+        const { purchaseToken } = JSON.parse(body.receipt);
+        await this.iapValidatorProvider.validateGooglePurchase(
+          body.productId,
+          purchaseToken,
+        );
+      }
+    } catch (error: any) {
+      this.logger.error(error);
     }
 
-    const result = await new this.buycoinModel(body).save();
+    const result = await new this.buycoinModel({
+      userId: userId,
+      os: body.os,
+      productId: body.productId,
+      receipt: body.receipt,
+    }).save();
 
-    await this.updateCoinAccum(user_id, amount);
+    await this.updateCoinAccum(userId, amount);
     return result._id.toString();
   }
 
@@ -121,16 +125,16 @@ export class CoinsService {
     return result._id;
   }
 
-  async createCoin(user_id: string) {
+  async createCoin(userId: string) {
     await new this.coinModel({
-      userId: user_id,
+      userId: userId,
       total: 0,
       accumLogs: [0],
     }).save();
   }
 
-  async updateCoinAccum(user_id: string, amount: number) {
-    const usercoin = await this.coinModel.findOne({ userId: user_id });
+  async updateCoinAccum(userId: string, amount: number) {
+    const usercoin = await this.coinModel.findOne({ userId: userId });
     usercoin.accumLogs.push(amount);
 
     let total = 0;
@@ -143,11 +147,11 @@ export class CoinsService {
     return usercoin.save();
   }
 
-  async updateCoin(coin_id, user_id: string, body: UpdateCoinDto) {
+  async updateCoin(coin_id, userId: string, body: UpdateCoinDto) {
     const result = await this.coinModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(coin_id),
-        userId: user_id,
+        userId: userId,
       },
       {
         $set: { body, updatedAt: now() },
@@ -156,10 +160,10 @@ export class CoinsService {
     return result._id.toString();
   }
 
-  async getCoinById(coin_id, user_id: string) {
+  async getCoinById(coin_id, userId: string) {
     const result = await this.coinModel.findOne({
       _id: new Types.ObjectId(coin_id),
-      userId: user_id,
+      userId: userId,
     });
     return result;
   }
