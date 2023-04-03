@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { now } from 'mongoose';
 import { OS } from 'src/common/enums';
 import { UseType } from '../enums/usetype.enum';
 

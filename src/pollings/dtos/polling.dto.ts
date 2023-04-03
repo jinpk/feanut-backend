@@ -1,6 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Types } from 'mongoose';
-import { UseCoinDto } from 'src/coins/dtos/coin.dto';
 import { FriendDto } from 'src/friendships/dtos';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 
