@@ -930,12 +930,12 @@ export class PollingsService {
       },
       {
         $project: {
-          'voter._id': 0,
           'voter.phoneNumber': 0,
           'voter.birth': 0,
           'voter.ownerId': 0,
           'voter.__v': 0,
           'voter.createdAt': 0,
+          'voter.statusMessage': 0,
           'voter.updatedAt': 0,
         },
       },
@@ -1006,8 +1006,11 @@ export class PollingsService {
       mergedList.push(temp);
 
       v.voter.imageFileKey = null;
+      v.voter.profileId = v.voter._id;
+      delete v.voter._id;
       if (!v.isOpened) {
         v.voter.name = null;
+        delete v.voter.profileId;
       } else {
         if (v.voter.imageFileId) {
           v.voter.imageFileKey = v.files.key;
