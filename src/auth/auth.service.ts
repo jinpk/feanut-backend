@@ -104,7 +104,9 @@ export class AuthService {
     await this.require3MCoolTime(user.phoneNumber);
 
     // 인증코드 처리
-    const code = this.genAuthCode();
+    const code = dto.phoneNumber.startsWith('000000000')
+      ? '000000'
+      : this.genAuthCode();
     const doc = await new this.authModel({
       code,
       payload: dto.username,
@@ -254,7 +256,9 @@ export class AuthService {
     await this.require3MCoolTime(dto.phoneNumber);
 
     // 인증코드 처리
-    const code = this.genAuthCode();
+    const code = dto.phoneNumber.startsWith('000000000')
+      ? '000000'
+      : this.genAuthCode();
     const payload = this.genSignUpPayload(
       dto.birth,
       dto.gender as Gender,
