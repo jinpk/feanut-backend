@@ -7,7 +7,6 @@ export class UserCreatedEvent {
     private _name: string,
     private _phoneNumber: string,
     private _gender: Gender,
-    private _birth: string,
   ) {}
 
   get userId() {
@@ -21,8 +20,5 @@ export class UserCreatedEvent {
   }
   get gender() {
     return this._gender;
-  }
-  get birth() {
-    return this._birth;
   }
 }

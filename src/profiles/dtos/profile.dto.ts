@@ -11,9 +11,6 @@ export class ProfileDto {
   @ApiProperty({ description: '성별', enum: Gender })
   gender: Gender;
 
-  @ApiProperty({ description: '생년월일' })
-  birth: string;
-
   @ApiProperty({ title: '상태메시지' })
   statusMessage: string;
 

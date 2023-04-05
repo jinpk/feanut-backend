@@ -1,5 +1,6 @@
 export const FilePurpose = {
   ProfileImage: 'profileimage',
+  Emoji: 'emoji',
 } as const;
 export type FilePurpose = (typeof FilePurpose)[keyof typeof FilePurpose];
 

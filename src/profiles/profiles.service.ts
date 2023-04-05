@@ -47,10 +47,9 @@ export class ProfilesService {
     ownerId: Types.ObjectId,
     name?: string,
     gender?: Gender,
-    birth?: string,
   ) {
     await this.profileModel.findByIdAndUpdate(profileId, {
-      $set: { ownerId, name: name || '', gender, birth },
+      $set: { ownerId, name: name || '', gender },
     });
   }
 
@@ -123,13 +122,11 @@ export class ProfilesService {
     phoneNumber: string,
     name?: string,
     gender?: Gender,
-    birth?: string,
   ): Promise<string> {
     const doc = await new this.profileModel({
       ownerId,
       name,
       gender,
-      birth,
       phoneNumber,
     }).save();
     const id = doc._id.toHexString();
@@ -213,7 +210,6 @@ export class ProfilesService {
   docToDto(doc: Profile | ProfileDocument): ProfileDto {
     const dto = new ProfileDto();
     dto.id = doc._id.toHexString();
-    dto.birth = doc.birth || null;
     dto.gender = doc.gender || null;
     dto.name = doc.name || '';
     dto.statusMessage = doc.statusMessage || '';

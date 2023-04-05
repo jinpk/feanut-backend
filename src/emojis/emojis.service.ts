@@ -30,7 +30,10 @@ export class EmojisService {
   async createEmoji(body: CreateEmojiDto) {
     const result = await new this.emojiModel({
       fileId: new Types.ObjectId(body.fileId),
+      name: body.name,
     }).save();
+
+    await this.filesService.updateUploadedState(body.fileId);
 
     return result._id.toString();
   }

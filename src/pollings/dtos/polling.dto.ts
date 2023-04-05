@@ -71,10 +71,7 @@ export class PollingResultDto {
   roundEvent: PollRoundEventDto;
 }
 
-export class PollingFriendDto extends OmitType(FriendDto, [
-  'username',
-  'hidden',
-]) {}
+export class PollingFriendDto extends OmitType(FriendDto, ['hidden']) {}
 
 export class ReceivePollingDto {
   @ApiProperty({})

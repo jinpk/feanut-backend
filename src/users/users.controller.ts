@@ -3,7 +3,6 @@ import {
   Delete,
   Get,
   NotFoundException,
-  Param,
   Query,
   Req,
 } from '@nestjs/common';
@@ -14,7 +13,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Public } from 'src/auth/decorators';
 import { WrappedError } from 'src/common/errors';
 import { UserDto } from './dtos';
 import { USER_MODULE_NAME } from './users.constant';
@@ -69,21 +67,5 @@ export class UsersController {
       throw new NotFoundException('');
     }
     return await this.usersService._userDocToDto(user);
-  }
-}
-
-@ApiTags('User')
-@Controller('users')
-export class UsersPublicController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Get('existence/by/username/:username')
-  @Public()
-  @ApiOperation({
-    summary: '사용자 조회 By Username',
-  })
-  @ApiResponse({ type: Boolean })
-  async existence(@Param('username') username: string): Promise<boolean> {
-    return await this.usersService.hasUsername(username);
   }
 }

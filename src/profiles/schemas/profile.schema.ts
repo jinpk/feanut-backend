@@ -20,11 +20,6 @@ export class Profile {
   @Prop({})
   name?: string;
 
-  // 생년월일
-  // format: YYYYMMDD
-  @Prop({ maxlength: 8 })
-  birth?: string;
-
   // 성별
   @Prop({ enum: Gender })
   gender?: Gender;

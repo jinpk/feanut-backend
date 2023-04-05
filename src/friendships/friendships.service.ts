@@ -239,13 +239,6 @@ export class FriendshipsService {
               options: 'i',
             },
           },
-          {
-            $regexMatch: {
-              input: '$user.username',
-              regex: params.keyword,
-              options: 'i',
-            },
-          },
         ],
       },
     };
@@ -270,7 +263,6 @@ export class FriendshipsService {
         $ifNull: ['$profile.name', '$friends.name'],
       },
       gender: '$profile.gender',
-      username: '$user.username',
       profileImageKey: '$file.key',
     };
 

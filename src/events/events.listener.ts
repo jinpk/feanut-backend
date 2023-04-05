@@ -35,7 +35,6 @@ export class EventsListener {
           event.userId,
           event.name,
           event.gender,
-          event.birth,
         );
       } else {
         await this.profilesService.create(
@@ -43,7 +42,6 @@ export class EventsListener {
           event.phoneNumber,
           event.name,
           event.gender,
-          event.birth,
         );
       }
 
