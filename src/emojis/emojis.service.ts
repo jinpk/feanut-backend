@@ -32,6 +32,8 @@ export class EmojisService {
       fileId: new Types.ObjectId(body.fileId),
     }).save();
 
+    await this.filesService.updateUploadedState(body.fileId);
+
     return result._id.toString();
   }
 
