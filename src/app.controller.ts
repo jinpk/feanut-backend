@@ -6,22 +6,17 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
-import {
-  AUTH_ERROR_NOT_FOUND_USERNAME,
-  INSTAGRAM_AUTH_REDIRECT_PATH,
-} from './auth/auth.constant';
+import { INSTAGRAM_AUTH_REDIRECT_PATH } from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
 import { Public } from './auth/decorators';
 import {
-  AdminLoginDto,
   TokenDto,
   SignUpDto,
   SignUpVerificationDto,
-  LoginDto,
-  ResetPasswordDto,
-  ResetPasswordVerificationDto,
-  ResetPasswordVerificationCodeDto,
   RefreshTokenDto,
+  AuthDto,
+  SignInDto,
+  SignInVerificationDto,
 } from './auth/dtos';
 
 @Controller()
@@ -31,6 +26,7 @@ export class AppController {
     private readonly configService: ConfigService,
   ) {}
 
+  /** 인스타그램 */
   @Get(`${INSTAGRAM_AUTH_REDIRECT_PATH}/success`)
   @Public()
   @ApiOperation({
@@ -60,6 +56,7 @@ export class AppController {
     );
   }
 
+  /** 토큰 */
   @Post('token')
   @Public()
   @ApiOperation({
@@ -70,43 +67,37 @@ export class AppController {
     return await this.authService.validateRefreshToken(body.refreshToken);
   }
 
-  @Post('signin/admin')
+  /** 로그인 */
+  @Post('signin/verification')
   @Public()
   @ApiOperation({
-    summary: '관리자 로그인',
+    summary: '로그인 인증코드 전송 요청',
   })
-  @ApiBody({
-    type: AdminLoginDto,
-  })
-  @ApiOkResponse({
-    type: TokenDto,
-  })
-  async adminLogin(@Body() body: AdminLoginDto) {
-    return this.authService.adminLogin(body);
+  @ApiOkResponse({ type: AuthDto })
+  async signInVerification(@Body() body: SignInVerificationDto) {
+    return await this.authService.signInVerification(body);
   }
 
   @Post('signin')
   @Public()
   @ApiOperation({
-    summary: 'feanutID로 로그인',
-    description: `존재하지 않는 ID는 status: 404(Not Found), code: ${AUTH_ERROR_NOT_FOUND_USERNAME} 응답`,
+    summary: '로그인',
   })
-  @ApiBody({ type: LoginDto })
-  @ApiOkResponse({ type: TokenDto })
-  async signin(@Body() body: LoginDto) {
-    const sub = await this.authService.validate(body.username, body.password);
-    return await this.authService.userLogin(sub);
+  @ApiCreatedResponse({ type: TokenDto })
+  async signIn(@Body() body: SignInDto) {
+    return await this.authService.signIn(body);
   }
 
+  /** 회원가입 */
   @Post('signup/verification')
   @Public()
   @ApiOperation({
     summary: '회원가입 인증코드 전송(요청)',
-    description: `feanutID로 가입 진행 가능한 경우 phoneNumber로 인증코드 발송됨.
+    description: `phoneNumber로 인증코드 발송됨.
     \nresponse된 authId와 사용자가 입력한 인증코드를 입력하여 /signup API 호출필요
   `,
   })
-  @ApiOkResponse({ type: String, description: 'authId' })
+  @ApiOkResponse({ type: AuthDto })
   async signUpVerification(@Body() body: SignUpVerificationDto) {
     return await this.authService.signUpVerification(body);
   }
@@ -121,38 +112,6 @@ export class AppController {
   @ApiCreatedResponse({ type: TokenDto })
   async signUp(@Body() body: SignUpDto) {
     return await this.authService.signUp(body);
-  }
-
-  @Post('resetpassword/verification/code')
-  @Public()
-  @ApiOperation({
-    summary: '비밀번호 재설정 인증코드 검증',
-  })
-  @ApiOkResponse({ type: String, description: 'authId' })
-  async resetPasswordVerificationCode(
-    @Body() body: ResetPasswordVerificationCodeDto,
-  ) {
-    return await this.authService.resetPasswordVerificationCode(body);
-  }
-
-  @Post('resetpassword/verification')
-  @Public()
-  @ApiOperation({
-    summary: '비밀번호 재설정 인증코드 전송(요청)',
-  })
-  @ApiOkResponse({ type: String, description: 'authId' })
-  async resetPasswordVerification(@Body() body: ResetPasswordVerificationDto) {
-    return await this.authService.resetPasswordVerification(body);
-  }
-
-  @Post('resetpassword')
-  @Public()
-  @ApiOperation({
-    summary: '비밀번호 재설정 (완료)',
-    description: `인증코드 전송(요청)에서 입력했던 feanutId의 비밀번호가 변경됩니다.`,
-  })
-  async resetPassword(@Body() body: ResetPasswordDto) {
-    return await this.authService.resetPassword(body);
   }
 
   @Get()

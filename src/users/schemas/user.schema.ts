@@ -10,14 +10,7 @@ export class User {
   // pk
   _id?: Types.ObjectId;
 
-  // feanut ID
-  // 전역으로 unique
-  @Prop({ lowercase: true, unique: true })
-  username: string;
-
-  @Prop({})
-  password?: string;
-
+  // isDeleted: fals중 unique
   @Prop({})
   phoneNumber: string;
 

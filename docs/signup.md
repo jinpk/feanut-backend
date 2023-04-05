@@ -7,7 +7,6 @@
 - feanutID
 - gender
 - name
-- birth
 
 3. 위 정보를 담아서 휴대폰 인증코드 발송
 

@@ -11,9 +11,6 @@ export class FriendDto {
   @ApiProperty({ title: '친구 이름' })
   name: string;
 
-  @ApiProperty({ title: '친구 feanut ID' })
-  username?: string;
-
   @ApiProperty({ title: '친구 숨김 여부' })
   hidden?: string;
 

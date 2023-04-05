@@ -1,16 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumberString, Length } from 'class-validator';
-import { Gender } from 'src/profiles/enums';
+import { IsNotEmpty, IsNumberString, Length } from 'class-validator';
 
-export class SignUpVerificationDto {
-  @ApiProperty({ title: '이름' })
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty({ title: '성별', enum: Gender })
-  @IsEnum(Gender)
-  gender: Gender;
-
+export class SignInVerificationDto {
   @ApiProperty({ title: '휴대폰번호', description: '-없이 숫자만 11자리' })
   @IsNotEmpty()
   @IsNumberString()
@@ -18,7 +9,7 @@ export class SignUpVerificationDto {
   phoneNumber: string;
 }
 
-export class SignUpDto {
+export class SignInDto {
   @ApiProperty({ title: 'authId' })
   @IsNotEmpty()
   authId: string;

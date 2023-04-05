@@ -6,29 +6,24 @@ import { Auth, AuthDocument } from './schemas/auth.schema';
 import * as dayjs from 'dayjs';
 import { InjectModel } from '@nestjs/mongoose';
 import {
-  AdminLoginDto,
   TokenDto,
   SignUpVerificationDto,
   SignUpDto,
-  ResetPasswordVerificationDto,
-  ResetPasswordDto,
-  ResetPasswordVerificationCodeDto,
+  AuthDto,
+  SignInVerificationDto,
+  SignInDto,
 } from './dtos';
-import { AdminService } from 'src/admin/admin.service';
 import { WrappedError } from 'src/common/errors';
 import {
   AUTH_ERROR_COOL_TIME,
   AUTH_ERROR_EXIST_PHONE_NUMBER,
-  AUTH_ERROR_EXIST_USERNAME,
   AUTH_ERROR_INVALID_CODE,
-  AUTH_ERROR_INVALID_LOGIN,
+  AUTH_ERROR_NOT_FOUND_PHONE_NUMBER,
   AUTH_ERROR_NOT_FOUND_USER,
-  AUTH_ERROR_NOT_FOUND_USERNAME,
   AUTH_ERROR_VERIFICATION_TIMEOUT,
   AUTH_MODULE_NAME,
 } from './auth.constant';
 import { Gender } from 'src/profiles/enums';
-import * as bcrypt from 'bcrypt';
 import { AuthPurpose } from './enums';
 import { AligoProvider, InstagramProvider } from './providers';
 import { ProfilesService } from 'src/profiles/profiles.service';
@@ -41,7 +36,6 @@ export class AuthService {
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private usersService: UsersService,
     private jwtService: JwtService,
-    private adminService: AdminService,
     private aligoProvider: AligoProvider,
     private instagramProvider: InstagramProvider,
     private profilesService: ProfilesService,
@@ -84,122 +78,6 @@ export class AuthService {
     return this.userLogin(user._id.toHexString());
   }
 
-  // 비밀번호 초기화 인증 요청
-  async resetPasswordVerification(
-    dto: ResetPasswordVerificationDto,
-  ): Promise<string> {
-    const user = await this.usersService.findActiveUserOne({
-      username: dto.username,
-      phoneNumber: dto.phoneNumber,
-    });
-
-    if (!user) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_NOT_FOUND_USER,
-      ).reject();
-    }
-
-    // 3분 쿨타임
-    await this.require3MCoolTime(user.phoneNumber);
-
-    // 인증코드 처리
-    const code = dto.phoneNumber.startsWith('000000000')
-      ? '000000'
-      : this.genAuthCode();
-    const doc = await new this.authModel({
-      code,
-      payload: dto.username,
-      purpose: AuthPurpose.ResetPassword,
-      phoneNumber: user.phoneNumber,
-    }).save();
-
-    // 인증코드 전송
-    this.sendResetPasswordSMS(dto.phoneNumber, code);
-
-    return doc._id.toHexString();
-  }
-
-  // 비밀번호 초기화 인증코드 검증
-  async resetPasswordVerificationCode(dto: ResetPasswordVerificationCodeDto) {
-    const auth = await this.authModel.findById(dto.authId);
-    // 이미 인증했으면 reject
-    if (!auth || auth.verified) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
-    }
-
-    if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_VERIFICATION_TIMEOUT,
-      ).reject();
-    }
-
-    if (dto.code !== auth.code) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_INVALID_CODE,
-      ).badRequest();
-    }
-
-    auth.verified = true;
-    await auth.save();
-  }
-
-  // 비밀번호 초기화
-  async resetPassword(dto: ResetPasswordDto) {
-    const auth = await this.authModel.findById(dto.authId);
-    // 검증되지 않았거나 이미 사용한 인증은 reject
-    if (!auth || !auth.verified || auth.used) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
-    }
-
-    if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_VERIFICATION_TIMEOUT,
-      ).reject();
-    }
-
-    const user = await this.usersService.findActiveUserOne({
-      username: auth.payload,
-    });
-    await this.usersService.updatePasswordById(user._id, dto.password);
-
-    auth.used = true;
-    auth.usedAt = dayjs().toDate();
-    await auth.save();
-  }
-
-  // 로그인
-  async validate(username: string, password: string): Promise<string> {
-    // 아이디 검증
-    if (!(await this.usersService.hasUsername(username))) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_NOT_FOUND_USERNAME,
-      ).notFound();
-    }
-
-    const user = await this.usersService.findActiveUserOne({
-      username,
-    });
-
-    // 비밀번호 검증
-    if (
-      !user ||
-      !user.password ||
-      !this.comparePassword(password, user.password)
-    ) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_INVALID_LOGIN,
-      ).reject();
-    }
-
-    return user._id.toHexString();
-  }
-
   // 사용자 로그인후 토큰 발급
   async userLogin(sub: string): Promise<TokenDto> {
     const payload = {
@@ -217,29 +95,78 @@ export class AuthService {
     };
   }
 
-  // 관리자 로그인
-  async adminLogin(body: AdminLoginDto): Promise<TokenDto> {
-    const sub = await this.adminService.validateAdmin(
-      body.username,
-      body.password,
-    );
-    const payload = { sub, isAdmin: true };
-    return {
-      accessToken: this.genToken(payload, '1d'),
-      refreshToken: '',
-    };
+  // 로그인 인증 요청
+  async signInVerification(dto: SignInVerificationDto): Promise<AuthDto> {
+    const user = await this.usersService.findActiveUserOne({
+      phoneNumber: dto.phoneNumber,
+    });
+
+    if (!user) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_PHONE_NUMBER,
+      ).notFound();
+    }
+
+    // 3분 쿨타임
+    await this.require3MCoolTime(dto.phoneNumber);
+
+    // 인증코드 처리
+    const code = dto.phoneNumber.startsWith('000000000')
+      ? '000000'
+      : this.genAuthCode();
+
+    const doc = await new this.authModel({
+      code,
+      payload: user._id.toHexString(),
+      purpose: AuthPurpose.SignIn,
+      phoneNumber: dto.phoneNumber,
+    }).save();
+
+    // 인증코드 전송
+    this.sendLoginSMS(dto.phoneNumber, code);
+
+    return { authId: doc._id.toHexString() };
+  }
+
+  // 로그인
+  async signIn(dto: SignInDto) {
+    const auth = await this.authModel.findById(dto.authId);
+    if (!auth || auth.used) {
+      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    }
+
+    if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_VERIFICATION_TIMEOUT,
+      ).reject();
+    }
+
+    if (dto.code !== auth.code) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVALID_CODE,
+      ).badRequest();
+    }
+
+    const user = await this.usersService.findActiveUserById(auth.payload);
+    if (!user) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_USER,
+      ).reject();
+    }
+
+    auth.used = true;
+    auth.usedAt = dayjs().toDate();
+    auth.save();
+
+    return await this.userLogin(user._id.toHexString());
   }
 
   // 회원가입 인증 요청
-  async signUpVerification(dto: SignUpVerificationDto): Promise<string> {
-    // username 검증
-    if (await this.usersService.hasUsername(dto.username)) {
-      throw new WrappedError(
-        AUTH_MODULE_NAME,
-        AUTH_ERROR_EXIST_USERNAME,
-      ).alreadyExist();
-    }
-
+  async signUpVerification(dto: SignUpVerificationDto): Promise<AuthDto> {
     // 휴대폰번호 검증
     if (
       await this.usersService.findActiveUserOne({
@@ -259,12 +186,8 @@ export class AuthService {
     const code = dto.phoneNumber.startsWith('000000000')
       ? '000000'
       : this.genAuthCode();
-    const payload = this.genSignUpPayload(
-      dto.birth,
-      dto.gender as Gender,
-      dto.name,
-      dto.username,
-    );
+
+    const payload = this.genSignUpPayload(dto.name, dto.gender as Gender);
 
     const doc = await new this.authModel({
       code,
@@ -276,7 +199,7 @@ export class AuthService {
     // 인증코드 전송
     this.sendSignUpSMS(dto.phoneNumber, code);
 
-    return doc._id.toHexString();
+    return { authId: doc._id.toHexString() };
   }
 
   // 회원가입
@@ -302,20 +225,22 @@ export class AuthService {
 
     const payload = this.parseSignUpPayload(auth.payload);
 
-    // username 검증
-    if (await this.usersService.hasUsername(payload.username)) {
+    // 휴대폰번호 검증
+    if (
+      await this.usersService.findActiveUserOne({
+        phoneNumber: auth.phoneNumber,
+      })
+    ) {
       throw new WrappedError(
         AUTH_MODULE_NAME,
-        AUTH_ERROR_EXIST_USERNAME,
+        AUTH_ERROR_EXIST_PHONE_NUMBER,
       ).alreadyExist();
     }
 
     const sub = await this.usersService.create(
-      payload.username,
       auth.phoneNumber,
       payload.name,
       payload.gender,
-      payload.birth,
     );
 
     auth.used = true;
@@ -350,7 +275,6 @@ export class AuthService {
     });
   }
 
-  // no error handling
   async sendSignUpSMS(phoneNumber: string, code: string) {
     await this.aligoProvider.sendSMS(
       phoneNumber,
@@ -358,15 +282,11 @@ export class AuthService {
     );
   }
 
-  async sendResetPasswordSMS(phoneNumber: string, code: string) {
+  async sendLoginSMS(phoneNumber: string, code: string) {
     await this.aligoProvider.sendSMS(
       phoneNumber,
-      `[인증번호:${code}] feanut - 피넛 비밀번호 재설정 인증번호입니다.`,
+      `[인증번호:${code}] feanut - 피넛 로그인 인증번호입니다.`,
     );
-  }
-
-  comparePassword(input: string, hashed: string): boolean {
-    return bcrypt.compareSync(input, hashed);
   }
 
   genAuthCode(): string {
@@ -381,27 +301,18 @@ export class AuthService {
     return this.jwtService.sign(payload, { expiresIn });
   }
 
-  genSignUpPayload(
-    birth: string,
-    gender: Gender,
-    name: string,
-    username: string,
-  ) {
-    return `${username}\n${name}\n${birth}\n${gender}`;
+  genSignUpPayload(name: string, gender: Gender) {
+    return `${name}\n${gender}`;
   }
 
   parseSignUpPayload(payload: string): {
-    birth: string;
     gender: Gender;
     name: string;
-    username: string;
   } {
-    const [username, name, birth, gender] = payload.split('\n');
+    const [name, gender] = payload.split('\n');
     return {
-      birth,
-      gender: gender as Gender,
       name,
-      username,
+      gender: gender as Gender,
     };
   }
 }

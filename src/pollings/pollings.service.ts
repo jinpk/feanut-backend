@@ -954,7 +954,6 @@ export class PollingsService {
       {
         $project: {
           'voter.phoneNumber': 0,
-          'voter.birth': 0,
           'voter.ownerId': 0,
           'voter.__v': 0,
           'voter.createdAt': 0,

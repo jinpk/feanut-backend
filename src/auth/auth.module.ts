@@ -6,7 +6,6 @@ import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Auth, AuthSchema } from './schemas/auth.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { AdminModule } from 'src/admin/admin.module';
 import { AligoProvider } from './providers/aligo.provider';
 import { HttpModule } from '@nestjs/axios';
 import { InstagramProvider } from './providers';
@@ -23,7 +22,6 @@ import { ProfilesModule } from 'src/profiles/profiles.module';
     }),
     MongooseModule.forFeature([{ name: Auth.name, schema: AuthSchema }]),
     UsersModule,
-    AdminModule,
     ProfilesModule,
   ],
   providers: [AuthService, JwtStrategy, AligoProvider, InstagramProvider],
