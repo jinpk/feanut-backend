@@ -17,6 +17,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   AUTH_ERROR_COOL_TIME,
   AUTH_ERROR_EXIST_PHONE_NUMBER,
+  AUTH_ERROR_INVAILD_VERIFICATION,
   AUTH_ERROR_INVALID_CODE,
   AUTH_ERROR_NOT_FOUND_PHONE_NUMBER,
   AUTH_ERROR_NOT_FOUND_USER,
@@ -206,7 +207,10 @@ export class AuthService {
   async signUp(dto: SignUpDto) {
     const auth = await this.authModel.findById(dto.authId);
     if (!auth || auth.used) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVAILD_VERIFICATION,
+      ).reject();
     }
 
     if (dayjs(auth.createdAt).isBefore(dayjs().subtract(3, 'minutes'))) {
