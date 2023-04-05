@@ -167,6 +167,15 @@ export class PollingsService {
 
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
+
+    if (friendList.data.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        '활성화 된 친구를 4명 이상 추가해주세요.'
+      ).reject();
+    }
+
     const temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -366,6 +375,14 @@ export class PollingsService {
 
     let friendTempArr: any[] = []
     const friendList = await this.friendShipsService.listFriend(user_id);
+
+    if (friendList.data.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        '활성화 된 친구를 4명 이상 추가해주세요.'
+      ).reject();
+    }
 
     // 친구 수 12명 이하이면 slice없이 셔플.(리프레쉬 횟수 3회 이므로.)
     if (friendList.data.length <= 12) {
@@ -1218,7 +1235,7 @@ export class PollingsService {
       .sort({ createdAt: -1 });
 
     const friendList = await this.friendShipsService.listFriend(user_id);
-    if (friendList.total < 4) {
+    if (friendList.data.length < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_MIN_FRIENDS,
@@ -1297,18 +1314,17 @@ export class PollingsService {
     return this.userRoundToDto(result);
   }
 
-  async findRecentUserRound(user_id: string) {
-    const recent = await this.userroundModel
-      .findOne({
-        userId: new Types.ObjectId(user_id),
-      })
-      .sort({ createdAt: -1 });
-
-    return recent;
-  }
-
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
+
+    const friendList = await this.friendShipsService.listFriend(user_id);
+    if (friendList.data.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        null,
+      ).reject();
+    }
 
     const userrounds = await this.userroundModel.aggregate([
       {
