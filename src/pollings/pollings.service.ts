@@ -38,6 +38,7 @@ import {
   POLLING_ERROR_EXCEED_SKIP,
   POLLING_ERROR_NOT_FOUND_POLL,
   POLLING_ERROR_NOT_FOUND_USERROUND,
+  POLLING_ERROR_ROUNDEVENT_LOOKUP
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -353,7 +354,7 @@ export class PollingsService {
   ): Promise<Polling> {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
-
+    console.log(polling)
     // 3번째 친구 새로고침인지 확인
     if (!polling.refreshCount) {
       polling.refreshCount = 1;
@@ -373,7 +374,7 @@ export class PollingsService {
     for (const arr of polling.friendIds) {
       prevFriend.push(arr);
     }
-
+    console.log(prevFriend)
     let friendTempArr: any[] = [];
     const friendList = await this.friendShipsService.listFriend(user_id);
 
@@ -395,6 +396,7 @@ export class PollingsService {
         .filter((friend) => !prevFriend.includes(friend.profileId))
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
+      console.log(friendTempArr)
     }
 
     // polling friendlist 갱신
@@ -404,7 +406,7 @@ export class PollingsService {
     }
     polling.friendIds.push(newIds);
 
-    polling.save();
+    await polling.save();
 
     const filter: FilterQuery<PollingDocument> = {
       _id: polling._id,
@@ -1135,6 +1137,14 @@ export class PollingsService {
           },
         },
       ]);
+
+      if (round.length == 0) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_ROUNDEVENT_LOOKUP,
+          'roundevent lookup error',
+        ).reject();
+      }
 
       res.roundEvent = round[0].roundevent;
 
