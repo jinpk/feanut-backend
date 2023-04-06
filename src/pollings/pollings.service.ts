@@ -354,7 +354,7 @@ export class PollingsService {
   ): Promise<Polling> {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
-    console.log(polling)
+
     // 3번째 친구 새로고침인지 확인
     if (!polling.refreshCount) {
       polling.refreshCount = 1;
@@ -374,7 +374,7 @@ export class PollingsService {
     for (const arr of polling.friendIds) {
       prevFriend.push(arr);
     }
-    console.log(prevFriend)
+
     let friendTempArr: any[] = [];
     const friendList = await this.friendShipsService.listFriend(user_id);
 
@@ -396,7 +396,6 @@ export class PollingsService {
         .filter((friend) => !prevFriend.includes(friend.profileId))
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
-      console.log(friendTempArr)
     }
 
     // polling friendlist 갱신
@@ -1255,10 +1254,10 @@ export class PollingsService {
         null,
       ).reject();
     }
-    const rounds = await this.roundModel.find().sort({ index: 1 });
+    const rounds = await this.roundModel.find().sort({ index: 1});
 
     // 이벤트 라운드 체크
-    var eventRounds = [];
+    let eventRounds = [];
     eventRounds = rounds.filter((element) => element.startedAt);
 
     eventRounds.sort((prev, next) => {
@@ -1281,7 +1280,6 @@ export class PollingsService {
 
     var normalRounds = [];
     normalRounds = rounds.filter((element) => !element.startedAt);
-
     var nextRound = new Round();
     if (eventRounds.length > 0) {
       nextRound = eventRounds[0];
@@ -1295,12 +1293,12 @@ export class PollingsService {
       var currentRound = new Round();
       if (userrounds.length > 0) {
         for (let r of rounds) {
-          if (r._id == userrounds[0].roundId) {
+          if (r._id.toString() == userrounds[0].roundId.toString()) {
             currentRound = r;
           }
         }
         let filtered = normalRounds.filter(
-          (element) => element.index > currentRound.index,
+          (element) => (element.index > currentRound.index)
         );
         if (filtered.length > 0) {
           nextRound = filtered[0];
@@ -1392,7 +1390,7 @@ export class PollingsService {
         if (element.completedAt == null) {
           todayRounds.push(element);
         }
-        if (element.completedAt >= start && element.completedAt <= end) {
+        if ((element.completedAt >= start) && (element.completedAt <= end)) {
           todayRounds.push(element);
         }
       });
@@ -1404,6 +1402,7 @@ export class PollingsService {
           res.data = this.userRoundToDto(userrounds[0]);
         } else {
           const result = await this.createUserRound(user_id);
+          res.todayCount += 1;
           res.data = result;
         }
       } else if (res.todayCount < 3) {
@@ -1422,6 +1421,7 @@ export class PollingsService {
           if (timecheck < 0) {
             res.recentCompletedAt = userrounds[0].completedAt;
             const result = await this.createUserRound(user_id);
+            res.todayCount += 1;
             res.data = result;
           } else {
             res.data = this.userRoundToDto(userrounds[0]);
