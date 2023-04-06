@@ -47,6 +47,7 @@ export class PollsService {
 
     let pollroundevent = new PollRoundEvent();
     pollroundevent = {
+      name: '',
       message: body.message,
       subMessage: body.subMessage,
       markingText: body.markingText,
@@ -105,7 +106,7 @@ export class PollsService {
       round.pollRoundEventId = null;
     }
 
-    round.title = body.title;
+    //round.title = body.title;
     round.enabled = body.enabled;
     round.pollIds = body.pollIds;
 
@@ -304,7 +305,7 @@ export class PollsService {
   roundToDto(doc: Round | RoundDocument): ResRoundDto {
     const dto = new ResRoundDto();
     dto.id = doc._id.toHexString();
-    dto.title = doc.title;
+    //dto.title = doc.title;
     dto.index = doc.index;
     dto.enabled = doc.enabled;
     dto.pollRoundEventId = doc.pollRoundEventId.toHexString();

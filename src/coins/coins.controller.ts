@@ -49,7 +49,7 @@ export class CoinsController {
     return await this.coinsService.findUserCoin(req.user.id);
   }
 
-  @Get('usecoins')
+  /*@Get('usecoins')
   @ApiOperation({
     summary: '(ADMIN) 사용자 사용내역 조회',
     description: 'userId 미입력 시 전체조회',
@@ -63,7 +63,7 @@ export class CoinsController {
         'Not an Admin');
     }
     return await this.coinsService.findListUsecoin(query);
-  }
+  }*/
 
   @Get('buycoins')
   @ApiOperation({

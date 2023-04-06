@@ -11,6 +11,10 @@ export class Poll {
   // pk
   _id: Types.ObjectId;
 
+  // 투표명 고유값
+  @Prop({ required: true, unique: true })
+  name: string;
+
   // emotion
   @Prop({})
   emotion: Emotion;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, now, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from '../polls.constant';
 
 export type PollRoundEventDocument = HydratedDocument<PollRoundEvent>;
@@ -9,6 +9,10 @@ export type PollRoundEventDocument = HydratedDocument<PollRoundEvent>;
 export class PollRoundEvent {
   // pk
   _id?: Types.ObjectId;
+
+  // 이벤트명 고유값
+  @Prop({ required: true, unique: true })
+  name: string;
 
   // 문구
   @Prop({ required: true })
