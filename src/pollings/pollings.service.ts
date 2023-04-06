@@ -386,6 +386,9 @@ export class PollingsService {
 
     // 친구 수 12명 이하이면 slice없이 셔플.(리프레쉬 횟수 3회 이므로.)
     if (friendList.data.length <= 12) {
+      friendTempArr = friendList.data
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4);
     } else {
       friendTempArr = friendList.data
       .filter((friend) => !prevFriend.includes(friend.profileId))
