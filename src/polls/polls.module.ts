@@ -22,7 +22,9 @@ import { EmojisModule } from 'src/emojis/emojis.module';
     EmojisModule,
   ],
   providers: [PollsService],
-  controllers: [PollsController, PublicPollsController],
+  controllers: [
+    //PollsController, PublicPollsController
+  ],
   exports: [PollsService],
 })
 export class PollsModule {}

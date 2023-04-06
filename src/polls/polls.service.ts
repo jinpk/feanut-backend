@@ -1,24 +1,12 @@
-import { Injectable, Body } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  now,
-  FilterQuery,
-  Model,
-  PipelineStage,
-  ProjectionFields,
-  Types,
-} from 'mongoose';
+import { now, FilterQuery, Model, ProjectionFields, Types } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
-import { ProfilesService } from 'src/profiles/profiles.service';
 import { PollDto } from './dtos/poll.dto';
 import { RoundDto, ResRoundDto } from './dtos/round.dto';
 import { Poll, PollDocument } from './schemas/poll.schema';
 import { Round, RoundDocument } from './schemas/round.schema';
-import {
-  UpdatePollDto,
-  UpdateRoundDto,
-  UpdatePollIdsDto,
-} from './dtos/update-poll.dto';
+import { UpdateRoundDto } from './dtos/update-poll.dto';
 import { GetListPollDto, GetListRoundDto } from './dtos/get-poll.dto';
 import { UtilsService } from 'src/common/providers';
 import { KR_TIME_DIFF } from 'src/common/common.constant';
@@ -32,10 +20,9 @@ import { EmojisService } from 'src/emojis/emojis.service';
 import {
   POLL_MODULE_NAME,
   POLL_ERROR_NOT_FOUND_ROUND_EVENT,
-  POLL_ERROR_NOT_FOUND_POLL,
   POLL_ERROR_NOT_FOUND_EMOJIID,
   POLL_ERROR_LACK_POLLS,
-  POLL_ERROR_DATE_REQUIRED
+  POLL_ERROR_DATE_REQUIRED,
 } from './polls.constant';
 
 @Injectable()
@@ -49,8 +36,8 @@ export class PollsService {
     private emojisService: EmojisService,
   ) {}
 
-  async createPollRoundEvent(body:PollRoundEventDto) {
-    const exist = await this.emojisService.findEmojiById(body.emojiId);
+  async createPollRoundEvent(body: PollRoundEventDto) {
+    const [exist] = await this.emojisService.existEmoji(body.emojiId);
     if (!exist) {
       throw new WrappedError(
         POLL_MODULE_NAME,
@@ -60,18 +47,19 @@ export class PollsService {
 
     let pollroundevent = new PollRoundEvent();
     pollroundevent = {
+      name: '',
       message: body.message,
       subMessage: body.subMessage,
       markingText: body.markingText,
       emojiId: new Types.ObjectId(body.emojiId),
       reward: body.reward,
-    }
+    };
     const res = await new this.pollRoundEventModel(pollroundevent).save();
     return res._id.toString();
   }
 
   async createPoll(body: PollDto): Promise<string> {
-    const exist = await this.emojisService.findEmojiById(body.emojiId.toString());
+    const [exist] = await this.emojisService.existEmoji(body.emojiId);
     if (!exist) {
       throw new WrappedError(
         POLL_MODULE_NAME,
@@ -89,7 +77,8 @@ export class PollsService {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_LACK_POLLS,
-        '투표를 12개 이상 선택해주세요.').reject();
+        '투표를 12개 이상 선택해주세요.',
+      ).reject();
     }
 
     var round = new Round();
@@ -98,23 +87,26 @@ export class PollsService {
         throw new WrappedError(
           POLL_MODULE_NAME,
           POLL_ERROR_DATE_REQUIRED,
-          '시작일, 종료일을 입력해 주세요.').reject();
+          '시작일, 종료일을 입력해 주세요.',
+        ).reject();
       }
 
-      let exist = await this.pollRoundEventModel.findById(body.pollRoundEventId);
+      let exist = await this.pollRoundEventModel.findById(
+        body.pollRoundEventId,
+      );
       if (!exist) {
         throw new WrappedError(
           POLL_MODULE_NAME,
           POLL_ERROR_NOT_FOUND_ROUND_EVENT,
-          ).notFound()
+        ).notFound();
       }
 
       round.pollRoundEventId = new Types.ObjectId(body.pollRoundEventId);
     } else {
-      round.pollRoundEventId = null
+      round.pollRoundEventId = null;
     }
 
-    round.title = body.title;
+    //round.title = body.title;
     round.enabled = body.enabled;
     round.pollIds = body.pollIds;
 
@@ -183,13 +175,11 @@ export class PollsService {
       pollIds: 1,
       startedAt: 1,
       endedAt: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.roundModel.aggregate([
       { $match: filter },
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
@@ -210,13 +200,11 @@ export class PollsService {
       emotion: 1,
       emoji: 1,
       contentText: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.pollModel.aggregate([
       { $match: filter },
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
@@ -248,7 +236,6 @@ export class PollsService {
       emojiId: 1,
       isOpenedCount: 1,
       contentText: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.pollModel.aggregate([
@@ -268,35 +255,36 @@ export class PollsService {
   }
 
   async findAllActiveEventRound() {
-    let rounds = await this.roundModel.aggregate([
-      {
-        $match: {
-          enabled: true,
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          enabled: 0,
-          pollIds: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          __v: 0,
-        }
-      }
-    ]).sort({ startedAt: -1});
+    let rounds = await this.roundModel
+      .aggregate([
+        {
+          $match: {
+            enabled: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            enabled: 0,
+            pollIds: 0,
+            updatedAt: 0,
+            __v: 0,
+          },
+        },
+      ])
+      .sort({ startedAt: -1 });
 
-    let eventRound = rounds.filter(element => (element.startedAt != null))
+    let eventRound = rounds.filter((element) => element.startedAt != null);
     let normalRound = rounds
-    .filter(element => (element.startedAt == null))
-    .sort(
-      (v1, v2) => 
-      (v1.index < v2.index) ? -1 : (v1.index > v2.index) ? 1 : 0);
+      .filter((element) => element.startedAt == null)
+      .sort((v1, v2) =>
+        v1.index < v2.index ? -1 : v1.index > v2.index ? 1 : 0,
+      );
 
     return {
       eventRound: eventRound,
       normalRound: normalRound,
-    }
+    };
   }
 
   pollToDto(doc: Poll | PollDocument): PollDto {
@@ -311,7 +299,7 @@ export class PollsService {
   roundToDto(doc: Round | RoundDocument): ResRoundDto {
     const dto = new ResRoundDto();
     dto.id = doc._id.toHexString();
-    dto.title = doc.title;
+    //dto.title = doc.title;
     dto.index = doc.index;
     dto.enabled = doc.enabled;
     dto.pollRoundEventId = doc.pollRoundEventId.toHexString();
