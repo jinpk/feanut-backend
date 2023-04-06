@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, ProjectionFields } from 'mongoose';
+import { Model, ProjectionFields } from 'mongoose';
 import { PagingResDto } from 'src/common/dtos';
 import { EmojiDto } from './dtos/emoji.dto';
 import { Emoji, EmojiDocument } from './schemas/emoji.schema';
@@ -25,18 +25,13 @@ export class EmojisService {
   }
 
   async findListEmoji(query: GetListEmojiDto): Promise<PagingResDto<EmojiDto>> {
-    const filter: FilterQuery<EmojiDocument> = {
-      isDeleted: false,
-    };
-
     const projection: ProjectionFields<EmojiDto> = {
-      id: '$_id',
       _id: 0,
       key: 1,
+      id: '$_id',
     };
 
     const cursor = await this.emojiModel.aggregate([
-      { $match: filter },
       { $project: projection },
       { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
