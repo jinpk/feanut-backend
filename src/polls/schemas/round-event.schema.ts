@@ -5,7 +5,7 @@ import { POLL_ROUND_EVENT_SCHEMA_NAME } from '../polls.constant';
 export type PollRoundEventDocument = HydratedDocument<PollRoundEvent>;
 
 // PollRoundEvent
-@Schema({ collection: POLL_ROUND_EVENT_SCHEMA_NAME, timestamps: true })
+@Schema({ collection: POLL_ROUND_EVENT_SCHEMA_NAME })
 export class PollRoundEvent {
   // pk
   _id?: Types.ObjectId;
@@ -33,9 +33,6 @@ export class PollRoundEvent {
   // 이벤트 reward 수량
   @Prop({ required: true, default: 0 })
   reward: number;
-
-  @Prop({})
-  createdAt?: Date;
 }
 
 export const PollRoundEventSchema =

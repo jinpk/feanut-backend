@@ -175,13 +175,11 @@ export class PollsService {
       pollIds: 1,
       startedAt: 1,
       endedAt: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.roundModel.aggregate([
       { $match: filter },
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
@@ -202,13 +200,11 @@ export class PollsService {
       emotion: 1,
       emoji: 1,
       contentText: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.pollModel.aggregate([
       { $match: filter },
       { $project: projection },
-      { $sort: { createdAt: -1 } },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
@@ -240,7 +236,6 @@ export class PollsService {
       emojiId: 1,
       isOpenedCount: 1,
       contentText: 1,
-      createdAt: 1,
     };
 
     const cursor = await this.pollModel.aggregate([
@@ -272,7 +267,6 @@ export class PollsService {
             _id: 0,
             enabled: 0,
             pollIds: 0,
-            createdAt: 0,
             updatedAt: 0,
             __v: 0,
           },

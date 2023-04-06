@@ -5,7 +5,7 @@ import { POLL_ROUND_SCHEMA_NAME } from '../../polls/polls.constant';
 export type RoundDocument = HydratedDocument<Round>;
 
 // Round
-@Schema({ collection: POLL_ROUND_SCHEMA_NAME, timestamps: true })
+@Schema({ collection: POLL_ROUND_SCHEMA_NAME })
 export class Round {
   // pk
   _id?: Types.ObjectId;
@@ -35,10 +35,6 @@ export class Round {
   // round 활성화 끝 시간
   @Prop({})
   endedAt?: Date;
-
-  // 생성시간
-  @Prop({})
-  createdAt?: Date;
 }
 
 export const RoundSchema = SchemaFactory.createForClass(Round);
