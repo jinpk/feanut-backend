@@ -1,7 +1,7 @@
 export const POLL_MODULE_NAME = 'polls';
 export const POLL_SCHEMA_NAME = 'polls';
 export const POLL_ROUND_SCHEMA_NAME = 'poll_rounds';
-export const POLL_ROUND_EVENT_SCHEMA_NAME = 'polls_round_events';
+export const POLL_ROUND_EVENT_SCHEMA_NAME = 'poll_round_events';
 
 export const POLL_ERROR_EXIST_POLL = 1;
 export const POLL_ERROR_EXIST_ROUND = 2;

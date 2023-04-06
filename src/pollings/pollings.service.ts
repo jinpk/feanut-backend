@@ -44,6 +44,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PollingVotedEvent } from './events';
 import { PollingStatsDto } from './dtos/pollingstatus.dto';
 import { FeanutCardDto } from './dtos';
+import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
 
 @Injectable()
 export class PollingsService {
@@ -172,7 +173,7 @@ export class PollingsService {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.'
+        '활성화 된 친구를 4명 이상 추가해주세요.',
       ).reject();
     }
 
@@ -373,27 +374,27 @@ export class PollingsService {
       prevFriend.push(arr);
     }
 
-    let friendTempArr: any[] = []
+    let friendTempArr: any[] = [];
     const friendList = await this.friendShipsService.listFriend(user_id);
 
     if (friendList.data.length < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.'
+        '활성화 된 친구를 4명 이상 추가해주세요.',
       ).reject();
     }
 
     // 친구 수 12명 이하이면 slice없이 셔플.(리프레쉬 횟수 3회 이므로.)
     if (friendList.data.length <= 12) {
       friendTempArr = friendList.data
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4);
     } else {
       friendTempArr = friendList.data
-      .filter((friend) => !prevFriend.includes(friend.profileId))
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
+        .filter((friend) => !prevFriend.includes(friend.profileId))
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4);
     }
 
     // polling friendlist 갱신
@@ -1114,7 +1115,7 @@ export class PollingsService {
         },
         {
           $lookup: {
-            from: 'polls_round_events',
+            from: POLL_ROUND_EVENT_SCHEMA_NAME,
             localField: 'pollRoundEventId',
             foreignField: '_id',
             as: 'roundevent',
