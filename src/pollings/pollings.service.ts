@@ -38,6 +38,7 @@ import {
   POLLING_ERROR_EXCEED_SKIP,
   POLLING_ERROR_NOT_FOUND_POLL,
   POLLING_ERROR_NOT_FOUND_USERROUND,
+  POLLING_ERROR_ROUNDEVENT_LOOKUP
 } from './pollings.constant';
 import { PollRoundEventDto } from 'src/polls/dtos/round-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -404,7 +405,7 @@ export class PollingsService {
     }
     polling.friendIds.push(newIds);
 
-    polling.save();
+    await polling.save();
 
     const filter: FilterQuery<PollingDocument> = {
       _id: polling._id,
@@ -1136,6 +1137,14 @@ export class PollingsService {
         },
       ]);
 
+      if (round.length == 0) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_ROUNDEVENT_LOOKUP,
+          'roundevent lookup error',
+        ).reject();
+      }
+
       res.roundEvent = round[0].roundevent;
 
       // reward 지급
@@ -1245,10 +1254,10 @@ export class PollingsService {
         null,
       ).reject();
     }
-    const rounds = await this.roundModel.find().sort({ index: 1 });
+    const rounds = await this.roundModel.find().sort({ index: 1});
 
     // 이벤트 라운드 체크
-    var eventRounds = [];
+    let eventRounds = [];
     eventRounds = rounds.filter((element) => element.startedAt);
 
     eventRounds.sort((prev, next) => {
@@ -1271,7 +1280,6 @@ export class PollingsService {
 
     var normalRounds = [];
     normalRounds = rounds.filter((element) => !element.startedAt);
-
     var nextRound = new Round();
     if (eventRounds.length > 0) {
       nextRound = eventRounds[0];
@@ -1285,12 +1293,12 @@ export class PollingsService {
       var currentRound = new Round();
       if (userrounds.length > 0) {
         for (let r of rounds) {
-          if (r._id == userrounds[0].roundId) {
+          if (r._id.toString() == userrounds[0].roundId.toString()) {
             currentRound = r;
           }
         }
         let filtered = normalRounds.filter(
-          (element) => element.index > currentRound.index,
+          (element) => (element.index > currentRound.index)
         );
         if (filtered.length > 0) {
           nextRound = filtered[0];
@@ -1382,7 +1390,7 @@ export class PollingsService {
         if (element.completedAt == null) {
           todayRounds.push(element);
         }
-        if (element.completedAt >= start && element.completedAt <= end) {
+        if ((element.completedAt >= start) && (element.completedAt <= end)) {
           todayRounds.push(element);
         }
       });
@@ -1394,6 +1402,7 @@ export class PollingsService {
           res.data = this.userRoundToDto(userrounds[0]);
         } else {
           const result = await this.createUserRound(user_id);
+          res.todayCount += 1;
           res.data = result;
         }
       } else if (res.todayCount < 3) {
@@ -1412,6 +1421,7 @@ export class PollingsService {
           if (timecheck < 0) {
             res.recentCompletedAt = userrounds[0].completedAt;
             const result = await this.createUserRound(user_id);
+            res.todayCount += 1;
             res.data = result;
           } else {
             res.data = this.userRoundToDto(userrounds[0]);

@@ -65,6 +65,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    // 클라우드런 req, res 로그 수집
+    // consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }
