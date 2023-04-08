@@ -15,3 +15,21 @@ export class AddFriendDto {
   @IsNotEmpty()
   name: string;
 }
+
+export class AddFriendManyDto {
+  @ApiProperty({ title: '추가할 연락처 목록', description: '숫자만' })
+  contacts: { name: string; phoneNumber: string }[];
+
+  @ApiProperty({
+    title: '추가할 연락처 목록',
+    description: '숫자만',
+    required: false,
+  })
+  invalidContacts: {
+    displayName: string;
+    givenName: string;
+    familyName: string;
+    middleName: string;
+    phoneNumbers: string[];
+  }[];
+}

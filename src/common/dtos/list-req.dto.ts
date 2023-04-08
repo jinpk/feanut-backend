@@ -1,18 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class PagingReqDto {
   @ApiProperty({
     title: 'page',
     default: 1,
   })
+  @IsNotEmpty()
   page: number;
 
   @ApiProperty({
     title: 'limit',
     default: 10,
   })
+  @IsNotEmpty()
   limit: number;
+}
+
+export class OptionalPagingReqDto {
+  @ApiProperty({
+    title: 'page',
+    default: 1,
+    required: false,
+  })
+  page?: number;
+
+  @ApiProperty({
+    title: 'limit',
+    default: 10,
+    required: false,
+  })
+  limit?: number;
 }
 
 export class DateReqDto {

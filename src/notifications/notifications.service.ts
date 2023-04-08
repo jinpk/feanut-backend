@@ -49,11 +49,11 @@ export class NotificationsService {
     }
 
     if (dto.receivePoll !== undefined) {
-      dto.receivePoll = dto.receivePoll;
+      config.receivePoll = dto.receivePoll;
     }
 
     if (dto.receivePull !== undefined) {
-      dto.receivePull = dto.receivePull;
+      config.receivePull = dto.receivePull;
     }
 
     await config.save();
@@ -72,7 +72,32 @@ export class NotificationsService {
       {
         $match: {
           receivePoll: true,
-          fcmToken: { $ne: null },
+          fcmToken: { $exists: true, $ne: '' },
+        },
+      },
+    ]);
+
+    let polls = await this.pollsService.findListPublicPoll({limit: 12, page:1})
+    let i = 0
+    for (let user of users) {
+      user.contentText = polls.data[i].contentText;
+      i++;
+      if (i == polls.data.length){
+        i = 0;
+      }
+    }
+
+    console.log(users)
+
+    return users
+  }
+
+  async getListNotificationUsersUsingRoundTitle() {
+    const users = await this.notificationUserConfigModel.aggregate([
+      {
+        $match: {
+          receivePoll: true,
+          fcmToken: { $exists: true, $ne: '' },
         },
       },
       {
@@ -213,8 +238,9 @@ export class NotificationsService {
         const poll = await this.pollsService.findPollById(pollId);
         this.firebaseService.sendPush({
           tokens: [userConfig.fcmToken],
-          title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
-          message: poll.contentText,
+          title: '누군가가 ' + profile.name + '님을 투표했어요!',
+          // 알림 문자는 한줄로
+          message: poll.contentText.split('\n').join(' '),
           payload: {
             action: 'pull',
             value: pollingId,
