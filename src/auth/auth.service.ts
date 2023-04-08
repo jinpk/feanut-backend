@@ -86,7 +86,7 @@ export class AuthService {
       isAdmin: false,
     };
 
-    const accessToken = this.genToken(payload, '1h');
+    const accessToken = this.genToken(payload, '5s');
     const refreshToken = this.genToken({}, '30d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);

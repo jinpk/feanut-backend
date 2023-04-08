@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Model,
@@ -9,7 +9,7 @@ import {
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
-import { AddFriendDto, FriendDto } from './dtos';
+import { AddFriendDto, AddFriendManyDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
 import { FRIENDSHIPS_MODULE_NAME } from './friendships.constant';
@@ -23,6 +23,7 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class FriendshipsService {
+  private readonly logger = new Logger(FriendshipsService.name);
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
@@ -31,6 +32,22 @@ export class FriendshipsService {
     private usersService: UsersService,
   ) {}
 
+  async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
+    // 유효하지않은 전화번호부 로깅
+    this.logger.log(
+      `addFriendManyWithCheck invalid contacts: ${JSON.stringify(
+        dto.invalidContacts,
+      )}`,
+    );
+
+    for await (let contact of dto.contacts) {
+      try {
+        await this.addFriendWithCheck(userId, contact);
+      } catch (error) {
+        this.logger.error(`addFriendWithCheck error: ${JSON.stringify(error)}`);
+      }
+    }
+  }
 
   async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
     const friendship = await this.friendShipModel.findOne(

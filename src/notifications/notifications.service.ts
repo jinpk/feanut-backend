@@ -213,7 +213,7 @@ export class NotificationsService {
         const poll = await this.pollsService.findPollById(pollId);
         this.firebaseService.sendPush({
           tokens: [userConfig.fcmToken],
-          title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
+          title: '누군가가 ' + profile.name + '님을 투표했어요!',
           // 알림 문자는 한줄로
           message: poll.contentText.split('\n').join(' '),
           payload: {

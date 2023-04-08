@@ -20,6 +20,7 @@ import { WrappedError } from 'src/common/errors';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import {
   AddFriendDto,
+  AddFriendManyDto,
   FriendDto,
   FriendshipStatsDto,
   GetFriendsDto,
@@ -138,6 +139,20 @@ export class FriendshipsController {
       keyword: query.keyword,
       hidden: query.hidden === '1',
     });
+  }
+
+  @Post(':userId/friends/many')
+  @ApiOperation({ summary: '연락처 동기화', description: `` })
+  @ApiCreatedResponse({ description: '동기화 완료' })
+  async addFriendsMany(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Body() body: AddFriendManyDto,
+  ) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+    await this.friendshipsService.addFriendManyWithCheck(userId, body);
   }
 
   @Post(':userId/friends')

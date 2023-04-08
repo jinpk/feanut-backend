@@ -1,3 +1,3 @@
-import { PagingReqDto } from 'src/common/dtos';
+import { OptionalPagingReqDto } from 'src/common/dtos';
 
-export class GetListEmojiDto extends PagingReqDto {}
+export class GetListEmojiDto extends OptionalPagingReqDto {}
