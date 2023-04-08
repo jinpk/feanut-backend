@@ -72,7 +72,7 @@ export class NotificationsService {
       {
         $match: {
           receivePoll: true,
-          fcmToken: { $ne: null },
+          fcmToken: { $exists: true, $ne: '' },
         },
       },
       {
@@ -214,7 +214,8 @@ export class NotificationsService {
         this.firebaseService.sendPush({
           tokens: [userConfig.fcmToken],
           title: '누군가가 ' + profile.name + '님을 투표에서 선택했어요!',
-          message: poll.contentText,
+          // 알림 문자는 한줄로
+          message: poll.contentText.split('\n').join(' '),
           payload: {
             action: 'pull',
             value: pollingId,
