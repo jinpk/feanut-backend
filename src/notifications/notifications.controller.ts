@@ -51,4 +51,9 @@ export class NotificationsController {
   async getUtest() {
     return await this.notificationsService.getListNotificationUsers();
   }
+
+  @Get('test')
+  async test (){
+    await this.notificationsService.getListNotificationUsers()
+  }
 }

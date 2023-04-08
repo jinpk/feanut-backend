@@ -49,11 +49,11 @@ export class NotificationsService {
     }
 
     if (dto.receivePoll !== undefined) {
-      dto.receivePoll = dto.receivePoll;
+      config.receivePoll = dto.receivePoll;
     }
 
     if (dto.receivePull !== undefined) {
-      dto.receivePull = dto.receivePull;
+      config.receivePull = dto.receivePull;
     }
 
     await config.save();
@@ -68,6 +68,31 @@ export class NotificationsService {
   }
 
   async getListNotificationUsers() {
+    const users = await this.notificationUserConfigModel.aggregate([
+      {
+        $match: {
+          receivePoll: true,
+          fcmToken: { $exists: true, $ne: '' },
+        },
+      },
+    ]);
+
+    let polls = await this.pollsService.findListPublicPoll({limit: 12, page:1})
+    let i = 0
+    for (let user of users) {
+      user.contentText = polls.data[i].contentText;
+      i++;
+      if (i == polls.data.length){
+        i = 0;
+      }
+    }
+
+    console.log(users)
+
+    return users
+  }
+
+  async getListNotificationUsersUsingRoundTitle() {
     const users = await this.notificationUserConfigModel.aggregate([
       {
         $match: {
