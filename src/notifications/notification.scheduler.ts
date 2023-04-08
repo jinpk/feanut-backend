@@ -22,7 +22,7 @@ export class SchedulerService {
       users.forEach((user) => {
         this.firebaseService.sendPush({
           tokens: [user.fcmToken],
-          title: user.contentText.replace('\n').join(' '),
+          title: user.contentText.split('\n').join(' '),
           message: '참여할 수 있는 새로운 투표가 시작되었어요!',
           payload: {},
         });
@@ -44,7 +44,7 @@ export class SchedulerService {
       users.forEach((user) => {
         this.firebaseService.sendPush({
           tokens: [user.fcmToken],
-          title: user.contentText.replace('\n').join(' '),
+          title: user.contentText.split('\n').join(' '),
           message: '참여할 수 있는 새로운 투표가 시작되었어요!',
           payload: {},
         });
@@ -67,7 +67,7 @@ export class SchedulerService {
       users.forEach((user) => {
         this.firebaseService.sendPush({
           tokens: [user.fcmToken],
-          title: user.contentText.replace('\n').join(' '),
+          title: user.contentText.split('\n').join(' '),
           message: '참여할 수 있는 새로운 투표가 시작되었어요!',
           payload: {},
         });
