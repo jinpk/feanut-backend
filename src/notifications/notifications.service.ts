@@ -86,9 +86,7 @@ export class NotificationsService {
         i = 0;
       }
     }
-
-    console.log(users)
-
+    
     return users
   }
 

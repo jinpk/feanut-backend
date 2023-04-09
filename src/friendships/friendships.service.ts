@@ -239,25 +239,20 @@ export class FriendshipsService {
       preserveNullAndEmptyArrays: true,
     };
 
-    const matchUser: FilterQuery<FriendDto> = {
-      $expr: {
-        $or: [
-          {
-            $regexMatch: {
-              input: '$profile.name',
-              regex: params.keyword,
-              options: 'i',
-            },
-          },
-          {
-            $regexMatch: {
-              input: '$friends.name',
-              regex: params.keyword,
-              options: 'i',
-            },
-          },
+    const addNameFields: PipelineStage.AddFields['$addFields'] = {
+      name: {
+        $cond: [
+          // 회원가입 안했으면
+          { $ifNull: ['$user._id', true] },
+          // 내 친구목록 이름으로 조회
+          '$friends.name',
+          '$profile.name',
         ],
       },
+    };
+
+    const matchUser: FilterQuery<FriendDto> = {
+      name: { $regex: params.keyword, $options: 'i' },
     };
 
     const lookupFile: PipelineStage.Lookup['$lookup'] = {
@@ -276,9 +271,7 @@ export class FriendshipsService {
       _id: 0,
       profileId: '$friends.profileId',
       hidden: '$friends.hidden',
-      name: {
-        $ifNull: ['$profile.name', '$friends.name'],
-      },
+      name: 1,
       gender: '$profile.gender',
       profileImageKey: '$file.key',
     };
@@ -301,6 +294,7 @@ export class FriendshipsService {
       {
         $unwind: unwindUser,
       },
+      { $addFields: addNameFields },
       params.keyword && { $match: matchUser },
       { $lookup: lookupFile },
       {
