@@ -55,27 +55,4 @@ export class SchedulerService {
       );
     }
   }
-
-  // // @Cron('0 30 12 * * 0-6')
-  // @Cron('* * * * * *')
-  // async handleEveryTest() {
-  //   this.logger.log('scheduling every test time!');
-  //   try {
-  //     const users = await this.notificationService.getListNotificationUsers();
-  //     if (!users.length) return;
-
-  //     users.forEach((user) => {
-  //       this.firebaseService.sendPush({
-  //         tokens: [user.fcmToken],
-  //         title: user.contentText.split('\n').join(' '),
-  //         message: '참여할 수 있는 새로운 투표가 시작되었어요!',
-  //         payload: {},
-  //       });
-  //     });
-  //   } catch (error) {
-  //     this.logger.error(
-  //       `scheduling every test time to failed: ${JSON.stringify(error)}`,
-  //     );
-  //   }
-  // }
 }

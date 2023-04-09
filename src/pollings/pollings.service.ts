@@ -1024,7 +1024,7 @@ export class PollingsService {
       if (v.friendIds.profile.name) {
         temp.name = v.friendIds.profile.name;
       } else {
-        temp.name = v.friendIds.friends.name;
+        temp.name = null;
       }
 
       if (v.friendIds.profile.imageFileId) {
