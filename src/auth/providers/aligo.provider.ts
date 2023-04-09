@@ -35,6 +35,10 @@ export class AligoProvider {
           : 'N',
     };
 
+    if (!data.receiver.startsWith('010')) {
+      return;
+    }
+
     const form = new FormData();
 
     Object.keys(data).map((key) => {

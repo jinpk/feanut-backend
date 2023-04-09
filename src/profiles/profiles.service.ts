@@ -11,6 +11,7 @@ import {
   PROFILES_ERROR_OWNER_LESS,
   PROFILE_MODULE_NAME,
   PROFILE_SCHEMA_NAME,
+  RANDOM_NICKNAMES,
 } from './profiles.constant';
 import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 
@@ -112,6 +113,8 @@ export class ProfilesService {
   async createWithPhoneNumber(phoneNumber: string): Promise<Types.ObjectId> {
     const doc = await new this.profileModel({
       phoneNumber,
+      // 친구추가로 생성된 계정 랜덤 닉네임 부여
+      name: this._getRandomNickname(),
     }).save();
 
     return doc._id;
@@ -205,6 +208,12 @@ export class ProfilesService {
 
   async getProfileImageKey(imageFileId: Types.ObjectId) {
     return await this.filesService.getKeyById(imageFileId);
+  }
+
+  _getRandomNickname() {
+    return RANDOM_NICKNAMES[
+      Math.floor(Math.random() * RANDOM_NICKNAMES.length)
+    ];
   }
 
   docToDto(doc: Profile | ProfileDocument): ProfileDto {

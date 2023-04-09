@@ -86,7 +86,7 @@ export class AuthService {
       isAdmin: false,
     };
 
-    const accessToken = this.genToken(payload, '5s');
+    const accessToken = this.genToken(payload, '1h');
     const refreshToken = this.genToken({}, '30d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);
@@ -109,8 +109,8 @@ export class AuthService {
       ).notFound();
     }
 
-    // 3분 쿨타임
-    await this.require3MCoolTime(dto.phoneNumber);
+    // 쿨타임
+    await this.requireAuthCoolTime(dto.phoneNumber);
 
     // 인증코드 처리
     const code = dto.phoneNumber.startsWith('000000000')
@@ -181,7 +181,7 @@ export class AuthService {
     }
 
     // 3분 쿨타임
-    await this.require3MCoolTime(dto.phoneNumber);
+    await this.requireAuthCoolTime(dto.phoneNumber);
 
     // 인증코드 처리
     const code = dto.phoneNumber.startsWith('000000000')
@@ -254,29 +254,22 @@ export class AuthService {
     return await this.userLogin(sub);
   }
 
-  // 3분 이내 데이터 있는 경우 throw Excepction
-  async require3MCoolTime(phoneNumber: string) {
-    if (
-      await this.findAuthIn3MByField({
-        phoneNumber,
-      })
-    ) {
+  // 인증 쿨타임
+  async requireAuthCoolTime(phoneNumber: string) {
+    // 10초 서비스 커지면 조정 필요
+    const latestAuth = await this.authModel.findOne({
+      phoneNumber,
+      used: { $ne: true },
+      createdAt: { $gte: dayjs().subtract(10, 'seconds') },
+    });
+
+    if (latestAuth) {
       throw new WrappedError(
         AUTH_MODULE_NAME,
         AUTH_ERROR_COOL_TIME,
         '잠시후 다시 시도해 주세요.',
       );
     }
-  }
-
-  async findAuthIn3MByField(
-    filter: FilterQuery<AuthDocument>,
-  ): Promise<AuthDocument | null> {
-    return await this.authModel.findOne({
-      ...filter,
-      used: { $ne: true },
-      createdAt: { $gte: dayjs().subtract(3, 'minutes') },
-    });
   }
 
   async sendSignUpSMS(phoneNumber: string, code: string) {

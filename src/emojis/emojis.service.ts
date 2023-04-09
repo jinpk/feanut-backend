@@ -25,7 +25,6 @@ export class EmojisService {
   }
 
   async findListEmoji(query: GetListEmojiDto): Promise<PagingResDto<EmojiDto>> {
-    console.log(query)
     const paging = query.page && query.limit;
 
     const projection: ProjectionFields<EmojiDto> = {
