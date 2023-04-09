@@ -35,6 +35,12 @@ export class AligoProvider {
           : 'N',
     };
 
+    if (!data.receiver.startsWith('010')) {
+      throw new Error(
+        '010으로 시작되는 전화번호로만 인증번호 발송 가능합니다.',
+      );
+    }
+
     const form = new FormData();
 
     Object.keys(data).map((key) => {
