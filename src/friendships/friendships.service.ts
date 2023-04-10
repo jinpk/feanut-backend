@@ -32,6 +32,7 @@ export class FriendshipsService {
     private usersService: UsersService,
   ) {}
 
+  // 전화번호부 동기화
   async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
     // 유효하지않은 전화번호부 로깅
     this.logger.log(
@@ -40,13 +41,77 @@ export class FriendshipsService {
       )}`,
     );
 
-    for await (let contact of dto.contacts) {
-      try {
-        await this.addFriendWithCheck(userId, contact);
-      } catch (error) {
-        this.logger.error(`addFriendWithCheck error: ${JSON.stringify(error)}`);
+    const user = await this.usersService.findActiveUserById(userId);
+
+    const friendship = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    // 내 전화번호 필터링
+    dto.contacts = dto.contacts.filter(
+      (x) => x.phoneNumber !== user.phoneNumber,
+    );
+
+    // 이미 가입된 프로필 조회
+    const profiles = await this.profilesService.activeListByPhoneNumbers(
+      dto.contacts.map((x) => x.phoneNumber),
+    );
+
+    const existsCreateList: {
+      [phoneNumber: string]: { name: string; profileId: Types.ObjectId };
+    } = {};
+    const needToCreateList: { [phoneNumber: string]: string } = {};
+
+    dto.contacts.forEach((contact) => {
+      const profile = profiles.find(
+        (x) => x.phoneNumber === contact.phoneNumber,
+      );
+      if (profile) {
+        existsCreateList[contact.phoneNumber] = {
+          name: contact.name,
+          profileId: profile._id,
+        };
+      } else {
+        needToCreateList[contact.phoneNumber] = contact.name;
       }
-    }
+    });
+
+    // 가입되지 않은 전화번호 프로필 등록
+    const createdProfiles =
+      await this.profilesService.createManyWithPhoneNumbers(
+        // key is phoneNumber
+        Object.keys(needToCreateList),
+      );
+
+    // 친구 등록
+    createdProfiles.forEach((profile) => {
+      friendship.friends.push({
+        profileId: profile._id,
+        name: needToCreateList[profile.phoneNumber],
+      });
+    });
+
+    // 이미 가입된 친구
+    Object.keys(existsCreateList).map((key) => {
+      const existProfile = existsCreateList[key];
+
+      const index = friendship.friends.findIndex((x) =>
+        x.profileId.equals(existProfile.profileId),
+      );
+
+      if (index >= 0) {
+        // 이미 친구라면 이름 최신화
+        friendship.friends[index].name = existProfile.name;
+      } else {
+        // 친구아니면 등록
+        friendship.friends.push({
+          profileId: existProfile.profileId,
+          name: existProfile.name,
+        });
+      }
+    });
+
+    await friendship.save();
   }
 
   async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
@@ -185,6 +250,21 @@ export class FriendshipsService {
     return true;
   }
 
+  // 인자 ID가 속한 모든 친구관계에서 삭제
+  async removeFriendsAllByProfileId(profileId: string | Types.ObjectId) {
+    profileId = new Types.ObjectId(profileId);
+    await this.friendShipModel.updateMany(
+      {
+        'friends.profileId': profileId,
+      },
+      {
+        $pull: {
+          friends: { profileId },
+        },
+      },
+    );
+  }
+
   async hasFriends(userId: string | Types.ObjectId) {
     const doc = await this.friendShipModel.findOne({
       userId: new Types.ObjectId(userId),
@@ -243,7 +323,7 @@ export class FriendshipsService {
       name: {
         $cond: [
           // 회원가입 안했으면
-          { $ifNull: ['$user._id', true] },
+          { $eq: ['$user._id', null] },
           // 내 친구목록 이름으로 조회
           '$friends.name',
           '$profile.name',

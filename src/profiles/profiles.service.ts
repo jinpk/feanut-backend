@@ -95,6 +95,47 @@ export class ProfilesService {
     }
   }
 
+  // 휴대폰번호 리스트로 프로필 ID 조회
+  // 이미 탈퇴한 사용자도 필터링
+  async activeListByPhoneNumbers(
+    phoneNumbers: string[],
+  ): Promise<{ _id: Types.ObjectId; phoneNumber: string }[]> {
+    const profiles = await this.profileModel.aggregate<{
+      _id: Types.ObjectId;
+      phoneNumber: string;
+    }>([
+      {
+        $match: {
+          phoneNumber: { $in: phoneNumbers },
+        },
+      },
+      {
+        $lookup: {
+          from: USER_SCHEMA_NAME,
+          localField: 'ownerId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true,
+          },
+        },
+      },
+      { $project: { _id: 1, phoneNumber: 1 } },
+    ]);
+
+    return profiles;
+  }
+
   // 아직 소유권없는 프로필 조회
   async getOwnerLessProfileByPhoneNumber(
     phoneNumber: string,
@@ -118,6 +159,17 @@ export class ProfilesService {
     }).save();
 
     return doc._id;
+  }
+
+  async createManyWithPhoneNumbers(phoneNumbers: string[]): Promise<Profile[]> {
+    const docs = await this.profileModel.insertMany(
+      phoneNumbers.map((x) => ({
+        phoneNumber: x,
+        name: this._getRandomNickname(),
+      })),
+    );
+
+    return docs;
   }
 
   async create(

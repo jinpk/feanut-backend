@@ -6,7 +6,7 @@ import { UserDto } from './dtos';
 import { User, UserDocument } from './schemas/user.schema';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UserCreatedEvent } from './events';
+import { UserCreatedEvent, UserDeletedEvent } from './events';
 
 @Injectable()
 export class UsersService {
@@ -71,7 +71,7 @@ export class UsersService {
     userId: string | Types.ObjectId,
     deletionReason: string,
   ): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, {
+    const user = await this.userModel.findByIdAndUpdate(userId, {
       $set: {
         deletedAt: dayjs().toDate(),
         isDeleted: true,
@@ -79,6 +79,11 @@ export class UsersService {
         refreshToken: undefined,
       },
     });
+
+    this.eventEmitter.emit(
+      UserDeletedEvent.name,
+      new UserDeletedEvent(user._id),
+    );
   }
 
   async _userDocToDto(user: User): Promise<UserDto> {
