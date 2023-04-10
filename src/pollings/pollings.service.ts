@@ -14,11 +14,11 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
-import { PollingDto, PollingResultDto } from './dtos/polling.dto';
+import { PollingDto, PollingResultDto, InboxPollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
-  GetListReceivePollingDto,
+  GetListInboxPollingDto,
 } from './dtos/get-polling.dto';
 import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { CoinsService } from 'src/coins/conis.service';
@@ -222,8 +222,58 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
+          from: 'profiles',
           let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$friend_id'],
+                }
+              },
+            },
+          ],
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'profile.ownerId',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      {
+        $unwind: {
+          path: '$owner',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profile.imageFileId',
+          foreignField: '_id',
+          as: 'imagefile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$imagefile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profile._id', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
@@ -238,63 +288,52 @@ export class PollingsService {
                 },
               },
             },
-            {
-              $lookup: {
-                from: 'profiles',
-                localField: 'friends.profileId',
-                foreignField: '_id',
-                as: 'profile',
-              },
-            },
-            {
-              $unwind: {
-                path: '$profile',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $lookup: {
-                from: 'files',
-                localField: 'profile.imageFileId',
-                foreignField: '_id',
-                as: 'files',
-              },
-            },
-            {
-              $unwind: {
-                path: '$files',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                'profile._id': 0,
-                'profile.__v': 0,
-                'profile.phoneNumber': 0,
-                'profile.ownerId': 0,
-                'profile.createdAt': 0,
-                'profile.updatedAt': 0,
-                'files._id': 0,
-                'files.__v': 0,
-                'files.type': 0,
-                'files.ownerId': 0,
-                'files.createdAt': 0,
-                'files.updatedAt': 0,
-              },
-            },
           ],
-          as: 'friendIds',
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: '$friendIds',
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
+      },
+      {
+        $project: {
+          'profile.__v': 0,
+          'profile.phoneNumber': 0,
+          'profile.createdAt': 0,
+          'profile.updatedAt': 0,
+          'profile.imageFileId': 0,
+          'profile.ownerId': 0,
+          'owner._id': 0,
+          'owner.__v': 0,
+          'owner.phoneNumber': 0,
+          'owner.createdAt': 0,
+          'owner.updatedAt': 0,
+          'owner.refreshToken': 0,
+          'owner.deletionReason': 0,
+          'imagefile._id': 0,
+          'imagefile.__v': 0,
+          'imagefile.ownerId': 0,
+          'imagefile.contentType': 0,
+          'imagefile.purpose': 0,
+          'imagefile.createdAt': 0,
+          'imagefile.updatedAt': 0,
+          'imagefile.isUploaded': 0,
+          'friendship._id': 0,
+          'friendship.__v': 0,
+          'friendship.userId': 0,
+          'friendship.createdAt': 0,
+          'friendship.updatedAt': 0,
+          'friendship.isUploaded': 0,
+        }
       },
       {
         $lookup: {
@@ -312,6 +351,10 @@ export class PollingsService {
       },
       {
         $project: {
+          __v: 0,
+          friendIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
           'pollId._id': 0,
           'pollId.isOpenedCount': 0,
           'pollId.createdAt': 0,
@@ -325,27 +368,60 @@ export class PollingsService {
       ...lookups,
     ]);
 
+    if (cursor.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
     let mergedList = [];
     const cursors = cursor.slice(-4);
+
     for (const v of cursors) {
       let temp = {
         profileId: null,
         name: null,
         imageFileKey: null,
-        gender: null
+        gender: null,
       };
-      temp.profileId = v.friendIds.friends.profileId;
 
-      if (v.friendIds.profile.gender) {
-        temp.name = v.friendIds.profile.name;
-        temp.gender = v.friendIds.profile.gender;
+      temp.profileId = v.profile._id;
+
+      if (v.owner) {
+        if (v.owner.isDeleted) {
+          if (v.friendship) {
+            temp.name = v.friendship.friends.name;
+          } else {
+            temp.name = '항해하는 자유요정'
+          };
+        } else {
+          if (v.profile) {
+            if (v.profile.gender){
+              temp.name = v.profile.name;
+              temp.gender = v.profile.gender;
+            } else {
+              if (v.friendship) {
+                temp.name = v.friendship.friends.name;
+              } else {
+                temp.name = '항해하는 자유요정'
+              }
+            }
+          } else {
+          };
+
+          if (v.imagefile) {
+            temp.imageFileKey = v.imagefile.key;
+          }
+        }
       } else {
-        temp.name = v.friendIds.friends.name;
+        if (v.friendship) {
+          temp.name = v.friendship.friends.name;
+        } else {
+          temp.name = '항해하는 자유요정'
+        }
       }
 
-      if (v.friendIds.profile.imageFileId) {
-        temp.imageFileKey = v.friendIds.files.key;
-      }
       mergedList.push(temp);
     }
 
@@ -432,8 +508,58 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
+          from: 'profiles',
           let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$friend_id'],
+                }
+              },
+            },
+          ],
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'profile.ownerId',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      {
+        $unwind: {
+          path: '$owner',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profile.imageFileId',
+          foreignField: '_id',
+          as: 'imagefile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$imagefile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profile._id', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
@@ -448,63 +574,52 @@ export class PollingsService {
                 },
               },
             },
-            {
-              $lookup: {
-                from: 'profiles',
-                localField: 'friends.profileId',
-                foreignField: '_id',
-                as: 'profile',
-              },
-            },
-            {
-              $unwind: {
-                path: '$profile',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $lookup: {
-                from: 'files',
-                localField: 'profile.imageFileId',
-                foreignField: '_id',
-                as: 'files',
-              },
-            },
-            {
-              $unwind: {
-                path: '$files',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                'profile._id': 0,
-                'profile.__v': 0,
-                'profile.phoneNumber': 0,
-                'profile.ownerId': 0,
-                'profile.createdAt': 0,
-                'profile.updatedAt': 0,
-                'files._id': 0,
-                'files.__v': 0,
-                'files.type': 0,
-                'files.ownerId': 0,
-                'files.createdAt': 0,
-                'files.updatedAt': 0,
-              },
-            },
           ],
-          as: 'friendIds',
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: '$friendIds',
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
+      },
+      {
+        $project: {
+          'profile.__v': 0,
+          'profile.phoneNumber': 0,
+          'profile.createdAt': 0,
+          'profile.updatedAt': 0,
+          'profile.imageFileId': 0,
+          'profile.ownerId': 0,
+          'owner._id': 0,
+          'owner.__v': 0,
+          'owner.phoneNumber': 0,
+          'owner.createdAt': 0,
+          'owner.updatedAt': 0,
+          'owner.refreshToken': 0,
+          'owner.deletionReason': 0,
+          'imagefile._id': 0,
+          'imagefile.__v': 0,
+          'imagefile.ownerId': 0,
+          'imagefile.contentType': 0,
+          'imagefile.purpose': 0,
+          'imagefile.createdAt': 0,
+          'imagefile.updatedAt': 0,
+          'imagefile.isUploaded': 0,
+          'friendship._id': 0,
+          'friendship.__v': 0,
+          'friendship.userId': 0,
+          'friendship.createdAt': 0,
+          'friendship.updatedAt': 0,
+          'friendship.isUploaded': 0,
+        }
       },
       {
         $lookup: {
@@ -522,6 +637,10 @@ export class PollingsService {
       },
       {
         $project: {
+          __v: 0,
+          friendIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
           'pollId._id': 0,
           'pollId.isOpenedCount': 0,
           'pollId.createdAt': 0,
@@ -544,6 +663,7 @@ export class PollingsService {
 
     let mergedList = [];
     const cursors = cursor.slice(-4);
+
     for (const v of cursors) {
       let temp = {
         profileId: null,
@@ -551,18 +671,43 @@ export class PollingsService {
         imageFileKey: null,
         gender: null,
       };
-      temp.profileId = v.friendIds.friends.profileId;
 
-      if (v.friendIds.profile.gender) {
-        temp.name = v.friendIds.profile.name;
-        temp.gender = v.friendIds.profile.gender;
+      temp.profileId = v.profile._id;
+
+      if (v.owner) {
+        if (v.owner.isDeleted) {
+          if (v.friendship) {
+            temp.name = v.friendship.friends.name;
+          } else {
+            temp.name = '항해하는 자유요정'
+          }
+        } else {
+          if (v.profile) {
+            if (v.profile.gender){
+              temp.name = v.profile.name;
+              temp.gender = v.profile.gender;
+            } else {
+              if (v.friendship) {
+                temp.name = v.friendship.friends.name;
+              } else {
+                temp.name = '항해하는 자유요정'
+              }
+            }
+          } else {
+          }
+    
+          if (v.imagefile) {
+            temp.imageFileKey = v.imagefile.key;
+          }
+        }
       } else {
-        temp.name = v.friendIds.friends.name;
+        if (v.friendship) {
+          temp.name = v.friendship.friends.name;
+        } else {
+          temp.name = '항해하는 자유요정'
+        }
       }
 
-      if (v.friendIds.profile.imageFileId) {
-        temp.imageFileKey = v.friendIds.files.key;
-      }
       mergedList.push(temp);
     }
 
@@ -603,7 +748,7 @@ export class PollingsService {
 
   async findListInboxByUserId(
     user_id: string,
-    query: GetListReceivePollingDto,
+    query: GetListInboxPollingDto,
   ): Promise<PagingResDto<PollingDto>> {
     const profile = await this.profilesService.getByUserId(user_id);
 
@@ -703,8 +848,58 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
+          from: 'profiles',
           let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$friend_id'],
+                }
+              },
+            },
+          ],
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'profile.ownerId',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      {
+        $unwind: {
+          path: '$owner',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profile.imageFileId',
+          foreignField: '_id',
+          as: 'imagefile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$imagefile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profile._id', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
@@ -719,63 +914,52 @@ export class PollingsService {
                 },
               },
             },
-            {
-              $lookup: {
-                from: 'profiles',
-                localField: 'friends.profileId',
-                foreignField: '_id',
-                as: 'profile',
-              },
-            },
-            {
-              $unwind: {
-                path: '$profile',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $lookup: {
-                from: 'files',
-                localField: 'profile.imageFileId',
-                foreignField: '_id',
-                as: 'files',
-              },
-            },
-            {
-              $unwind: {
-                path: '$files',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                'profile._id': 0,
-                'profile.__v': 0,
-                'profile.phoneNumber': 0,
-                'profile.ownerId': 0,
-                'profile.createdAt': 0,
-                'profile.updatedAt': 0,
-                'files._id': 0,
-                'files.__v': 0,
-                'files.type': 0,
-                'files.ownerId': 0,
-                'files.createdAt': 0,
-                'files.updatedAt': 0,
-              },
-            },
           ],
-          as: 'friendIds',
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: '$friendIds',
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
+      },
+      {
+        $project: {
+          'profile.__v': 0,
+          'profile.phoneNumber': 0,
+          'profile.createdAt': 0,
+          'profile.updatedAt': 0,
+          'profile.imageFileId': 0,
+          'profile.ownerId': 0,
+          'owner._id': 0,
+          'owner.__v': 0,
+          'owner.phoneNumber': 0,
+          'owner.createdAt': 0,
+          'owner.updatedAt': 0,
+          'owner.refreshToken': 0,
+          'owner.deletionReason': 0,
+          'imagefile._id': 0,
+          'imagefile.__v': 0,
+          'imagefile.ownerId': 0,
+          'imagefile.contentType': 0,
+          'imagefile.purpose': 0,
+          'imagefile.createdAt': 0,
+          'imagefile.updatedAt': 0,
+          'imagefile.isUploaded': 0,
+          'friendship._id': 0,
+          'friendship.__v': 0,
+          'friendship.userId': 0,
+          'friendship.createdAt': 0,
+          'friendship.updatedAt': 0,
+          'friendship.isUploaded': 0,
+        }
       },
       {
         $lookup: {
@@ -793,6 +977,10 @@ export class PollingsService {
       },
       {
         $project: {
+          __v: 0,
+          friendIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
           'pollId._id': 0,
           'pollId.isOpenedCount': 0,
           'pollId.createdAt': 0,
@@ -815,6 +1003,7 @@ export class PollingsService {
 
     let mergedList = [];
     const cursors = cursor.slice(-4);
+
     for (const v of cursors) {
       let temp = {
         profileId: null,
@@ -822,18 +1011,43 @@ export class PollingsService {
         imageFileKey: null,
         gender: null,
       };
-      temp.profileId = v.friendIds.friends.profileId;
 
-      if (v.friendIds.profile.gender) {
-        temp.name = v.friendIds.profile.name;
-        temp.gender = v.friendIds.profile.gender;
+      temp.profileId = v.profile._id;
+
+      if (v.owner) {
+        if (v.owner.isDeleted) {
+          if (v.friendship) {
+            temp.name = v.friendship.friends.name;
+          } else {
+            temp.name = '항해하는 자유요정'
+          }
+        } else {
+          if (v.profile) {
+            if (v.profile.gender){
+              temp.name = v.profile.name;
+              temp.gender = v.profile.gender;
+            } else {
+              if (v.friendship) {
+                temp.name = v.friendship.friends.name;
+              } else {
+                temp.name = '항해하는 자유요정'
+              }
+            }
+          } else {
+          }
+    
+          if (v.imagefile) {
+            temp.imageFileKey = v.imagefile.key;
+          }
+        }
       } else {
-        temp.name = v.friendIds.friends.name;
+        if (v.friendship) {
+          temp.name = v.friendship.friends.name;
+        } else {
+          temp.name = '항해하는 자유요정'
+        }
       }
 
-      if (v.friendIds.profile.imageFileId) {
-        temp.imageFileKey = v.friendIds.files.key;
-      }
       mergedList.push(temp);
     }
 
@@ -864,8 +1078,44 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
+          from: 'profiles',
           let: { friend_id: '$friendIds', user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$friend_id'],
+                }
+              },
+            },
+          ],
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profile.imageFileId',
+          foreignField: '_id',
+          as: 'imagefile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$imagefile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profile._id', user_id: '$userId' },
           pipeline: [
             {
               $unwind: '$friends',
@@ -880,63 +1130,45 @@ export class PollingsService {
                 },
               },
             },
-            {
-              $lookup: {
-                from: 'profiles',
-                localField: 'friends.profileId',
-                foreignField: '_id',
-                as: 'profile',
-              },
-            },
-            {
-              $unwind: {
-                path: '$profile',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $lookup: {
-                from: 'files',
-                localField: 'profile.imageFileId',
-                foreignField: '_id',
-                as: 'files',
-              },
-            },
-            {
-              $unwind: {
-                path: '$files',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: 0,
-                createdAt: 0,
-                updatedAt: 0,
-                'profile._id': 0,
-                'profile.__v': 0,
-                'profile.phoneNumber': 0,
-                'profile.ownerId': 0,
-                'profile.createdAt': 0,
-                'profile.updatedAt': 0,
-                'files._id': 0,
-                'files.__v': 0,
-                'files.type': 0,
-                'files.ownerId': 0,
-                'files.createdAt': 0,
-                'files.updatedAt': 0,
-              },
-            },
           ],
-          as: 'friendIds',
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: '$friendIds',
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
+      },
+      {
+        $project: {
+          'profile.__v': 0,
+          'profile.phoneNumber': 0,
+          'profile.createdAt': 0,
+          'profile.updatedAt': 0,
+          'profile.imageFileId': 0,
+          'profile.ownerId': 0,
+          'imagefile._id': 0,
+          'imagefile.__v': 0,
+          'imagefile.ownerId': 0,
+          'imagefile.contentType': 0,
+          'imagefile.purpose': 0,
+          'imagefile.createdAt': 0,
+          'imagefile.updatedAt': 0,
+          'imagefile.isUploaded': 0,
+          'friendship._id': 0,
+          'friendship.__v': 0,
+          'friendship.userId': 0,
+          'friendship.createdAt': 0,
+          'friendship.updatedAt': 0,
+          'friendship.isUploaded': 0,
+        }
       },
       {
         $lookup: {
@@ -954,6 +1186,10 @@ export class PollingsService {
       },
       {
         $project: {
+          __v: 0,
+          friendIds: 0,
+          createdAt: 0,
+          updatedAt: 0,
           'pollId._id': 0,
           'pollId.isOpenedCount': 0,
           'pollId.createdAt': 0,
@@ -1042,18 +1278,26 @@ export class PollingsService {
         gender: null
       };
 
-      temp.profileId = v.friendIds.friends.profileId;
+      temp.profileId = v.profile._id;
 
-      if (v.friendIds.profile.gender) {
-        temp.name = v.friendIds.profile.name;
-        temp.gender = v.friendIds.profile.gender;
+      if (v.profile) {
+        if (v.profile.gender){
+          temp.name = v.profile.name;
+          temp.gender = v.profile.gender;
+        } else {
+          if (v.friendship) {
+            temp.name = v.friendship.friends.name;
+          } else {
+            temp.name = '항해하는 자유요정'
+          }
+        }
       } else {
-        temp.name = v.friendIds.profile.name;
+      };
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
-      if (v.friendIds.profile.imageFileId) {
-        temp.imageFileKey = v.friendIds.files.key;
-      }
       mergedList.push(temp);
 
       v.voter.imageFileKey = null;
@@ -1072,7 +1316,18 @@ export class PollingsService {
     }
 
     cursor.at(-1).friendIds = mergedList;
-    return cursor.at(-1);
+
+    const dto = new InboxPollingDto();
+    dto._id = cursor.at(-1)._id.toHexString();
+    dto.userRoundId = cursor.at(-1).userRoundId;
+    dto.pollId = cursor.at(-1).pollId;
+    dto.friendIds = cursor.at(-1).friendIds;
+    dto.selectedProfileId = cursor.at(-1).selectedProfileId;
+    dto.isOpened = cursor.at(-1).isOpened;
+    dto.completedAt = cursor.at(-1).completedAt;
+    dto.voter = cursor.at(-1).voter;
+
+    return dto;
   }
 
   async updatePolling(polling_id: string, body: UpdatePollingDto) {

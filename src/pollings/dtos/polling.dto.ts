@@ -73,33 +73,52 @@ export class PollingResultDto {
 
 export class PollingFriendDto extends OmitType(FriendDto, ['hidden']) {}
 
-export class ReceivePollingDto {
-  @ApiProperty({})
-  id?: string;
+class Voter {
+  // name
+  @ApiProperty({default: null})
+  name: string;
 
-  // userId
-  @ApiProperty({})
-  userId: Types.ObjectId;
+  // gender
+  @ApiProperty({default: null})
+  gender: string;
 
-  @ApiProperty({})
-  userName: string;
+  // imageFileKey
+  @ApiProperty({default: null})
+  imageFileKey: string;
 
+  // profileId
+  @ApiProperty({default: null})
+  profileId: string;
+} 
+
+export class InboxPollingDto {
+  _id?: string;
+
+  // userRoundId
   @ApiProperty({})
-  userImageFileId: Types.ObjectId;
+  userRoundId: Types.ObjectId;
 
   // pollId
   @ApiProperty({})
-  pollId: Types.ObjectId;
+  pollId: Object;
 
   // friendList
   @ApiProperty({})
   friendIds: Types.ObjectId[][];
 
   // selectedId
-  @ApiProperty({ default: null })
+  @ApiProperty({})
   selectedProfileId: Types.ObjectId;
 
+  // isOpened
+  @ApiProperty({})
+  isOpened: boolean;
+
   // completedAt
-  @ApiProperty({ default: null })
+  @ApiProperty({})
   completedAt: Date;
+
+  // voter
+  @ApiProperty({})
+  voter: Voter;
 }

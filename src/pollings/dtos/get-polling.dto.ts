@@ -9,7 +9,7 @@ export class GetListPollingDto extends PagingReqDto {
   userId: string;
 }
 
-export class GetListReceivePollingDto extends PagingReqDto {}
+export class GetListInboxPollingDto extends PagingReqDto {}
 
 export class GetPollingDto {
   @ApiProperty({
