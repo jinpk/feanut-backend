@@ -545,11 +545,17 @@ export class PollingsService {
     let mergedList = [];
     const cursors = cursor.slice(-4);
     for (const v of cursors) {
-      let temp = { profileId: null, name: null, imageFileKey: null };
+      let temp = {
+        profileId: null,
+        name: null,
+        imageFileKey: null,
+        gender: null,
+      };
       temp.profileId = v.friendIds.friends.profileId;
 
-      if (v.friendIds.profile.name) {
+      if (v.friendIds.profile.gender) {
         temp.name = v.friendIds.profile.name;
+        temp.gender = v.friendIds.profile.gender;
       } else {
         temp.name = v.friendIds.friends.name;
       }
