@@ -12,7 +12,6 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors({ origin: '*' });
   app.useGlobalPipes(new ValidationPipe());
 
   const configService = app.get(ConfigService);
@@ -37,6 +36,9 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('docs', app, document);
+    app.enableCors({ origin: '*' });
+  } else {
+    // app.enableCors({ origin: '*' });
   }
 
   await app.listen(port);

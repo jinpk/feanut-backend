@@ -323,7 +323,7 @@ export class FriendshipsService {
       name: {
         $cond: [
           // 회원가입 안했으면
-          { $eq: ['$user._id', null] },
+          { $ifNull: ['$user._id', true] },
           // 내 친구목록 이름으로 조회
           '$friends.name',
           '$profile.name',
@@ -400,7 +400,6 @@ export class FriendshipsService {
       };
     } else {
       const doc = await this.friendShipModel.aggregate<FriendDto>(pipeline);
-
       return {
         total: doc.length,
         data: doc,
