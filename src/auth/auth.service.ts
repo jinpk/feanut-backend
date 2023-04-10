@@ -62,7 +62,7 @@ export class AuthService {
       const username = await this.instagramProvider.parseCode(code);
       await this.profilesService.updateInstagramById(profileId, username);
     } catch (error) {
-      this.logger.error('인스타그램 연동 오류', error);
+      this.logger.error(JSON.stringify(`인스타그램 연동 오류: ${error}`));
       throw new WrappedError(AUTH_MODULE_NAME);
     }
   }

@@ -20,12 +20,12 @@ import {
   PollingDto,
   ReqNewPollingDto,
   PollingResultDto,
-  ReceivePollingDto,
+  InboxPollingDto,
 } from './dtos/polling.dto';
 import { FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
-import { GetListReceivePollingDto } from './dtos/get-polling.dto';
+import { GetListInboxPollingDto } from './dtos/get-polling.dto';
 import { WrappedError } from '../common/errors';
 import {
   POLLING_MODULE_NAME,
@@ -90,7 +90,7 @@ export class PollingsController {
   })
   @ApiOkResponsePaginated(Polling)
   async getMyInboxList(
-    @Query() query: GetListReceivePollingDto,
+    @Query() query: GetListInboxPollingDto,
     @Request() req,
   ) {
     return await this.pollingsService.findListInboxByUserId(req.user.id, query);
@@ -103,7 +103,7 @@ export class PollingsController {
   })
   @ApiOkResponse({
     status: 200,
-    type: ReceivePollingDto,
+    type: InboxPollingDto,
   })
   async getInboxDetail(@Param('pollingId') pollingId: string, @Request() req) {
     return await this.pollingsService.findInboxPollingByUserId(
@@ -140,14 +140,14 @@ export class PollingsController {
     @Request() req,
   ) {
     const polling = await this.pollingsService.findPollingById(pollingId);
-    if (req.user.isAdmin) {
-    } else if (req.user.id != polling.userId) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_NOT_AUTHORIZED,
-        '권한이 없습니다.',
-      ).unauthorized();
-    }
+    // if (req.user.isAdmin) {
+    // } else if (req.user.id != polling.userId) {
+    //   throw new WrappedError(
+    //     POLLING_MODULE_NAME,
+    //     POLLING_ERROR_NOT_AUTHORIZED,
+    //     '권한이 없습니다.',
+    //   ).unauthorized();
+    // }
 
     const dto = this.pollingsService.pollingToDto(polling);
 

@@ -35,10 +35,20 @@ export class FirebaseService {
           token: x,
           android: {
             priority: 'high',
+            notification: {
+              sound: 'default',
+            },
           },
           notification: {
             title: params.title,
             body: params.message,
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+              },
+            },
           },
           data: { ...params.payload },
         })),
