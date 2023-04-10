@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Round, RoundSchema } from './schemas/round.schema';
 import { Poll, PollSchema } from './schemas/poll.schema';
 import { PollsService } from './polls.service';
-import { PollsController, PublicPollsController } from './polls.controller';
+import { PollsGetController } from './polls.controller';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import {
   PollRoundEvent,
@@ -23,6 +23,7 @@ import { EmojisModule } from 'src/emojis/emojis.module';
   ],
   providers: [PollsService],
   controllers: [
+    PollsGetController,
     //PollsController, PublicPollsController
   ],
   exports: [PollsService],

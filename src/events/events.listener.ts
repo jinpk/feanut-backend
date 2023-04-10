@@ -5,7 +5,7 @@ import { FriendshipsService } from 'src/friendships/friendships.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PollingVotedEvent } from 'src/pollings/events';
 import { ProfilesService } from 'src/profiles/profiles.service';
-import { UserCreatedEvent } from 'src/users/events';
+import { UserCreatedEvent, UserDeletedEvent } from 'src/users/events';
 
 @Injectable()
 export class EventsListener {
@@ -60,6 +60,22 @@ export class EventsListener {
     } catch (error) {
       this.logger.error(
         `${UserCreatedEvent.name} got error with ${
+          event.userId
+        }.: ${JSON.stringify(error)}`,
+      );
+    }
+  }
+
+  @OnEvent(UserDeletedEvent.name)
+  async handleUserDeletedEvent(event: UserDeletedEvent) {
+    this.logger.log(`${UserDeletedEvent.name} triggered: ${event.userId}`);
+
+    try {
+      const profile = await this.profilesService.getByUserId(event.userId);
+      await this.friendshipsService.removeFriendsAllByProfileId(profile._id);
+    } catch (error) {
+      this.logger.error(
+        `${UserDeletedEvent.name} got error with ${
           event.userId
         }.: ${JSON.stringify(error)}`,
       );

@@ -41,8 +41,35 @@ import {
   POLL_MODULE_NAME,
   POLL_ERROR_NOT_FOUND_ROUND,
   POLL_ERROR_NOT_FOUND_POLL,
-  POLL_ERROR_NOT_AN_ADMIN
+  POLL_ERROR_NOT_AN_ADMIN,
 } from './polls.constant';
+
+@ApiTags('Poll')
+@Controller('polls')
+@ApiBearerAuth()
+export class PollsGetController {
+  constructor(private readonly pollsService: PollsService) {}
+
+  @Get(':pollId')
+  @ApiOperation({
+    summary: '등록된 투표 상세 조회',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: PollDto,
+  })
+  async getPollDetail(@Param('pollId') pollId: string, @Request() req) {
+    const poll = await this.pollsService.findPollById(pollId);
+    if (!poll) {
+      throw new WrappedError(
+        POLL_MODULE_NAME,
+        POLL_ERROR_NOT_FOUND_POLL,
+      ).notFound();
+    }
+    const dto = this.pollsService.pollToDto(poll);
+    return dto;
+  }
+}
 
 @ApiTags('Poll')
 @Controller('polls')
@@ -64,7 +91,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     return await this.pollsService.createPollRoundEvent(body);
   }
@@ -84,7 +112,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     return await this.pollsService.createRound(body);
   }
@@ -107,7 +136,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     return await this.pollsService.createPoll(body);
   }
@@ -132,7 +162,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
 
     const [exist, round] = await this.pollsService.existRound(roundId);
@@ -159,7 +190,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     const [exist, poll] = await this.pollsService.existPoll(pollId);
     if (!exist) {
@@ -179,7 +211,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     return await this.pollsService.findListRound(query);
   }
@@ -194,7 +227,8 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
     return await this.pollsService.findListPoll(query);
   }
@@ -213,20 +247,22 @@ export class PollsController {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_AN_ADMIN,
-        'Not an Admin');
+        'Not an Admin',
+      );
     }
-    
+
     const round = await this.pollsService.findRoundById(roundId);
     if (!round) {
       throw new WrappedError(
         POLL_MODULE_NAME,
         POLL_ERROR_NOT_FOUND_ROUND,
-        'Not Found Round').notFound();
+        'Not Found Round',
+      ).notFound();
     }
 
     const dto = this.pollsService.roundToDto(round);
 
-    return dto
+    return dto;
   }
 
   @Get(':pollId')

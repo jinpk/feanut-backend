@@ -35,7 +35,7 @@ export class NotificationsService {
     userId: string | mongoose.Types.ObjectId,
     dto: UpdateNotificationUserConfigDto,
   ) {
-    const config = await this.notificationUserConfigModel.findOneAndUpdate({
+    const config = await this.notificationUserConfigModel.findOne({
       userId: new mongoose.Types.ObjectId(userId),
     });
 
@@ -77,17 +77,20 @@ export class NotificationsService {
       },
     ]);
 
-    let polls = await this.pollsService.findListPublicPoll({limit: 12, page:1})
-    let i = 0
+    let polls = await this.pollsService.findListPublicPoll({
+      limit: 12,
+      page: 1,
+    });
+    let i = 0;
     for (let user of users) {
       user.contentText = polls.data[i].contentText;
       i++;
-      if (i == polls.data.length){
+      if (i == polls.data.length) {
         i = 0;
       }
     }
-    
-    return users
+
+    return users;
   }
 
   async getListNotificationUsersUsingRoundTitle() {
