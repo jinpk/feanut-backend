@@ -1042,7 +1042,7 @@ export class PollingsService {
         temp.name = v.friendIds.profile.name;
         temp.gender = v.friendIds.profile.gender;
       } else {
-        temp.name = null;
+        temp.name = v.friendIds.profile.name;
       }
 
       if (v.friendIds.profile.imageFileId) {
