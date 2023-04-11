@@ -1715,7 +1715,7 @@ export class PollingsService {
         if (todayRounds[0].completedAt) {
           timecheck =
             todayRounds[0].completedAt.getTime() +
-            1 * 60 * 1000 -
+            30 * 60 * 1000 -
             now().getTime(); // 30분 30 * 60 * 1000
 
           res.remainTime = timecheck;
