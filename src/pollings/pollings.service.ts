@@ -1482,7 +1482,7 @@ export class PollingsService {
   }
 
   // 피넛을 소모. 수신투표 열기.
-  async updatePollingOpen(user_id, polling_id: string): Promise<string> {
+  async updatePollingOpen(user_id, polling_id: string): Promise<InboxPollingDto> {
     //userId 사용하여 get profile
     const profile = await this.profilesService.getByUserId(user_id);
 
@@ -1549,7 +1549,9 @@ export class PollingsService {
           $inc: { isOpened: 1 },
         });
 
-        return result._id.toString();
+        const res = await this.findInboxPollingByUserId(user_id, polling_id);
+
+        return res;
       }
     }
   }
