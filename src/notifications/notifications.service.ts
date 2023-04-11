@@ -185,6 +185,8 @@ export class NotificationsService {
     ]);
 
     let rounds = await this.pollsService.findAllActiveEventRound();
+    rounds.eventRound = rounds.eventRound.sort(() => Math.random() - 0.5);
+    rounds.normalRound = rounds.normalRound.sort(() => Math.random() - 0.5);
 
     for (let user of users) {
       for (let i = 0; i < rounds.eventRound.length; i++) {
