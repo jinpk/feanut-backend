@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { SignOutEvent } from 'src/auth/events';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PollingVotedEvent } from 'src/pollings/events';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { UserCreatedEvent, UserDeletedEvent } from 'src/users/events';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class EventsListener {
@@ -16,11 +18,14 @@ export class EventsListener {
     private coinsService: CoinsService,
     private notificationsService: NotificationsService,
     private profilesService: ProfilesService,
+    private usersService: UsersService,
   ) {}
 
   @OnEvent(UserCreatedEvent.name)
   async handleUserCreatedEvent(event: UserCreatedEvent) {
-    this.logger.log(`${UserCreatedEvent.name} triggered: ${event.userId}`);
+    this.logger.log(
+      `${UserCreatedEvent.name} triggered userId: ${event.userId}`,
+    );
 
     try {
       const profileId =
@@ -68,11 +73,19 @@ export class EventsListener {
 
   @OnEvent(UserDeletedEvent.name)
   async handleUserDeletedEvent(event: UserDeletedEvent) {
-    this.logger.log(`${UserDeletedEvent.name} triggered: ${event.userId}`);
+    this.logger.log(
+      `${UserDeletedEvent.name} triggered userId: ${event.userId}`,
+    );
 
     try {
       const profile = await this.profilesService.getByUserId(event.userId);
+      // 친구목록 삭제
       await this.friendshipsService.removeFriendsAllByProfileId(profile._id);
+      // fcm clear
+      await this.notificationsService.updateNotificationUserConfig(
+        event.userId,
+        { fcmToken: '' },
+      );
     } catch (error) {
       this.logger.error(
         `${UserDeletedEvent.name} got error with ${
@@ -82,9 +95,32 @@ export class EventsListener {
     }
   }
 
+  @OnEvent(SignOutEvent.name)
+  async handleSignOutEvent(event: SignOutEvent) {
+    this.logger.log(`${SignOutEvent.name} triggered userId: ${event.userId}`);
+
+    try {
+      // clear refresh token
+      await this.usersService.updateRefreshTokenById(event.userId, undefined);
+      // fcm clear
+      await this.notificationsService.updateNotificationUserConfig(
+        event.userId,
+        { fcmToken: '' },
+      );
+    } catch (error) {
+      this.logger.error(
+        `${SignOutEvent.name} got error with ${event.userId}.: ${JSON.stringify(
+          error,
+        )}`,
+      );
+    }
+  }
+
   @OnEvent(PollingVotedEvent.name)
   async handlePollingVotedEvent(event: PollingVotedEvent) {
-    this.logger.log(`${PollingVotedEvent.name} triggered: ${event.pollingId}`);
+    this.logger.log(
+      `${PollingVotedEvent.name} triggered pollingId: ${event.pollingId}`,
+    );
     // 수신자 있는 경우 수신자에게 푸시알림 전송
     if (event.selectedProfileId) {
       this.notificationsService.sendInboxPull(

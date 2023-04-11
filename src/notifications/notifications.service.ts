@@ -68,11 +68,35 @@ export class NotificationsService {
   }
 
   async getListNotificationUsers() {
-    const users = await this.notificationUserConfigModel.aggregate([
+    let users = await this.notificationUserConfigModel.aggregate([
       {
         $match: {
           receivePoll: true,
           fcmToken: { $exists: true, $ne: '' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      {
+        $unwind: {
+          path: '$owner',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'owner._id': 0,
+          'owner.__v': 0,
+          'owner.phoneNumber': 0,
+          'owner.createdAt': 0,
+          'owner.updatedAt': 0,
+          'owner.refreshToken': 0,
         },
       },
     ]);
@@ -81,6 +105,20 @@ export class NotificationsService {
       limit: 12,
       page: 1,
     });
+
+    if (polls.data.length > 0) {
+      polls.data = polls.data.sort(() => Math.random() - 0.5);
+    }
+
+    // 삭제된 유저 sort
+    users = users.filter((element) => {
+      if (element.owner) {
+        return !element.owner.isDeleted;
+      } else {
+        return true;
+      }
+    });
+
     let i = 0;
     for (let user of users) {
       user.contentText = polls.data[i].contentText;
@@ -93,139 +131,139 @@ export class NotificationsService {
     return users;
   }
 
-  async getListNotificationUsersUsingRoundTitle() {
-    const users = await this.notificationUserConfigModel.aggregate([
-      {
-        $match: {
-          receivePoll: true,
-          fcmToken: { $exists: true, $ne: '' },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          receivePull: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          __v: 0,
-        },
-      },
-      {
-        $lookup: {
-          from: 'polling_user_rounds',
-          let: { user_id: '$userId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ['$userId', '$$user_id'],
-                },
-              },
-            },
-            {
-              $sort: { createdAt: -1 },
-            },
-            {
-              $limit: 1,
-            },
-          ],
-          as: 'userrounds',
-        },
-      },
-      {
-        $unwind: {
-          path: '$userrounds',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'poll_rounds',
-          let: { round_id: '$userrounds.roundId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ['$_id', '$$round_id'],
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: 0,
-                title: 0,
-              },
-            },
-          ],
-          as: 'round',
-        },
-      },
-      {
-        $unwind: {
-          path: '$round',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          'round._id': 0,
-          'round.title': 0,
-          'round.pollRoundEventId': 0,
-          'round.enabled': 0,
-          'round.pollIds': 0,
-          'round.startedAt': 0,
-          'round.endedAt': 0,
-          'round.createdAt': 0,
-          'round.updatedAt': 0,
-          'round.__v': 0,
-          userrounds: 0,
-        },
-      },
-    ]);
+  // async getListNotificationUsersUsingRoundTitle() {
+  //   const users = await this.notificationUserConfigModel.aggregate([
+  //     {
+  //       $match: {
+  //         receivePoll: true,
+  //         fcmToken: { $exists: true, $ne: '' },
+  //       },
+  //     },
+  //     {
+  //       $project: {
+  //         _id: 0,
+  //         receivePull: 0,
+  //         createdAt: 0,
+  //         updatedAt: 0,
+  //         __v: 0,
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: 'polling_user_rounds',
+  //         let: { user_id: '$userId' },
+  //         pipeline: [
+  //           {
+  //             $match: {
+  //               $expr: {
+  //                 $eq: ['$userId', '$$user_id'],
+  //               },
+  //             },
+  //           },
+  //           {
+  //             $sort: { createdAt: -1 },
+  //           },
+  //           {
+  //             $limit: 1,
+  //           },
+  //         ],
+  //         as: 'userrounds',
+  //       },
+  //     },
+  //     {
+  //       $unwind: {
+  //         path: '$userrounds',
+  //         preserveNullAndEmptyArrays: true,
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: 'poll_rounds',
+  //         let: { round_id: '$userrounds.roundId' },
+  //         pipeline: [
+  //           {
+  //             $match: {
+  //               $expr: {
+  //                 $eq: ['$_id', '$$round_id'],
+  //               },
+  //             },
+  //           },
+  //           {
+  //             $project: {
+  //               _id: 0,
+  //               userId: 0,
+  //               title: 0,
+  //             },
+  //           },
+  //         ],
+  //         as: 'round',
+  //       },
+  //     },
+  //     {
+  //       $unwind: {
+  //         path: '$round',
+  //         preserveNullAndEmptyArrays: true,
+  //       },
+  //     },
+  //     {
+  //       $project: {
+  //         'round._id': 0,
+  //         'round.title': 0,
+  //         'round.pollRoundEventId': 0,
+  //         'round.enabled': 0,
+  //         'round.pollIds': 0,
+  //         'round.startedAt': 0,
+  //         'round.endedAt': 0,
+  //         'round.createdAt': 0,
+  //         'round.updatedAt': 0,
+  //         'round.__v': 0,
+  //         userrounds: 0,
+  //       },
+  //     },
+  //   ]);
 
-    let rounds = await this.pollsService.findAllActiveEventRound();
+  //   let rounds = await this.pollsService.findAllActiveEventRound();
 
-    for (let user of users) {
-      for (let i = 0; i < rounds.eventRound.length; i++) {
-        if (user.round) {
-          if (user.round.index == rounds.eventRound[i].index) {
-            if (i == 0) {
-            } else {
-              user.round.title = rounds.eventRound[i - 1].title;
-            }
-          }
-        } else {
-          user['round'] = {
-            title: rounds.eventRound[rounds.eventRound.length - 1].title,
-          };
-          break;
-        }
-      }
+  //   for (let user of users) {
+  //     for (let i = 0; i < rounds.eventRound.length; i++) {
+  //       if (user.round) {
+  //         if (user.round.index == rounds.eventRound[i].index) {
+  //           if (i == 0) {
+  //           } else {
+  //             user.round.title = rounds.eventRound[i - 1].title;
+  //           }
+  //         }
+  //       } else {
+  //         user['round'] = {
+  //           title: rounds.eventRound[rounds.eventRound.length - 1].title,
+  //         };
+  //         break;
+  //       }
+  //     }
 
-      if (user.round.title) {
-      } else {
-        for (let i = 0; i < rounds.normalRound.length; i++) {
-          if (user.round.index) {
-            if (user.round.index == rounds.eventRound[i].index) {
-              if (i == rounds.normalRound.length - 1) {
-                user.round.title = rounds.normalRound[0].title;
-              } else {
-                user.round.title = rounds.normalRound[i + 1].title;
-              }
-            }
-          } else {
-            user['round'] = {
-              title: rounds.eventRound[rounds.eventRound.length - 1].title,
-            };
-            break;
-          }
-        }
-      }
-    }
+  //     if (user.round.title) {
+  //     } else {
+  //       for (let i = 0; i < rounds.normalRound.length; i++) {
+  //         if (user.round.index) {
+  //           if (user.round.index == rounds.eventRound[i].index) {
+  //             if (i == rounds.normalRound.length - 1) {
+  //               user.round.title = rounds.normalRound[0].title;
+  //             } else {
+  //               user.round.title = rounds.normalRound[i + 1].title;
+  //             }
+  //           }
+  //         } else {
+  //           user['round'] = {
+  //             title: rounds.eventRound[rounds.eventRound.length - 1].title,
+  //           };
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
 
-    return users;
-  }
+  //   return users;
+  // }
 
   async sendInboxPull(
     pollingId: string | mongoose.Types.ObjectId,

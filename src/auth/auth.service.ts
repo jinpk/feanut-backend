@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { UsersService } from 'src/users/users.service';
 import { Auth, AuthDocument } from './schemas/auth.schema';
 import * as dayjs from 'dayjs';
@@ -17,6 +17,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   AUTH_ERROR_COOL_TIME,
   AUTH_ERROR_EXIST_PHONE_NUMBER,
+  AUTH_ERROR_INVAILD_REFRESH_TOKEN,
   AUTH_ERROR_INVAILD_VERIFICATION,
   AUTH_ERROR_INVALID_CODE,
   AUTH_ERROR_NOT_FOUND_PHONE_NUMBER,
@@ -28,6 +29,8 @@ import { Gender } from 'src/profiles/enums';
 import { AuthPurpose } from './enums';
 import { AligoProvider, InstagramProvider } from './providers';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SignOutEvent } from './events';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +43,13 @@ export class AuthService {
     private aligoProvider: AligoProvider,
     private instagramProvider: InstagramProvider,
     private profilesService: ProfilesService,
+    private eventEmitter: EventEmitter2,
   ) {}
+
+  // 로그아웃
+  async signOut(sub: string) {
+    this.eventEmitter.emit(SignOutEvent.name, new SignOutEvent(sub));
+  }
 
   // 유효한 회원인지 검증
   async isValidUserId(userId: string | Types.ObjectId): Promise<boolean> {
@@ -69,14 +78,18 @@ export class AuthService {
 
   // 리프레시 토큰 검증 및 token 재발급
   async validateRefreshToken(refreshToken: string): Promise<TokenDto> {
-    await this.jwtService.verify(refreshToken);
-
-    const user = await this.usersService.findActiveUserOne({ refreshToken });
-    if (!user) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    try {
+      await this.jwtService.verify(refreshToken);
+      const user = await this.usersService.findActiveUserOne({ refreshToken });
+      return this.userLogin(user._id.toHexString());
+    } catch (error) {
+      this.logger.error(`validateRefreshToken error: ${JSON.stringify(error)}`);
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVAILD_REFRESH_TOKEN,
+        error.message || JSON.stringify(error),
+      ).reject();
     }
-
-    return this.userLogin(user._id.toHexString());
   }
 
   // 사용자 로그인후 토큰 발급
@@ -86,8 +99,10 @@ export class AuthService {
       isAdmin: false,
     };
 
+    this.logger.log(`userLogin: ${sub}`);
+
     const accessToken = this.genToken(payload, '1h');
-    const refreshToken = this.genToken({}, '30d');
+    const refreshToken = this.genToken({}, '14d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);
     return {

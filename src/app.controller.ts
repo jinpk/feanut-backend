@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiOperation,
   ApiBody,
   ApiOkResponse,
   ApiCreatedResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { INSTAGRAM_AUTH_REDIRECT_PATH } from './auth/auth.constant';
 import { AuthService } from './auth/auth.service';
@@ -76,6 +77,15 @@ export class AppController {
   @ApiOkResponse({ type: AuthDto })
   async signInVerification(@Body() body: SignInVerificationDto) {
     return await this.authService.signInVerification(body);
+  }
+
+  @Post('signout')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: '로그아웃',
+  })
+  async signOut(@Req() req) {
+    await this.authService.signOut(req.user.id);
   }
 
   @Post('signin')
