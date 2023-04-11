@@ -97,8 +97,8 @@ export class NotificationsService {
           'owner.createdAt': 0,
           'owner.updatedAt': 0,
           'owner.refreshToken': 0,
-        }
-      }
+        },
+      },
     ]);
 
     let polls = await this.pollsService.findListPublicPoll({
@@ -108,14 +108,14 @@ export class NotificationsService {
 
     if (polls.data.length > 0) {
       polls.data = polls.data.sort(() => Math.random() - 0.5);
-    };
+    }
 
     // 삭제된 유저 sort
-    users = users.filter(element => {
+    users = users.filter((element) => {
       if (element.owner) {
-        return (!element.owner.isDeleted);
+        return !element.owner.isDeleted;
       } else {
-        return true
+        return true;
       }
     });
 
