@@ -139,15 +139,15 @@ export class PollingsController {
     @Param('pollingId') pollingId: string,
     @Request() req,
   ) {
-    const polling = await this.pollingsService.findPollingById(pollingId);
-    // if (req.user.isAdmin) {
-    // } else if (req.user.id != polling.userId) {
-    //   throw new WrappedError(
-    //     POLLING_MODULE_NAME,
-    //     POLLING_ERROR_NOT_AUTHORIZED,
-    //     '권한이 없습니다.',
-    //   ).unauthorized();
-    // }
+    const polling = await this.pollingsService.findPollingById(pollingId, req.user.id);
+    if (req.user.isAdmin) {
+    } else if (req.user.id != polling.userId) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_AUTHORIZED,
+        '권한이 없습니다.',
+      ).unauthorized();
+    }
 
     const dto = this.pollingsService.pollingToDto(polling);
 

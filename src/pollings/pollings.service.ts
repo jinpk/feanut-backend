@@ -829,7 +829,18 @@ export class PollingsService {
     return polling;
   }
 
-  async findPollingById(polling_id: string) {
+  async findPollingById(polling_id, user_id: string) {
+    // 친구목록 불러오기/셔플
+    const friendList = await this.friendShipsService.listFriend(user_id);
+
+    if (friendList.data.length < 4) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_MIN_FRIENDS,
+        '활성화 된 친구를 4명 이상 추가해주세요.',
+      ).reject();
+    }
+
     const filter: FilterQuery<PollingDocument> = {
       _id: new Types.ObjectId(polling_id),
     };
