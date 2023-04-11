@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { UsersService } from 'src/users/users.service';
 import { Auth, AuthDocument } from './schemas/auth.schema';
 import * as dayjs from 'dayjs';
@@ -29,6 +29,8 @@ import { Gender } from 'src/profiles/enums';
 import { AuthPurpose } from './enums';
 import { AligoProvider, InstagramProvider } from './providers';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SignOutEvent } from './events';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +43,13 @@ export class AuthService {
     private aligoProvider: AligoProvider,
     private instagramProvider: InstagramProvider,
     private profilesService: ProfilesService,
+    private eventEmitter: EventEmitter2,
   ) {}
+
+  // 로그아웃
+  async signOut(sub: string) {
+    this.eventEmitter.emit(SignOutEvent.name, new SignOutEvent(sub));
+  }
 
   // 유효한 회원인지 검증
   async isValidUserId(userId: string | Types.ObjectId): Promise<boolean> {
