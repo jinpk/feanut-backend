@@ -46,6 +46,7 @@ import { PollingVotedEvent } from './events';
 import { PollingStatsDto } from './dtos/pollingstatus.dto';
 import { FeanutCardDto } from './dtos';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
+import { RANDOM_NICKNAMES } from 'src/profiles/profiles.constant';
 
 @Injectable()
 export class PollingsService {
@@ -393,7 +394,7 @@ export class PollingsService {
           if (v.friendship) {
             temp.name = v.friendship.friends.name;
           } else {
-            temp.name = '항해하는 자유요정'
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
           };
         } else {
           if (v.profile) {
@@ -404,7 +405,7 @@ export class PollingsService {
               if (v.friendship) {
                 temp.name = v.friendship.friends.name;
               } else {
-                temp.name = '항해하는 자유요정'
+                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
               }
             }
           } else {
@@ -418,7 +419,7 @@ export class PollingsService {
         if (v.friendship) {
           temp.name = v.friendship.friends.name;
         } else {
-          temp.name = '항해하는 자유요정'
+          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
@@ -679,7 +680,7 @@ export class PollingsService {
           if (v.friendship) {
             temp.name = v.friendship.friends.name;
           } else {
-            temp.name = '항해하는 자유요정'
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
           }
         } else {
           if (v.profile) {
@@ -690,7 +691,7 @@ export class PollingsService {
               if (v.friendship) {
                 temp.name = v.friendship.friends.name;
               } else {
-                temp.name = '항해하는 자유요정'
+                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
               }
             }
           } else {
@@ -704,7 +705,7 @@ export class PollingsService {
         if (v.friendship) {
           temp.name = v.friendship.friends.name;
         } else {
-          temp.name = '항해하는 자유요정'
+          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
@@ -1019,7 +1020,7 @@ export class PollingsService {
           if (v.friendship) {
             temp.name = v.friendship.friends.name;
           } else {
-            temp.name = '항해하는 자유요정'
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
           }
         } else {
           if (v.profile) {
@@ -1030,7 +1031,7 @@ export class PollingsService {
               if (v.friendship) {
                 temp.name = v.friendship.friends.name;
               } else {
-                temp.name = '항해하는 자유요정'
+                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
               }
             }
           } else {
@@ -1044,7 +1045,7 @@ export class PollingsService {
         if (v.friendship) {
           temp.name = v.friendship.friends.name;
         } else {
-          temp.name = '항해하는 자유요정'
+          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
@@ -1095,6 +1096,20 @@ export class PollingsService {
       {
         $unwind: {
           path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'profile.ownerId',
+          foreignField: '_id',
+          as: 'owner',
+        },
+      },
+      {
+        $unwind: {
+          path: '$owner',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -1154,6 +1169,13 @@ export class PollingsService {
           'profile.updatedAt': 0,
           'profile.imageFileId': 0,
           'profile.ownerId': 0,
+          'owner._id': 0,
+          'owner.__v': 0,
+          'owner.phoneNumber': 0,
+          'owner.createdAt': 0,
+          'owner.updatedAt': 0,
+          'owner.refreshToken': 0,
+          'owner.deletionReason': 0,
           'imagefile._id': 0,
           'imagefile.__v': 0,
           'imagefile.ownerId': 0,
@@ -1280,22 +1302,26 @@ export class PollingsService {
 
       temp.profileId = v.profile._id;
 
-      if (v.profile) {
-        if (v.profile.gender){
-          temp.name = v.profile.name;
-          temp.gender = v.profile.gender;
+      if (v.owner) {
+        if (v.owner.isDeleted) {
+          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         } else {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
+          if (v.profile) {
+            if (v.profile.gender){
+              temp.name = v.profile.name;
+              temp.gender = v.profile.gender;
+            } else {
+              temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+            }
           } else {
-            temp.name = '항해하는 자유요정'
+          }
+    
+          if (v.imagefile) {
+            temp.imageFileKey = v.imagefile.key;
           }
         }
       } else {
-      };
-
-      if (v.imagefile) {
-        temp.imageFileKey = v.imagefile.key;
+        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
       }
 
       mergedList.push(temp);
