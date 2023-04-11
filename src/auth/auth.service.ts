@@ -17,6 +17,7 @@ import { WrappedError } from 'src/common/errors';
 import {
   AUTH_ERROR_COOL_TIME,
   AUTH_ERROR_EXIST_PHONE_NUMBER,
+  AUTH_ERROR_INVAILD_REFRESH_TOKEN,
   AUTH_ERROR_INVAILD_VERIFICATION,
   AUTH_ERROR_INVALID_CODE,
   AUTH_ERROR_NOT_FOUND_PHONE_NUMBER,
@@ -69,14 +70,18 @@ export class AuthService {
 
   // 리프레시 토큰 검증 및 token 재발급
   async validateRefreshToken(refreshToken: string): Promise<TokenDto> {
-    await this.jwtService.verify(refreshToken);
-
-    const user = await this.usersService.findActiveUserOne({ refreshToken });
-    if (!user) {
-      throw new WrappedError(AUTH_MODULE_NAME).reject();
+    try {
+      await this.jwtService.verify(refreshToken);
+      const user = await this.usersService.findActiveUserOne({ refreshToken });
+      return this.userLogin(user._id.toHexString());
+    } catch (error) {
+      this.logger.error(`validateRefreshToken error: ${JSON.stringify(error)}`);
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVAILD_REFRESH_TOKEN,
+        error.message || JSON.stringify(error),
+      ).reject();
     }
-
-    return this.userLogin(user._id.toHexString());
   }
 
   // 사용자 로그인후 토큰 발급
@@ -86,8 +91,10 @@ export class AuthService {
       isAdmin: false,
     };
 
+    this.logger.log(`userLogin: ${sub}`);
+
     const accessToken = this.genToken(payload, '1h');
-    const refreshToken = this.genToken({}, '30d');
+    const refreshToken = this.genToken({}, '14d');
 
     await this.usersService.updateRefreshTokenById(sub, refreshToken);
     return {
