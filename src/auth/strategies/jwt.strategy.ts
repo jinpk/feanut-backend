@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WrappedError } from 'src/common/errors';
 import { AuthService } from '../auth.service';
+import { AUTH_ERROR_NOT_FOUND_USER, AUTH_MODULE_NAME } from '../auth.constant';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, '') {
@@ -30,7 +31,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, '') {
 
     // 탈퇴 회원인지 검증
     if (!user.isAdmin && !(await this.authServices.isValidUserId(user.id))) {
-      throw new WrappedError(null, null, '권한 없습니다.').unauthorized();
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_NOT_FOUND_USER,
+        '권한 없습니다.',
+      ).unauthorized();
     }
 
     return user;

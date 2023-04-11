@@ -81,6 +81,9 @@ export class AuthService {
     try {
       await this.jwtService.verify(refreshToken);
       const user = await this.usersService.findActiveUserOne({ refreshToken });
+      if (!user) {
+        throw new Error('Not Found active user');
+      }
       return this.userLogin(user._id.toHexString());
     } catch (error) {
       this.logger.error(`validateRefreshToken error: ${JSON.stringify(error)}`);
