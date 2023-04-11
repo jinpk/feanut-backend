@@ -830,10 +830,10 @@ export class PollingsService {
   }
 
   async findPollingById(polling_id, user_id: string) {
-    // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    // 친구 인원 수 체크
+    const friendList = await this.friendShipsService.getFriendsCount(user_id);
 
-    if (friendList.data.length < 4) {
+    if (friendList < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_MIN_FRIENDS,
@@ -1644,12 +1644,14 @@ export class PollingsService {
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
 
-    const friendList = await this.friendShipsService.listFriend(user_id);
-    if (friendList.data.length < 4) {
+    // 친구 인원 수 체크
+    const friendList = await this.friendShipsService.getFriendsCount(user_id);
+
+    if (friendList < 4) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_MIN_FRIENDS,
-        null,
+        '활성화 된 친구를 4명 이상 추가해주세요.',
       ).reject();
     }
 
