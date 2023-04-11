@@ -162,7 +162,7 @@ export class PollingsController {
   })
   @ApiResponse({
     status: 200,
-    type: InboxPollingDto,
+    type: String,
   })
   async postPollingOpen(@Param('pollingId') pollingId: string, @Request() req) {
     return await this.pollingsService.updatePollingOpen(req.user.id, pollingId);
