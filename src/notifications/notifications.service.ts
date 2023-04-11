@@ -78,8 +78,19 @@ export class NotificationsService {
       {
         $lookup: {
           from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
+          let: { user_id: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$_id', '$$user_id'] },
+                    { $ne: ['$isDeleted', true] },
+                  ],
+                }
+              },
+            },
+          ],
           as: 'owner',
         },
       },
@@ -91,12 +102,14 @@ export class NotificationsService {
       },
       {
         $project: {
-          'owner._id': 0,
-          'owner.__v': 0,
-          'owner.phoneNumber': 0,
-          'owner.createdAt': 0,
-          'owner.updatedAt': 0,
-          'owner.refreshToken': 0,
+          _id: 0,
+          owner: 0,
+          userId: 0,
+          receivePoll: 0,
+          receivePull: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
         },
       },
     ]);
@@ -109,15 +122,6 @@ export class NotificationsService {
     if (polls.data.length > 0) {
       polls.data = polls.data.sort(() => Math.random() - 0.5);
     }
-
-    // 삭제된 유저 sort
-    users = users.filter((element) => {
-      if (element.owner) {
-        return !element.owner.isDeleted;
-      } else {
-        return true;
-      }
-    });
 
     let i = 0;
     for (let user of users) {

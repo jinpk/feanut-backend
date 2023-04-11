@@ -114,6 +114,7 @@ export class FriendshipsService {
     await friendship.save();
   }
 
+  // 활성화된 친구수
   async getFriendsCount(userId: string | Types.ObjectId): Promise<number> {
     const friendship = await this.friendShipModel.findOne(
       {
