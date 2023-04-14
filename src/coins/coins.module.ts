@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Coin, CoinSchema } from './schemas/coin.schema';
 import { BuyCoin, BuyCoinSchema } from './schemas/buycoin.schema';
 import { UseCoin, UseCoinSchema } from './schemas/usecoin.schema';
-import { CoinsController } from './coins.controller';
+import { CoinsController, CoinsPublicController } from './coins.controller';
 import { CoinsService } from './conis.service';
 import { HttpModule } from '@nestjs/axios';
 import { IAPValidatorProvider } from './providers/iap-validator.provider';
@@ -15,7 +15,7 @@ import { IAPValidatorProvider } from './providers/iap-validator.provider';
     MongooseModule.forFeature([{ name: UseCoin.name, schema: UseCoinSchema }]),
     HttpModule,
   ],
-  controllers: [CoinsController],
+  controllers: [CoinsController,CoinsPublicController],
   providers: [CoinsService, IAPValidatorProvider],
   exports: [CoinsService],
 })

@@ -93,18 +93,26 @@ export class CoinsService {
 
     this.logger.log(JSON.stringify(body));
 
+    let orderId: string;
     try {
       if (body.os === 'ios') {
-        await this.iapValidatorProvider.validateIOSPurchase(body.receipt);
+        const appstoreRes = await this.iapValidatorProvider.validateIOSPurchase(
+          body.receipt,
+        );
+        orderId = appstoreRes.receipt.in_app[0].transaction_id;
       } else {
         const { purchaseToken } = JSON.parse(body.receipt);
-        await this.iapValidatorProvider.validateGooglePurchase(
-          body.productId,
-          purchaseToken,
-        );
+        const playstoreRes =
+          await this.iapValidatorProvider.validateGooglePurchase(
+            body.productId,
+            purchaseToken,
+          );
+        orderId = playstoreRes.orderId;
       }
+      console.log(`IAP Purchased: ${body.os} - ${orderId}`);
     } catch (error: any) {
-      this.logger.error(error);
+      console.error(`IAP Validation error: ${JSON.stringify(error)}`);
+      throw error;
     }
 
     const result = await new this.buycoinModel({
@@ -112,6 +120,7 @@ export class CoinsService {
       os: body.os,
       productId: body.productId,
       receipt: body.receipt,
+      orderId,
     }).save();
 
     await this.updateCoinAccum(userId, amount);

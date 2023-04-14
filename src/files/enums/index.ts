@@ -1,6 +1,5 @@
 export const FilePurpose = {
   ProfileImage: 'profileimage',
-  Emoji: 'emoji',
 } as const;
 export type FilePurpose = (typeof FilePurpose)[keyof typeof FilePurpose];
 
@@ -10,6 +9,7 @@ export const SupportContentType = {
   JPEG: 'image/jpeg',
   HEIC: 'image/heic',
   HIFC: 'image/hifc',
+  HEIF: 'image/heif',
 } as const;
 export type SupportContentType =
   (typeof SupportContentType)[keyof typeof SupportContentType];
