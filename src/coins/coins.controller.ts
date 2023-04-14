@@ -2,17 +2,15 @@ import {
   Controller,
   Get,
   Param,
-  Delete,
-  Patch,
-  Put,
   Post,
   Query,
   Body,
   Request,
+  Res,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -21,16 +19,12 @@ import {
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { CoinsService } from './conis.service';
 import { CoinDto, PurchaseCoinDto } from './dtos/coin.dto';
-import { UpdateCoinDto } from './dtos/update-coin.dto';
-import { GetBuyCoinDto, GetUseCoinDto } from './dtos/get-coin.dto';
+import { GetBuyCoinDto } from './dtos/get-coin.dto';
 import { BuyCoin } from './schemas/buycoin.schema';
-import { UseCoin } from './schemas/usecoin.schema';
 import { WrappedError } from 'src/common/errors';
-import {
-  COIN_MODULE_NAME,
-  COIN_ERROR_NOT_AN_ADMIN,
-
-} from './coins.constant';
+import { COIN_MODULE_NAME, COIN_ERROR_NOT_AN_ADMIN } from './coins.constant';
+import { Public } from 'src/auth/decorators';
+import { Response } from 'express';
 
 @ApiTags('Coin')
 @Controller('coins')
@@ -77,7 +71,8 @@ export class CoinsController {
         throw new WrappedError(
           COIN_MODULE_NAME,
           COIN_ERROR_NOT_AN_ADMIN,
-          'Not an Admin');
+          'Not an Admin',
+        );
       } else {
         return await this.coinsService.findListBuycoin(query);
       }
@@ -96,5 +91,28 @@ export class CoinsController {
   })
   async postBuyCoin(@Body() body: PurchaseCoinDto, @Request() req) {
     return await this.coinsService.createBuyCoin(req.user.id, body);
+  }
+}
+
+@ApiTags('Coin')
+@Controller('coins')
+export class CoinsPublicController {
+  constructor(private readonly coinsService: CoinsService) {}
+
+  @Post('purchase/update/:provider')
+  @Public()
+  @ApiOperation({
+    summary: '피넛코인 인앱 결제 Update Listener',
+  })
+  async purchaseUpdate(
+    @Body() body: any,
+    @Res({ passthrough: true }) res: Response,
+    @Param('provider') provider: 'playstore' | 'appstore',
+  ) {
+    res.status(HttpStatus.OK);
+    console.log(
+      `Purchase Updated: ${JSON.stringify(body)}, provider: ${provider}`,
+    );
+    return;
   }
 }
