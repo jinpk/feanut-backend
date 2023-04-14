@@ -8,7 +8,6 @@ import {
 } from './schemas/notification-user-config.schema';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { PollsModule } from 'src/polls/polls.module';
-import { SchedulerService } from './notifications.scheduler';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { SchedulerService } from './notifications.scheduler';
     PollsModule,
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, SchedulerService],
+  providers: [NotificationsService],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}
