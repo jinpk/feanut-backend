@@ -11,6 +11,7 @@ import { UpdateCoinDto } from './dtos/update-coin.dto';
 import { UtilsService } from 'src/common/providers';
 import { IAPValidatorProvider } from './providers/iap-validator.provider';
 import { IAP_PURCHASE_ITEM_AMOUNT_MAP } from './coins.constant';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CoinsService {
@@ -21,6 +22,7 @@ export class CoinsService {
     @InjectModel(UseCoin.name) private usecoinModel: Model<UseCoinDocument>,
     private iapValidatorProvider: IAPValidatorProvider,
     private utilsService: UtilsService,
+    private configService: ConfigService,
   ) {}
 
   async findUserCoin(userId: string): Promise<CoinDto> {
@@ -91,8 +93,6 @@ export class CoinsService {
       throw new Error('유효하지 않은 productId 입니다.');
     }
 
-    this.logger.log(JSON.stringify(body));
-
     let orderId: string;
     try {
       if (body.os === 'ios') {
@@ -111,8 +111,10 @@ export class CoinsService {
       }
       console.log(`IAP Purchased: ${body.os} - ${orderId}`);
     } catch (error: any) {
-      console.error(`IAP Validation error: ${JSON.stringify(error)}`);
-      throw error;
+      console.error(`IAP Purchase Validation error: ${JSON.stringify(error)}`);
+      if (this.configService.get('env') === 'production') {
+        throw error;
+      }
     }
 
     const result = await new this.buycoinModel({
