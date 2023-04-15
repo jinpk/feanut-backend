@@ -32,6 +32,39 @@ export class FriendshipsService {
     private usersService: UsersService,
   ) {}
 
+  async getFriendByProfileId(
+    userId: string,
+    profileId: string,
+  ): Promise<Friend | null> {
+    const friends = await this.friendShipModel.aggregate([
+      {
+        $match: {
+          userId: { $eq: new Types.ObjectId(userId) },
+        },
+      },
+      { $unwind: '$friends' },
+      {
+        $match: {
+          'friends.profileId': { $eq: new Types.ObjectId(profileId) },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$friends.name',
+          profileId: '$friends.profileId',
+        },
+      },
+    ]);
+
+    const friend = friends[0];
+    if (friend) {
+      return friend;
+    }
+
+    return null;
+  }
+
   // 전화번호부 동기화
   async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
     // 유효하지않은 전화번호부 로깅

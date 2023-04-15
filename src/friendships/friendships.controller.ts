@@ -102,6 +102,32 @@ export class FriendshipsController {
     }
   }
 
+  @Get(':userId/friends/:profileId/byprofile')
+  @ApiOperation({
+    summary: '친구관계 조회 by profileId',
+  })
+  @ApiOkResponse({ type: FriendDto })
+  async getFriendByProfileId(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Param('profileId') profileId: string,
+  ) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+
+    const friend = await this.friendshipsService.getFriendByProfileId(
+      userId,
+      profileId,
+    );
+
+    if (!friend) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).notFound();
+    }
+
+    return friend;
+  }
+
   @Get(':userId/friends/has')
   @ApiOperation({
     summary: '친구 1명 이상 있는지 여부',
