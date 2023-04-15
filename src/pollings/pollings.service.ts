@@ -47,6 +47,7 @@ import { PollingStatsDto } from './dtos/pollingstatus.dto';
 import { FeanutCardDto } from './dtos';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
 import { RANDOM_NICKNAMES } from 'src/profiles/profiles.constant';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PollingsService {
@@ -56,6 +57,7 @@ export class PollingsService {
     private userroundModel: Model<UserRoundDocument>,
     @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Round.name) private roundModel: Model<RoundDocument>,
+    private configService: ConfigService,
     private profilesService: ProfilesService,
     private coinService: CoinsService,
     private friendShipsService: FriendshipsService,
@@ -439,18 +441,18 @@ export class PollingsService {
     const polling = await this.pollingModel.findById(polling_id);
 
     // 3번째 친구 새로고침인지 확인
-    if (!polling.refreshCount) {
-      polling.refreshCount = 1;
-    } else {
-      if (polling.refreshCount < 3) {
-        polling.refreshCount += 1;
-      } else {
-        throw new WrappedError(
-          POLLING_MODULE_NAME,
-          POLLING_ERROR_EXCEED_REFRESH,
-        ).reject();
-      }
-    }
+    // if (!polling.refreshCount) {
+    //   polling.refreshCount = 1;
+    // } else {
+    //   if (polling.refreshCount < 3) {
+    //     polling.refreshCount += 1;
+    //   } else {
+    //     throw new WrappedError(
+    //       POLLING_MODULE_NAME,
+    //       POLLING_ERROR_EXCEED_REFRESH,
+    //     ).reject();
+    //   }
+    // }
 
     // 친구목록 불러오기/셔플
     let prevFriend = [];
@@ -469,7 +471,7 @@ export class PollingsService {
       ).reject();
     }
 
-    // 친구 수 12명 이하이면 slice없이 셔플.(리프레쉬 횟수 3회 이므로.)
+    // 친구 수 12명 이하이면 slice없이 셔플.
     if (friendList.data.length <= 12) {
       friendTempArr = friendList.data
         .sort(() => Math.random() - 0.5)
@@ -1644,6 +1646,11 @@ export class PollingsService {
   async findUserRound(user_id: string): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
 
+    var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
+    if (this.configService.get('env') === 'production') {
+    } else {
+      var waitTime = 1 * 30 * 1000;
+    }
     // 친구 인원 수 체크
     const friendList = await this.friendShipsService.getFriendsCount(user_id);
 
@@ -1728,8 +1735,8 @@ export class PollingsService {
         if (todayRounds[0].completedAt) {
           timecheck =
             todayRounds[0].completedAt.getTime() +
-            30 * 60 * 1000 -
-            now().getTime(); // 30분 30 * 60 * 1000
+            waitTime -
+            now().getTime();
 
           res.remainTime = timecheck;
         }
