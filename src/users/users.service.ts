@@ -89,6 +89,7 @@ export class UsersService {
   async _userDocToDto(user: User): Promise<UserDto> {
     const dto = new UserDto();
     dto.id = user._id.toHexString();
+    dto.phoneNumber = user.phoneNumber;
     return dto;
   }
 }

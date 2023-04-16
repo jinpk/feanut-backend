@@ -4,6 +4,8 @@ import { HttpService } from '@nestjs/axios';
 import GoogleReceiptVerify from 'google-play-billing-validator';
 import { ANDROID_PACKAGE_NAME } from 'src/common/common.constant';
 import { ItunesValidationResponse } from '../enums';
+import { AppStoreResponse } from '../interfaces';
+import { InAppPurchasePayloadResponse } from 'google-play-billing-validator';
 
 @Injectable()
 export class IAPValidatorProvider {
@@ -30,7 +32,7 @@ export class IAPValidatorProvider {
   async validateGooglePurchase(
     productId: string,
     purchaseToken: string,
-  ): Promise<void> {
+  ): Promise<InAppPurchasePayloadResponse> {
     const googleReceiptVerify = new GoogleReceiptVerify({
       email: this.email,
       key: this.playKey,
@@ -46,12 +48,10 @@ export class IAPValidatorProvider {
       throw new Error(response.errorMessage);
     }
 
-    this.logger.log(
-      `Google Playstore IAP Verification Response: ${JSON.stringify(response)}`,
-    );
+    return response.payload;
   }
 
-  async validateIOSPurchase(receipt: string): Promise<void> {
+  async validateIOSPurchase(receipt: string): Promise<AppStoreResponse> {
     const res = await this.httpService.axiosRef.post<ItunesValidationResponse>(
       this.itunesVerifyURL,
       {
@@ -66,14 +66,12 @@ export class IAPValidatorProvider {
       },
     );
 
-    this.logger.log(
-      `Itunes IAP Verification Response: ${JSON.stringify(res.data)}`,
-    );
+    const data = res.data as AppStoreResponse;
 
-    if (res.data.status !== 0) {
-      throw new Error(
-        'iOS 인앱 결제 검증 실패하였습니다. code: ' + res.data.status,
-      );
+    if (data.status !== 0) {
+      throw new Error('iOS 결제 실패 하였습니다. code: ' + res.data.status);
     }
+
+    return data;
   }
 }

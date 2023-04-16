@@ -11,6 +11,7 @@ import { UpdateCoinDto } from './dtos/update-coin.dto';
 import { UtilsService } from 'src/common/providers';
 import { IAPValidatorProvider } from './providers/iap-validator.provider';
 import { IAP_PURCHASE_ITEM_AMOUNT_MAP } from './coins.constant';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CoinsService {
@@ -21,6 +22,7 @@ export class CoinsService {
     @InjectModel(UseCoin.name) private usecoinModel: Model<UseCoinDocument>,
     private iapValidatorProvider: IAPValidatorProvider,
     private utilsService: UtilsService,
+    private configService: ConfigService,
   ) {}
 
   async findUserCoin(userId: string): Promise<CoinDto> {
@@ -91,20 +93,28 @@ export class CoinsService {
       throw new Error('유효하지 않은 productId 입니다.');
     }
 
-    this.logger.log(JSON.stringify(body));
-
+    let orderId: string;
     try {
       if (body.os === 'ios') {
-        await this.iapValidatorProvider.validateIOSPurchase(body.receipt);
+        const appstoreRes = await this.iapValidatorProvider.validateIOSPurchase(
+          body.receipt,
+        );
+        orderId = appstoreRes.receipt.in_app[0].transaction_id;
       } else {
         const { purchaseToken } = JSON.parse(body.receipt);
-        await this.iapValidatorProvider.validateGooglePurchase(
-          body.productId,
-          purchaseToken,
-        );
+        const playstoreRes =
+          await this.iapValidatorProvider.validateGooglePurchase(
+            body.productId,
+            purchaseToken,
+          );
+        orderId = playstoreRes.orderId;
       }
+      console.log(`IAP Purchased: ${body.os} - ${orderId}`);
     } catch (error: any) {
-      this.logger.error(error);
+      console.error(`IAP Purchase Validation error: ${JSON.stringify(error)}`);
+      if (this.configService.get('env') === 'production') {
+        throw error;
+      }
     }
 
     const result = await new this.buycoinModel({
@@ -112,6 +122,7 @@ export class CoinsService {
       os: body.os,
       productId: body.productId,
       receipt: body.receipt,
+      orderId,
     }).save();
 
     await this.updateCoinAccum(userId, amount);

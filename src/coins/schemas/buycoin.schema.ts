@@ -20,6 +20,10 @@ export class BuyCoin {
   @Prop({})
   receipt: string;
 
+  // transactionId or orderId
+  @Prop({})
+  orderId: string;
+
   @Prop({ enum: OS })
   os: OS;
 

@@ -32,14 +32,43 @@ export class FriendshipsService {
     private usersService: UsersService,
   ) {}
 
+  async getFriendByProfileId(
+    userId: string,
+    profileId: string,
+  ): Promise<Friend | null> {
+    const friends = await this.friendShipModel.aggregate([
+      {
+        $match: {
+          userId: { $eq: new Types.ObjectId(userId) },
+        },
+      },
+      { $unwind: '$friends' },
+      {
+        $match: {
+          'friends.profileId': { $eq: new Types.ObjectId(profileId) },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: '$friends.name',
+          profileId: '$friends.profileId',
+        },
+      },
+    ]);
+
+    const friend = friends[0];
+    if (friend) {
+      return friend;
+    }
+
+    return null;
+  }
+
   // 전화번호부 동기화
   async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
     // 유효하지않은 전화번호부 로깅
-    this.logger.log(
-      `addFriendManyWithCheck invalid contacts: ${JSON.stringify(
-        dto.invalidContacts,
-      )}`,
-    );
+    console.log(`Invalid contacts: ${JSON.stringify(dto.invalidContacts)}`);
 
     const user = await this.usersService.findActiveUserById(userId);
 
@@ -324,7 +353,9 @@ export class FriendshipsService {
       name: {
         $cond: [
           // 회원가입 안했으면
-          { $ifNull: ['$user._id', true] },
+          {
+            $eq: [{ $ifNull: ['$user._id', null] }, null],
+          },
           // 내 친구목록 이름으로 조회
           '$friends.name',
           '$profile.name',
@@ -351,6 +382,7 @@ export class FriendshipsService {
     const projection: ProjectionFields<FriendDto> = {
       _id: 0,
       profileId: '$friends.profileId',
+      user: 1,
       hidden: '$friends.hidden',
       name: 1,
       gender: '$profile.gender',
