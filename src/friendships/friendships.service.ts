@@ -353,7 +353,9 @@ export class FriendshipsService {
       name: {
         $cond: [
           // 회원가입 안했으면
-          { $ifNull: ['$user._id', true] },
+          {
+            $eq: [{ $ifNull: ['$user._id', null] }, null],
+          },
           // 내 친구목록 이름으로 조회
           '$friends.name',
           '$profile.name',
@@ -380,6 +382,7 @@ export class FriendshipsService {
     const projection: ProjectionFields<FriendDto> = {
       _id: 0,
       profileId: '$friends.profileId',
+      user: 1,
       hidden: '$friends.hidden',
       name: 1,
       gender: '$profile.gender',
