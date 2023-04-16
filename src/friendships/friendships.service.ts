@@ -68,11 +68,7 @@ export class FriendshipsService {
   // 전화번호부 동기화
   async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
     // 유효하지않은 전화번호부 로깅
-    this.logger.log(
-      `addFriendManyWithCheck invalid contacts: ${JSON.stringify(
-        dto.invalidContacts,
-      )}`,
-    );
+    console.log(`Invalid contacts: ${JSON.stringify(dto.invalidContacts)}`);
 
     const user = await this.usersService.findActiveUserById(userId);
 
