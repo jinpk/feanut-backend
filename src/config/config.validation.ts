@@ -13,7 +13,10 @@ export const validationSchema = joi.object({
 
   GOOGLE_CLOUD_CLIENT_EMAIL: joi.string().required(),
   GOOGLE_CLOUD_PRIVATE_KEY: joi.string().required(),
-  
+
+  GOOGLE_PLAY_CLIENT_EMAIL: joi.string().required(),
+  GOOGLE_PLAY_PRIVATE_KEY: joi.string().required(),
+
   GOOGLE_CLOUD_BUCKET: joi.string().required(),
 
   ALIGO_API_KEY: joi.string().required(),
