@@ -19,7 +19,7 @@ export class Auth {
   purpose: string;
 
   // purpose payload
-  @Prop({ required: true })
+  @Prop({})
   payload: string;
 
   // verified
