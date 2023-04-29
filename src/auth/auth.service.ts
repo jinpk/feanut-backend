@@ -285,6 +285,8 @@ export class AuthService {
       auth.phoneNumber,
       dto.name,
       dto.gender,
+      dto.school?.code,
+      dto.school?.grade,
     );
 
     auth.used = true;

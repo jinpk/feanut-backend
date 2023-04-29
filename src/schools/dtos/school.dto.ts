@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PagingReqDto } from 'src/common/dtos';
 
 export class SchoolDto {
   @ApiProperty({ title: '학교명' })
@@ -16,4 +15,7 @@ export class SchoolDto {
 
   @ApiProperty({ title: '군구' })
   sigungu: string;
+
+  @ApiProperty({ title: '가입수' })
+  joinedCount: number;
 }

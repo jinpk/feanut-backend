@@ -64,7 +64,7 @@ export class SchoolsController {
   @Public()
   @ApiOkResponsePaginated(SchoolDto)
   async listSchool(@Query() query: ListSchoolDto) {
-    if (!query.name && !query.zipcode) {
+    if (!query.name) {
       throw new WrappedError(SCHOOL_MODULE_NAME).badRequest();
     }
 

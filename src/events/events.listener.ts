@@ -6,6 +6,7 @@ import { FriendshipsService } from 'src/friendships/friendships.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PollingVotedEvent } from 'src/pollings/events';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { SchoolsService } from 'src/schools/schools.service';
 import { UserCreatedEvent, UserDeletedEvent } from 'src/users/events';
 import { UsersService } from 'src/users/users.service';
 
@@ -19,6 +20,7 @@ export class EventsListener {
     private notificationsService: NotificationsService,
     private profilesService: ProfilesService,
     private usersService: UsersService,
+    private schoolsService: SchoolsService,
   ) {}
 
   @OnEvent(UserCreatedEvent.name)
@@ -58,6 +60,15 @@ export class EventsListener {
 
       // 알림설정 초기화
       await this.notificationsService.initNotificationUserConfig(event.userId);
+
+      // 학생 가입시 학교 정보 등록
+      if (event.schoolCode && event.schoolGrade) {
+        await this.schoolsService.insertUserSchool(
+          event.userId,
+          event.schoolCode,
+          event.schoolGrade,
+        );
+      }
 
       this.logger.log(
         `${UserCreatedEvent.name} succesfully procceed: ${event.userId}`,

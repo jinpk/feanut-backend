@@ -14,5 +14,6 @@ import { UserSchool, UserSchoolSchema } from './schemas/user-school.schema';
   ],
   controllers: [SchoolsController],
   providers: [SchoolsService],
+  exports: [SchoolsService],
 })
 export class SchoolsModule {}

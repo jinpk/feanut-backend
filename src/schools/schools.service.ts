@@ -10,7 +10,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { UtilsService } from 'src/common/providers';
 import { ListSchoolDto, SchoolDto, UserSchoolDto } from './dtos';
 import { UserSchool, UserSchoolDocument } from './schemas/user-school.schema';
-import { SCHOOL_MODULE_NAME, SCHOOL_SCHEMA_NAME } from './schools.constants';
+import {
+  SCHOOL_MODULE_NAME,
+  SCHOOL_SCHEMA_NAME,
+  USER_SCHOOL_SCHEMA_NAME,
+} from './schools.constants';
 import { WrappedError } from 'src/common/errors';
 
 @Injectable()
@@ -85,15 +89,17 @@ export class SchoolsService {
   }
 
   async listSchool(query: ListSchoolDto) {
-    const filter: FilterQuery<School> = {};
-
-    if (query.name) {
-      filter.name = { $regex: query.name, $options: 'i' };
-    }
-
-    if (query.zipcode) {
-      filter.zipcode = { $eq: query.zipcode };
-    }
+    const filter: FilterQuery<School> = {
+      $expr: {
+        $or: [
+          { $regexMatch: { input: '$name', regex: query.name, options: 'i' } },
+          { $regexMatch: { input: '$sido', regex: query.name, options: 'i' } },
+          {
+            $regexMatch: { input: '$sigungu', regex: query.name, options: 'i' },
+          },
+        ],
+      },
+    };
 
     const projection: ProjectionFields<SchoolDto> = {
       _id: 0,
@@ -102,11 +108,32 @@ export class SchoolsService {
       sigungu: 1,
       address: 1,
       code: 1,
+      joinedCount: { $size: '$us' },
     };
 
     const pipeline: PipelineStage[] = [
       { $match: filter },
+      {
+        $lookup: {
+          from: USER_SCHOOL_SCHEMA_NAME,
+          let: { code: '$code' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$$code', '$code'] },
+                    { $ne: ['$disabled', true] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'us',
+        },
+      },
       { $project: projection },
+
       {
         $sort: {
           name: 1,
