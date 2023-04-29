@@ -48,6 +48,7 @@ import { FeanutCardDto } from './dtos';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
 import { RANDOM_NICKNAMES } from 'src/profiles/profiles.constant';
 import { ConfigService } from '@nestjs/config';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class PollingsService {
@@ -757,6 +758,7 @@ export class PollingsService {
 
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile._id,
+      completedAt: { $gte: dayjs().subtract(3, 'day').toDate()},
     };
 
     const lookups: PipelineStage[] = [
