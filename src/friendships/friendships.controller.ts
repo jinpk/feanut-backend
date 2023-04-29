@@ -29,6 +29,7 @@ import {
 import {
   FRIENDSHIPS_MODULE_NAME,
   FRIENDS_ERROR_NON_EXIST_FRIEND,
+  FRIENDS_ERROR_NO_LEGACY,
 } from './friendships.constant';
 import { FriendshipsService } from './friendships.service';
 
@@ -193,5 +194,44 @@ export class FriendshipsController {
       throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
     }
     await this.friendshipsService.addFriendWithCheck(userId, body);
+  }
+
+  @Post(':userId/legacy/clear')
+  @ApiOperation({
+    summary: '친구목록 초기화',
+    description: 'isLegacy true인 경우 가능',
+  })
+  @ApiOkResponse({ type: Boolean })
+  async clearFriendsForLegacy(@Request() req, @Param('userId') userId: string) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+
+    const legacy = await this.friendshipsService.isLegacyFriendShipByUserId(
+      userId,
+    );
+
+    if (!legacy) {
+      throw new WrappedError(
+        FRIENDSHIPS_MODULE_NAME,
+        FRIENDS_ERROR_NO_LEGACY,
+      ).reject();
+    }
+
+    return await this.friendshipsService.clearFriendsForLegacy(userId);
+  }
+
+  @Get(':userId/legacy')
+  @ApiOperation({
+    summary: '친구목록 Legacy 조회',
+    description: 'true인 경우 친구 목록 초기화 필요.\n친구 추가 방법 변경',
+  })
+  @ApiOkResponse({ type: Boolean })
+  async getLegacy(@Request() req, @Param('userId') userId: string) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+
+    return await this.friendshipsService.isLegacyFriendShipByUserId(userId);
   }
 }

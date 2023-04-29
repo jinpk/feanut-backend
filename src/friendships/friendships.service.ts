@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Model,
@@ -23,7 +23,6 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class FriendshipsService {
-  private readonly logger = new Logger(FriendshipsService.name);
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
@@ -31,6 +30,38 @@ export class FriendshipsService {
     private utilsService: UtilsService,
     private usersService: UsersService,
   ) {}
+
+  /** 친구추가 방법 변경 for Legacy */
+  // 친구목록 legacy 사용자 초기화
+  async clearFriendsForLegacy(userId: string | Types.ObjectId) {
+    const friendship = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    // 1. 친구 목록 초기화
+    friendship.isLegacy = undefined;
+    friendship.friends = [];
+
+    // 2. POLLING 후처리
+
+    // 3. save cleared legacy
+    await friendship.save();
+  }
+  // 연락처 강제 동기화로 친구추가한 friendship 조회
+  async isLegacyFriendShipByUserId(
+    userId: string | Types.ObjectId,
+  ): Promise<boolean> {
+    const friendship = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (friendship?.isLegacy) {
+      return true;
+    }
+
+    return false;
+  }
+  /** --- */
 
   async getFriendByProfileId(
     userId: string,

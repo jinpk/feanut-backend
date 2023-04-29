@@ -31,14 +31,13 @@ async function bootstrap() {
       .addTag('Emoji', '이모지 관리 API')
       .addTag('Notification', '알림 API')
       .addTag('Coin', '코인 API')
+      .addTag('School', '학교 API')
       .addTag('File', '파일 API')
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('docs', app, document);
     app.enableCors({ origin: '*' });
-  } else {
-    // app.enableCors({ origin: '*' });
   }
 
   await app.listen(port);

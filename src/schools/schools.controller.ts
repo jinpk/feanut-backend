@@ -58,16 +58,12 @@ export class SchoolsController {
 
   @Get('')
   @ApiOperation({
-    summary: '학교 조회 (초, 중, 고)',
-    description: 'zipcode 혹은 keyword 필수 조회',
+    summary: '학교 리스트 조회',
+    description: 'keyword 필수 조회',
   })
   @Public()
   @ApiOkResponsePaginated(SchoolDto)
   async listSchool(@Query() query: ListSchoolDto) {
-    if (!query.name) {
-      throw new WrappedError(SCHOOL_MODULE_NAME).badRequest();
-    }
-
     return await this.schoolsService.listSchool(query);
   }
 }

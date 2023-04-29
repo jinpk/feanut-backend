@@ -15,11 +15,17 @@ export class Friendship {
   @Prop({ type: Types.ObjectId, ref: User.name })
   userId: Types.ObjectId;
 
+  // if true 친구 초기화 필요함
+  @Prop()
+  isLegacy?: boolean;
+
   // 친구 목록
   @Prop({
     type: [{ type: FriendSchema }],
   })
   friends: Friend[];
+
+  createdAt?: Date;
 }
 
 export const FriendShipSchema = SchemaFactory.createForClass(Friendship);

@@ -76,10 +76,16 @@ export class SchoolsService {
     }
 
     // 이전학교 비활성화 처리
-    await this.userSchoolModel.findOneAndUpdate(
-      { userId: new mongoose.Types.ObjectId(userId), disabled: { $ne: true } },
-      { $set: { disabled: true } },
-    );
+    const prevSchools = await this.userSchoolModel.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      disabled: { $ne: true },
+    });
+
+    prevSchools.map((x) => {
+      x.disabled = true;
+      x.save();
+    });
+
     // 신규학교 저장
     await new this.userSchoolModel({
       userId: new mongoose.Types.ObjectId(userId),
@@ -92,10 +98,18 @@ export class SchoolsService {
     const filter: FilterQuery<School> = {
       $expr: {
         $or: [
-          { $regexMatch: { input: '$name', regex: query.name, options: 'i' } },
-          { $regexMatch: { input: '$sido', regex: query.name, options: 'i' } },
           {
-            $regexMatch: { input: '$sigungu', regex: query.name, options: 'i' },
+            $regexMatch: { input: '$name', regex: query.keyword, options: 'i' },
+          },
+          {
+            $regexMatch: { input: '$sido', regex: query.keyword, options: 'i' },
+          },
+          {
+            $regexMatch: {
+              input: '$sigungu',
+              regex: query.keyword,
+              options: 'i',
+            },
           },
         ],
       },
