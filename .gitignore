@@ -2,6 +2,8 @@
 /dist
 /node_modules
 
+/functions/crawling/node_modules
+
 *.env
 # Logs
 logs
