@@ -6,4 +6,5 @@ export enum SchoolLevels {
   E = '초등학교',
   M = '중학교',
   HS = '고등공민학교',
+  U = '대학교',
 }

@@ -196,6 +196,7 @@ export class FriendshipsController {
     await this.friendshipsService.addFriendWithCheck(userId, body);
   }
 
+  /*
   @Post(':userId/legacy/clear')
   @ApiOperation({
     summary: '친구목록 초기화',
@@ -233,5 +234,5 @@ export class FriendshipsController {
     }
 
     return await this.friendshipsService.isLegacyFriendShipByUserId(userId);
-  }
+  }*/
 }
