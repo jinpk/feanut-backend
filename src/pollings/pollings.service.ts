@@ -815,6 +815,7 @@ export class PollingsService {
       completedAt: 1,
       emotion: '$poll.emotion',
       emojiId: '$poll.emojiId',
+      contentText: '$poll.contentText',
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
