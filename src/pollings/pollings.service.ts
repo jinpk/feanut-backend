@@ -790,6 +790,20 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'poll',
+        },
+      },
+      {
+        $unwind: {
+          path: '$poll',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     const projection: ProjectionFields<PollingDto> = {
@@ -798,6 +812,8 @@ export class PollingsService {
       pollId: 1,
       isOpened: 1,
       completedAt: 1,
+      emotion: '$poll.emotion',
+      emojiId: '$poll.emojiId',
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
