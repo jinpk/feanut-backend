@@ -186,9 +186,9 @@ export class PollingsController {
       ).badRequest();
     }
 
-    const ids = pollingIds.split(',').map((x) => x.trim());
+    const ids = pollingIds.split(',').map((x) => x.trim().replace("{", "").replace("}", ""));
 
-    await this.pollingsService.updatePollingNoShowed(req.user.id, '');
+    return await this.pollingsService.updatePollingNoShowed(req.user.id, ids);
   }
 
   @Post('')
