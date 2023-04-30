@@ -48,6 +48,7 @@ import { FeanutCardDto } from './dtos';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
 import { RANDOM_NICKNAMES } from 'src/profiles/profiles.constant';
 import { ConfigService } from '@nestjs/config';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class PollingsService {
@@ -757,6 +758,8 @@ export class PollingsService {
 
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile._id,
+      completedAt: { $gte: dayjs().subtract(3, 'day').toDate()},
+      noShowed: { $ne: true },
     };
 
     const lookups: PipelineStage[] = [
@@ -788,6 +791,20 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'poll',
+        },
+      },
+      {
+        $unwind: {
+          path: '$poll',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     const projection: ProjectionFields<PollingDto> = {
@@ -796,6 +813,9 @@ export class PollingsService {
       pollId: 1,
       isOpened: 1,
       completedAt: 1,
+      emotion: '$poll.emotion',
+      emojiId: '$poll.emojiId',
+      contentText: '$poll.contentText',
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
@@ -1481,6 +1501,36 @@ export class PollingsService {
       ),
     );
     return res;
+  }
+
+  // 수신함 리스트에서 삭제
+  async updatePollingNoShowed(user_id, polling_id: string): Promise<string> {
+    //userId 사용하여 get profile
+    const profile = await this.profilesService.getByUserId(user_id);
+
+    const exist = await this.pollingModel.findOne({
+      _id: new Types.ObjectId(polling_id),
+      selectedProfileId: profile._id,
+    });
+
+    if (!exist) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
+    const result = await this.pollingModel.findOneAndUpdate(
+      {
+        _id: exist._id,
+        selectedProfileId: profile._id,
+      },
+      {
+        $set: { noShowed: true, updatedAt: now() },
+      },
+    );
+
+    return result._id.toString();
   }
 
   // 피넛을 소모. 수신투표 열기.

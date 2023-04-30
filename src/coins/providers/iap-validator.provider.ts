@@ -19,11 +19,12 @@ export class IAPValidatorProvider {
     private configService: ConfigService,
     private httpService: HttpService,
   ) {
-    this.email = this.configService.get('googleCloudClientEmail');
-    this.playKey = this.configService.get('googleCloudPrivateKey');
+    this.email = this.configService.get('googlePlayClientEmail');
+    this.playKey = this.configService.get('googlePlayPrivateKey');
     this.appStoreKey = this.configService.get('appStoreSecret');
 
     const env = this.configService.get('env');
+
     this.itunesVerifyURL = `https://${
       env === 'production' ? 'buy' : 'sandbox'
     }.itunes.apple.com/verifyReceipt`;

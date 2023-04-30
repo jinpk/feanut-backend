@@ -17,6 +17,9 @@ export default () => ({
   googleCloudPrivateKey: process.env.GOOGLE_CLOUD_PRIVATE_KEY,
   googleCloudBucket: process.env.GOOGLE_CLOUD_BUCKET,
 
+  googlePlayClientEmail: process.env.GOOGLE_PLAY_CLIENT_EMAIL,
+  googlePlayPrivateKey: process.env.GOOGLE_PLAY_PRIVATE_KEY,
+
   aligoAPIKey: process.env.ALIGO_API_KEY,
   aligoUserId: process.env.ALIGO_USER_ID,
   aligoSender: process.env.ALIGO_SENDER,

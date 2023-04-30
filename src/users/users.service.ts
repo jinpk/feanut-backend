@@ -7,6 +7,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent, UserDeletedEvent } from './events';
+import { CreateUserSchoolDto } from 'src/schools/dtos';
 
 @Injectable()
 export class UsersService {
@@ -53,6 +54,8 @@ export class UsersService {
     phoneNumber: string,
     name: string,
     gender: Gender,
+    schoolCode?: string,
+    schoolGrade?: number,
   ): Promise<string> {
     const user = await new this.userModel({
       phoneNumber,
@@ -60,7 +63,14 @@ export class UsersService {
 
     this.eventEmitter.emit(
       UserCreatedEvent.name,
-      new UserCreatedEvent(user._id, name, phoneNumber, gender),
+      new UserCreatedEvent(
+        user._id,
+        name,
+        phoneNumber,
+        gender,
+        schoolCode,
+        schoolGrade,
+      ),
     );
 
     return user._id.toHexString();

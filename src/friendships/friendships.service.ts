@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Model,
@@ -9,6 +9,7 @@ import {
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
+import { UserRound, UserRoundDocument } from 'src/pollings/schemas/user-round.schema';
 import { AddFriendDto, AddFriendManyDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
@@ -20,17 +21,63 @@ import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 import { FILE_SCHEMA_NAME } from 'src/files/files.constant';
 import { ListFriendParams } from './interfaces';
 import { UsersService } from 'src/users/users.service';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class FriendshipsService {
-  private readonly logger = new Logger(FriendshipsService.name);
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
+    @InjectModel(UserRound.name) private userroundModel: Model<UserRoundDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
     private usersService: UsersService,
   ) {}
+
+  /** 친구추가 방법 변경 for Legacy */
+  // 친구목록 legacy 사용자 초기화
+  async clearFriendsForLegacy(userId: string | Types.ObjectId) {
+    const friendship = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    // 1. 친구 목록 초기화
+    friendship.isLegacy = undefined;
+    friendship.friends = [];
+
+    // 2. POLLING 후처리
+    await this.userroundModel.findOneAndUpdate(
+      {
+        userId: new Types.ObjectId(userId),
+        completedAt: null,
+      },
+      {
+        completedAt: dayjs().subtract(2, 'day').toDate(),
+        complete: true,
+      },
+      {
+        $sort : { createdAt : -1 }
+      }
+    );
+
+    // 3. save cleared legacy
+    await friendship.save();
+  }
+  // 연락처 강제 동기화로 친구추가한 friendship 조회
+  async isLegacyFriendShipByUserId(
+    userId: string | Types.ObjectId,
+  ): Promise<boolean> {
+    const friendship = await this.friendShipModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (friendship?.isLegacy) {
+      return true;
+    }
+
+    return false;
+  }
+  /** --- */
 
   async getFriendByProfileId(
     userId: string,
@@ -353,7 +400,9 @@ export class FriendshipsService {
       name: {
         $cond: [
           // 회원가입 안했으면
-          { $ifNull: ['$user._id', true] },
+          {
+            $eq: [{ $ifNull: ['$user._id', null] }, null],
+          },
           // 내 친구목록 이름으로 조회
           '$friends.name',
           '$profile.name',
@@ -380,6 +429,7 @@ export class FriendshipsService {
     const projection: ProjectionFields<FriendDto> = {
       _id: 0,
       profileId: '$friends.profileId',
+      user: 1,
       hidden: '$friends.hidden',
       name: 1,
       gender: '$profile.gender',

@@ -12,6 +12,7 @@ import {
   AuthDto,
   SignInVerificationDto,
   SignInDto,
+  SignUpVerificationConfirmDto,
 } from './dtos';
 import { WrappedError } from 'src/common/errors';
 import {
@@ -25,7 +26,6 @@ import {
   AUTH_ERROR_VERIFICATION_TIMEOUT,
   AUTH_MODULE_NAME,
 } from './auth.constant';
-import { Gender } from 'src/profiles/enums';
 import { AuthPurpose } from './enums';
 import { AligoProvider, InstagramProvider } from './providers';
 import { ProfilesService } from 'src/profiles/profiles.service';
@@ -114,7 +114,7 @@ export class AuthService {
     };
   }
 
-  // 로그인 인증 요청
+  // 1. 로그인 인증 요청
   async signInVerification(dto: SignInVerificationDto): Promise<AuthDto> {
     const user = await this.usersService.findActiveUserOne({
       phoneNumber: dto.phoneNumber,
@@ -148,7 +148,7 @@ export class AuthService {
     return { authId: doc._id.toHexString() };
   }
 
-  // 로그인
+  // 2. 로그인
   async signIn(dto: SignInDto) {
     const auth = await this.authModel.findById(dto.authId);
     if (!auth || auth.used) {
@@ -184,7 +184,7 @@ export class AuthService {
     return await this.userLogin(user._id.toHexString());
   }
 
-  // 회원가입 인증 요청
+  // 1. 회원가입 인증 요청
   async signUpVerification(dto: SignUpVerificationDto): Promise<AuthDto> {
     // 휴대폰번호 검증
     if (
@@ -206,11 +206,9 @@ export class AuthService {
       ? '000000'
       : this.genAuthCode();
 
-    const payload = this.genSignUpPayload(dto.name, dto.gender as Gender);
-
+    // 인증코드 저장
     const doc = await new this.authModel({
       code,
-      payload,
       purpose: AuthPurpose.SignUp,
       phoneNumber: dto.phoneNumber,
     }).save();
@@ -221,8 +219,8 @@ export class AuthService {
     return { authId: doc._id.toHexString() };
   }
 
-  // 회원가입
-  async signUp(dto: SignUpDto) {
+  // 2. 회원가입 인증코드 확인 처리
+  async signUpVerificationConfirm(dto: SignUpVerificationConfirmDto) {
     const auth = await this.authModel.findById(dto.authId);
     if (!auth || auth.used) {
       throw new WrappedError(
@@ -245,9 +243,33 @@ export class AuthService {
       ).badRequest();
     }
 
-    const payload = this.parseSignUpPayload(auth.payload);
-
     // 휴대폰번호 검증
+    if (
+      await this.usersService.findActiveUserOne({
+        phoneNumber: auth.phoneNumber,
+      })
+    ) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_EXIST_PHONE_NUMBER,
+      ).alreadyExist();
+    }
+
+    auth.verified = true;
+    auth.save();
+  }
+
+  // 3. 회원가입
+  async signUp(dto: SignUpDto) {
+    const auth = await this.authModel.findById(dto.authId);
+    if (!auth || auth.used || !auth.verified) {
+      throw new WrappedError(
+        AUTH_MODULE_NAME,
+        AUTH_ERROR_INVAILD_VERIFICATION,
+      ).reject();
+    }
+
+    // 휴대폰번호 재확인
     if (
       await this.usersService.findActiveUserOne({
         phoneNumber: auth.phoneNumber,
@@ -261,8 +283,10 @@ export class AuthService {
 
     const sub = await this.usersService.create(
       auth.phoneNumber,
-      payload.name,
-      payload.gender,
+      dto.name,
+      dto.gender,
+      dto.school?.code,
+      dto.school?.grade,
     );
 
     auth.used = true;
@@ -314,20 +338,5 @@ export class AuthService {
 
   genToken(payload: any, expiresIn = '30m'): string {
     return this.jwtService.sign(payload, { expiresIn });
-  }
-
-  genSignUpPayload(name: string, gender: Gender) {
-    return `${name}\n${gender}`;
-  }
-
-  parseSignUpPayload(payload: string): {
-    gender: Gender;
-    name: string;
-  } {
-    const [name, gender] = payload.split('\n');
-    return {
-      name,
-      gender: gender as Gender,
-    };
   }
 }

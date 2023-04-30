@@ -168,6 +168,20 @@ export class PollingsController {
     return await this.pollingsService.updatePollingOpen(req.user.id, pollingId);
   }
 
+  @Post('receive/:pollingId/delete')
+  @ApiOperation({
+    summary: '수신투표 삭제',
+    description:
+      'Update noShowed: true',
+  })
+  @ApiResponse({
+    status: 200,
+    type: String,
+  })
+  async postPollingNoShowed(@Param('pollingId') pollingId: string, @Request() req) {
+    return await this.pollingsService.updatePollingNoShowed(req.user.id, pollingId);
+  }
+
   @Post('')
   @ApiOperation({
     summary: 'Polling 생성 - 투표시작',

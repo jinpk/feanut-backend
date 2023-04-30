@@ -7,6 +7,8 @@ export class UserCreatedEvent {
     private _name: string,
     private _phoneNumber: string,
     private _gender: Gender,
+    private _schoolCode?: string,
+    private _schoolGrade?: number,
   ) {}
 
   get userId() {
@@ -20,5 +22,12 @@ export class UserCreatedEvent {
   }
   get gender() {
     return this._gender;
+  }
+
+  get schoolCode() {
+    return this._schoolCode;
+  }
+  get schoolGrade() {
+    return this._schoolGrade;
   }
 }
