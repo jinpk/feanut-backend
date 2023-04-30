@@ -43,9 +43,13 @@ export class Polling {
   @Prop({ default: null })
   isOpened?: boolean;
 
-  // isOpened
+  // useCoinId
   @Prop({ default: null })
   useCoinId?: Types.ObjectId;
+
+  // noShowed
+  @Prop({})
+  noShowed?: boolean;
 
   // 생성시간
   @Prop({})

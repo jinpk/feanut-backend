@@ -759,6 +759,7 @@ export class PollingsService {
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile._id,
       completedAt: { $gte: dayjs().subtract(3, 'day').toDate()},
+      noShowed: { $ne: true },
     };
 
     const lookups: PipelineStage[] = [
@@ -1499,6 +1500,36 @@ export class PollingsService {
       ),
     );
     return res;
+  }
+
+  // 수신함 리스트에서 삭제
+  async updatePollingNoShowed(user_id, polling_id: string): Promise<string> {
+    //userId 사용하여 get profile
+    const profile = await this.profilesService.getByUserId(user_id);
+
+    const exist = await this.pollingModel.findOne({
+      _id: new Types.ObjectId(polling_id),
+      selectedProfileId: profile._id,
+    });
+
+    if (!exist) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    }
+
+    const result = await this.pollingModel.findOneAndUpdate(
+      {
+        _id: exist._id,
+        selectedProfileId: profile._id,
+      },
+      {
+        $set: { noShowed: true, updatedAt: now() },
+      },
+    );
+
+    return result._id.toString();
   }
 
   // 피넛을 소모. 수신투표 열기.
