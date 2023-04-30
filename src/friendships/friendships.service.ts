@@ -9,6 +9,7 @@ import {
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
+import { UserRound, UserRoundDocument } from 'src/pollings/schemas/user-round.schema';
 import { AddFriendDto, AddFriendManyDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
@@ -20,12 +21,14 @@ import { USER_SCHEMA_NAME } from 'src/users/users.constant';
 import { FILE_SCHEMA_NAME } from 'src/files/files.constant';
 import { ListFriendParams } from './interfaces';
 import { UsersService } from 'src/users/users.service';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class FriendshipsService {
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
+    @InjectModel(UserRound.name) private userroundModel: Model<UserRoundDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
     private usersService: UsersService,
@@ -43,6 +46,19 @@ export class FriendshipsService {
     friendship.friends = [];
 
     // 2. POLLING 후처리
+    await this.userroundModel.findOneAndUpdate(
+      {
+        userId: new Types.ObjectId(userId),
+        completedAt: null,
+      },
+      {
+        completedAt: dayjs().subtract(2, 'day').toDate(),
+        complete: true,
+      },
+      {
+        $sort : { createdAt : -1 }
+      }
+    );
 
     // 3. save cleared legacy
     await friendship.save();
