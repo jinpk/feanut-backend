@@ -6,6 +6,7 @@ import {
   Query,
   Body,
   Request,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -89,10 +90,7 @@ export class PollingsController {
     description: 'completedAt 최신순서 정렬되어 response',
   })
   @ApiOkResponsePaginated(Polling)
-  async getMyInboxList(
-    @Query() query: GetListInboxPollingDto,
-    @Request() req,
-  ) {
+  async getMyInboxList(@Query() query: GetListInboxPollingDto, @Request() req) {
     return await this.pollingsService.findListInboxByUserId(req.user.id, query);
   }
 
@@ -139,7 +137,10 @@ export class PollingsController {
     @Param('pollingId') pollingId: string,
     @Request() req,
   ) {
-    const polling = await this.pollingsService.findPollingById(pollingId, req.user.id);
+    const polling = await this.pollingsService.findPollingById(
+      pollingId,
+      req.user.id,
+    );
     if (req.user.isAdmin) {
     } else if (req.user.id != polling.userId) {
       throw new WrappedError(
@@ -168,18 +169,26 @@ export class PollingsController {
     return await this.pollingsService.updatePollingOpen(req.user.id, pollingId);
   }
 
-  @Post('receive/:pollingId/delete')
+  @Delete('receive')
   @ApiOperation({
     summary: '수신투표 삭제',
-    description:
-      'Update noShowed: true',
+    description: 'Update noShowed: true\npollingIds: {},{},{}',
   })
-  @ApiResponse({
-    status: 200,
-    type: String,
-  })
-  async postPollingNoShowed(@Param('pollingId') pollingId: string, @Request() req) {
-    return await this.pollingsService.updatePollingNoShowed(req.user.id, pollingId);
+  async postPollingNoShowed(
+    @Query('pollingIds') pollingIds: string,
+    @Request() req,
+  ) {
+    if (!pollingIds) {
+      throw new WrappedError(
+        POLLING_MODULE_NAME,
+        undefined,
+        'invalid pollingIds.',
+      ).badRequest();
+    }
+
+    const ids = pollingIds.split(',').map((x) => x.trim());
+
+    await this.pollingsService.updatePollingNoShowed(req.user.id, '');
   }
 
   @Post('')
