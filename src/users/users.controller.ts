@@ -81,8 +81,16 @@ export class UsersController {
       !query.schoolCode &&
       (!query.phoneNumber || !query.phoneNumber.length)
     ) {
-      throw new WrappedError(USER_SCHEMA_NAME).badRequest;
+      throw new WrappedError(USER_SCHEMA_NAME).badRequest();
     }
-    return await this.usersService.listRecommendation(req.user.id, query);
+
+    if (query.schoolCode) {
+      return await this.usersService.listRecommendation(req.user.id, query);
+    } else {
+      return await this.usersService.listRecommendationByPhoneNumbers(
+        req.user.id,
+        query.phoneNumber,
+      );
+    }
   }
 }

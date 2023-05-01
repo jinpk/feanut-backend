@@ -47,4 +47,6 @@ export class RecommendationDto {
   phoneNumber?: string;
   @ApiProperty({ description: '학교정보' })
   school?: RecommendationSchoolDto;
+  @ApiProperty({})
+  isFriend?: boolean;
 }
