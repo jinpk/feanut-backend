@@ -7,9 +7,12 @@ import { User, UserDocument } from './schemas/user.schema';
 import * as dayjs from 'dayjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent, UserDeletedEvent } from './events';
-import { USER_SCHOOL_SCHEMA_NAME } from 'src/schools/schools.constants';
+import {
+  SCHOOL_SCHEMA_NAME,
+  USER_SCHOOL_SCHEMA_NAME,
+} from 'src/schools/schools.constants';
 import { PROFILE_SCHEMA_NAME } from 'src/profiles/profiles.constant';
-import { GetRecommendationDto, ReconnendationDto } from './dtos/list.dto';
+import { GetRecommendationDto, RecommendationDto } from './dtos/list.dto';
 import {
   FriendShipDocument,
   Friendship,
@@ -31,7 +34,7 @@ export class UsersService {
   async listRecommendation(
     userId: string | Types.ObjectId,
     query: GetRecommendationDto,
-  ): Promise<PagingResDto<ReconnendationDto>> {
+  ): Promise<PagingResDto<RecommendationDto>> {
     const friendship = await this.friendshipModel.findOne(
       {
         userId: new Types.ObjectId(userId),
@@ -61,6 +64,15 @@ export class UsersService {
                 },
               },
             },
+            {
+              $lookup: {
+                from: SCHOOL_SCHEMA_NAME,
+                localField: 'code',
+                foreignField: 'code',
+                as: 'school',
+              },
+            },
+            { $unwind: { path: '$school' } },
           ],
           as: 'us',
         },
@@ -118,6 +130,12 @@ export class UsersService {
       {
         $project: {
           phoneNumber: query.phoneNumber?.length ? 1 : undefined,
+          school: query.schoolCode
+            ? {
+                name: '$us.school.name',
+                grade: '$us.grade',
+              }
+            : undefined,
           userId: '$_id',
           profileId: '$profile._id',
           name: '$profile.name',

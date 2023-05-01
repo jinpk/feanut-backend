@@ -444,14 +444,15 @@ export class FriendshipsService {
     const projection: ProjectionFields<FriendDto> = {
       _id: 0,
       profileId: '$friends.profileId',
-      user: 1,
       hidden: '$friends.hidden',
       name: 1,
       gender: '$profile.gender',
       profileImageKey: '$file.key',
+      userId: { $ifNull: ['$user._id', ''] },
     };
 
     const sort: PipelineStage.Sort['$sort'] = {
+      userId: -1,
       name: 1,
     };
 

@@ -17,7 +17,7 @@ import { WrappedError } from 'src/common/errors';
 import { UserDto } from './dtos';
 import { USER_MODULE_NAME, USER_SCHEMA_NAME } from './users.constant';
 import { UsersService } from './users.service';
-import { GetRecommendationDto, ReconnendationDto } from './dtos/list.dto';
+import { GetRecommendationDto, RecommendationDto } from './dtos/list.dto';
 import { ApiOkResponsePaginated } from 'src/common/decorators';
 
 @ApiTags('User')
@@ -75,7 +75,7 @@ export class UsersController {
   @ApiOperation({
     summary: '사용자 추천 조회',
   })
-  @ApiOkResponsePaginated(ReconnendationDto)
+  @ApiOkResponsePaginated(RecommendationDto)
   async getRecommendation(@Req() req, @Query() query: GetRecommendationDto) {
     if (
       !query.schoolCode &&
