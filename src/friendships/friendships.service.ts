@@ -9,7 +9,10 @@ import {
 } from 'mongoose';
 import { Friend } from './schemas/friend.schema';
 import { Friendship, FriendShipDocument } from './schemas/friendships.schema';
-import { UserRound, UserRoundDocument } from 'src/pollings/schemas/user-round.schema';
+import {
+  UserRound,
+  UserRoundDocument,
+} from 'src/pollings/schemas/user-round.schema';
 import { AddFriendDto, AddFriendManyDto, FriendDto } from './dtos';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import { WrappedError } from 'src/common/errors';
@@ -28,7 +31,8 @@ export class FriendshipsService {
   constructor(
     @InjectModel(Friendship.name)
     private friendShipModel: Model<FriendShipDocument>,
-    @InjectModel(UserRound.name) private userroundModel: Model<UserRoundDocument>,
+    @InjectModel(UserRound.name)
+    private userroundModel: Model<UserRoundDocument>,
     private profilesService: ProfilesService,
     private utilsService: UtilsService,
     private usersService: UsersService,
@@ -56,8 +60,8 @@ export class FriendshipsService {
         complete: true,
       },
       {
-        $sort : { createdAt : -1 }
-      }
+        $sort: { createdAt: -1 },
+      },
     );
 
     // 3. save cleared legacy
@@ -78,6 +82,19 @@ export class FriendshipsService {
     return false;
   }
   /** --- */
+
+  async addFriendByProfileId(userId: string, profileId: string) {
+    // 이미 추가된 친구인지 검증
+    if (await this.hasFriend(userId, profileId)) {
+      throw new WrappedError(
+        FRIENDSHIPS_MODULE_NAME,
+        null,
+        'already added friend ',
+      ).alreadyExist();
+    }
+
+    await this.addFriendToList(userId, profileId, '');
+  }
 
   async getFriendByProfileId(
     userId: string,
@@ -115,8 +132,6 @@ export class FriendshipsService {
   // 전화번호부 동기화
   async addFriendManyWithCheck(userId: string, dto: AddFriendManyDto) {
     // 유효하지않은 전화번호부 로깅
-    console.log(`Invalid contacts: ${JSON.stringify(dto.invalidContacts)}`);
-
     const user = await this.usersService.findActiveUserById(userId);
 
     const friendship = await this.friendShipModel.findOne({

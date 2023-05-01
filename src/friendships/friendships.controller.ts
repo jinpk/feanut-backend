@@ -19,6 +19,7 @@ import { ApiOkResponsePaginated } from 'src/common/decorators';
 import { WrappedError } from 'src/common/errors';
 import { ProfilesService } from 'src/profiles/profiles.service';
 import {
+  AddFriendByProfileDto,
   AddFriendDto,
   AddFriendManyDto,
   FriendDto,
@@ -182,6 +183,20 @@ export class FriendshipsController {
     await this.friendshipsService.addFriendManyWithCheck(userId, body);
   }
 
+  @Post(':userId/friends/byprofile')
+  @ApiOperation({ summary: 'profileId로 친구등록', description: `` })
+  @ApiCreatedResponse({ description: '친구등록 완료' })
+  async addFriendByProfile(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Body() body: AddFriendByProfileDto,
+  ) {
+    if (req.user.id !== userId) {
+      throw new WrappedError(FRIENDSHIPS_MODULE_NAME).reject();
+    }
+    await this.friendshipsService.addFriendByProfileId(userId, body.profileId);
+  }
+
   @Post(':userId/friends')
   @ApiOperation({ summary: '전화번호로 친구등록', description: `` })
   @ApiCreatedResponse({ description: '친구등록 완료' })
@@ -196,7 +211,6 @@ export class FriendshipsController {
     await this.friendshipsService.addFriendWithCheck(userId, body);
   }
 
-  /*
   @Post(':userId/legacy/clear')
   @ApiOperation({
     summary: '친구목록 초기화',
@@ -234,5 +248,5 @@ export class FriendshipsController {
     }
 
     return await this.friendshipsService.isLegacyFriendShipByUserId(userId);
-  }*/
+  }
 }

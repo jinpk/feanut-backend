@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Req,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,

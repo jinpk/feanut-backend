@@ -15,8 +15,10 @@ import {
 } from '@nestjs/swagger';
 import { WrappedError } from 'src/common/errors';
 import { UserDto } from './dtos';
-import { USER_MODULE_NAME } from './users.constant';
+import { USER_MODULE_NAME, USER_SCHEMA_NAME } from './users.constant';
 import { UsersService } from './users.service';
+import { GetRecommendationDto, ReconnendationDto } from './dtos/list.dto';
+import { ApiOkResponsePaginated } from 'src/common/decorators';
 
 @ApiTags('User')
 @Controller('users')
@@ -67,5 +69,20 @@ export class UsersController {
       throw new NotFoundException('');
     }
     return await this.usersService._userDocToDto(user);
+  }
+
+  @Get('recommendation')
+  @ApiOperation({
+    summary: '사용자 추천 조회',
+  })
+  @ApiOkResponsePaginated(ReconnendationDto)
+  async getRecommendation(@Req() req, @Query() query: GetRecommendationDto) {
+    if (
+      !query.schoolCode &&
+      (!query.phoneNumber || !query.phoneNumber.length)
+    ) {
+      throw new WrappedError(USER_SCHEMA_NAME).badRequest;
+    }
+    return await this.usersService.listRecommendation(req.user.id, query);
   }
 }
