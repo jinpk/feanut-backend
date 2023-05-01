@@ -100,6 +100,8 @@ export class UsersService {
       {
         $match: {
           isDeleted: { $ne: true },
+          // 내가 아닌
+          _id: { $ne: new Types.ObjectId(userId) },
         },
       },
       ...(query.phoneNumber?.length >= 1 ? phonePipeline : []),
