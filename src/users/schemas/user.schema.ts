@@ -10,7 +10,7 @@ export class User {
   // pk
   _id?: Types.ObjectId;
 
-  // isDeleted: fals중 unique
+  // isDeleted: false중 unique
   @Prop({})
   phoneNumber: string;
 
