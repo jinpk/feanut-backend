@@ -7,6 +7,7 @@ import {
   FriendShipSchema,
   Friendship,
 } from 'src/friendships/schemas/friendships.schema';
+import { Profile, ProfileSchema } from 'src/profiles/schemas/profile.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import {
     MongooseModule.forFeature([
       { name: Friendship.name, schema: FriendShipSchema },
     ]),
+    MongooseModule.forFeature([{ name: Profile.name, schema: ProfileSchema }]),
   ],
   providers: [UsersService],
   controllers: [UsersController],

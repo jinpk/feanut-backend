@@ -20,11 +20,14 @@ import {
 import { FILE_SCHEMA_NAME } from 'src/files/files.constant';
 import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
+import { Profile, ProfileDocument } from 'src/profiles/schemas/profile.schema';
+import { USER_SCHEMA_NAME } from './users.constant';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
     @InjectModel(Friendship.name)
     private friendshipModel: Model<FriendShipDocument>,
     private eventEmitter: EventEmitter2,
@@ -86,15 +89,6 @@ export class UsersService {
       },
     ];
 
-    const phonePipeline: PipelineStage[] = [
-      // 요청 전화번호로 가입한 회원만
-      {
-        $match: {
-          phoneNumber: { $in: query.phoneNumber },
-        },
-      },
-    ];
-
     const cursor = await this.userModel.aggregate([
       // 탈퇴하지 않은 회원
       {
@@ -104,8 +98,7 @@ export class UsersService {
           _id: { $ne: new Types.ObjectId(userId) },
         },
       },
-      ...(query.phoneNumber?.length >= 1 ? phonePipeline : []),
-      ...(query.schoolCode ? schoolPipeline : []),
+      ...schoolPipeline,
       {
         $lookup: {
           from: PROFILE_SCHEMA_NAME,
@@ -131,13 +124,10 @@ export class UsersService {
       { $unwind: { path: '$file', preserveNullAndEmptyArrays: true } },
       {
         $project: {
-          phoneNumber: query.phoneNumber?.length ? 1 : undefined,
-          school: query.schoolCode
-            ? {
-                name: '$us.school.name',
-                grade: '$us.grade',
-              }
-            : undefined,
+          school: {
+            name: '$us.school.name',
+            grade: '$us.grade',
+          },
           userId: '$_id',
           profileId: '$profile._id',
           name: '$profile.name',
@@ -158,6 +148,86 @@ export class UsersService {
     return {
       total: metdata[0]?.total || 0,
       data: data,
+    };
+  }
+
+  // 전화번호 리스트로 요청시 가입 여부와 친구 여부 response
+  async listRecommendationByPhoneNumbers(
+    userId: string | Types.ObjectId,
+    phoneNumbers: string[],
+  ): Promise<PagingResDto<RecommendationDto>> {
+    const friendship = await this.friendshipModel.findOne(
+      {
+        userId: new Types.ObjectId(userId),
+      },
+      {
+        friends: {
+          profileId: 1,
+        },
+      },
+    );
+
+    const cursor = await this.profileModel.aggregate<RecommendationDto>([
+      // 요청 전화번호로 가입한 회원만
+      {
+        $match: {
+          phoneNumber: { $in: phoneNumbers },
+        },
+      },
+      {
+        $lookup: {
+          from: USER_SCHEMA_NAME,
+          localField: 'ownerId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          // 탈퇴하지 않은 회원
+          'user.isDeleted': { $ne: true },
+          // 내가 아닌
+          'user._id': { $ne: new Types.ObjectId(userId) },
+        },
+      },
+      {
+        $lookup: {
+          from: FILE_SCHEMA_NAME,
+          localField: 'imageFileId',
+          foreignField: '_id',
+          as: 'file',
+        },
+      },
+      { $unwind: { path: '$file', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          phoneNumber: 1,
+          userId: '$user._id',
+          profileId: '$_id',
+          name: '$name',
+          gender: '$gender',
+          profileImageKey: '$file.key',
+          _id: 0,
+        },
+      },
+      { $sort: { name: 1 } },
+    ]);
+
+    const results = cursor.map((z) => {
+      // 친구라면
+      if (
+        friendship.friends.findIndex((x) => x.profileId.equals(z.profileId)) >=
+        0
+      ) {
+        z.isFriend = true;
+      }
+      return z;
+    });
+
+    return {
+      total: results.length,
+      data: results,
     };
   }
 

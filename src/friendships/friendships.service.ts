@@ -83,9 +83,10 @@ export class FriendshipsService {
   }
   /** --- */
 
-  async addFriendByProfileId(userId: string, profileId: string) {
+  async addFriendByUserId(userId: string, targetUserId: string) {
+    const profile = await this.profilesService.getByUserId(targetUserId);
     // 이미 추가된 친구인지 검증
-    if (await this.hasFriend(userId, profileId)) {
+    if (await this.hasFriend(userId, profile._id)) {
       throw new WrappedError(
         FRIENDSHIPS_MODULE_NAME,
         null,
@@ -93,7 +94,7 @@ export class FriendshipsService {
       ).alreadyExist();
     }
 
-    await this.addFriendToList(userId, profileId, '');
+    await this.addFriendToList(userId, profile._id, '');
   }
 
   async getFriendByProfileId(

@@ -16,10 +16,10 @@ export class AddFriendDto {
   name: string;
 }
 
-export class AddFriendByProfileDto {
+export class AddFriendByUserDto {
   @ApiProperty()
   @IsNotEmpty()
-  profileId: string;
+  userId: string;
 }
 
 export class AddFriendManyDto {
