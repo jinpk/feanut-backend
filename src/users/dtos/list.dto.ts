@@ -17,7 +17,7 @@ export class GetRecommendationDto extends PagingReqDto {
     if (typeof value === 'string') {
       return value?.split(',');
     }
-    return value
+    return value;
   })
   @IsOptional()
   @IsNotEmpty()
@@ -25,7 +25,14 @@ export class GetRecommendationDto extends PagingReqDto {
   phoneNumber?: string[];
 }
 
-export class ReconnendationDto {
+class RecommendationSchoolDto {
+  @ApiProperty()
+  name: string;
+  @ApiProperty()
+  grade: string;
+}
+
+export class RecommendationDto {
   @ApiProperty()
   userId: string;
   @ApiProperty()
@@ -38,4 +45,6 @@ export class ReconnendationDto {
   gender: Gender;
   @ApiProperty({ description: 'phoneNumber 요청만 응답' })
   phoneNumber?: string;
+  @ApiProperty({ description: '학교정보' })
+  school?: RecommendationSchoolDto;
 }
