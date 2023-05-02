@@ -42,11 +42,11 @@ export class SignUpDto {
   @IsEnum(Gender)
   gender: Gender;
 
-  @ApiProperty({ title: '학교정보' })
+  @ApiProperty({ title: '학교정보', required: false })
   @IsOptional()
   school?: CreateUserSchoolDto;
 
-  @ApiProperty({ title: 'referralUserId' })
+  @ApiProperty({ title: 'referralUserId', required: false })
   @IsOptional()
   referralUserId?: string;
 }
