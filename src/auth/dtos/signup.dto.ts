@@ -45,4 +45,8 @@ export class SignUpDto {
   @ApiProperty({ title: '학교정보' })
   @IsOptional()
   school?: CreateUserSchoolDto;
+
+  @ApiProperty({ title: 'referralUserId' })
+  @IsOptional()
+  referralUserId?: string;
 }

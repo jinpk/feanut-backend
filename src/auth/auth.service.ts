@@ -287,6 +287,7 @@ export class AuthService {
       dto.gender,
       dto.school?.code,
       dto.school?.grade,
+      dto.referralUserId
     );
 
     auth.used = true;

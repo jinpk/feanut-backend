@@ -17,6 +17,10 @@ export class User {
   @Prop({})
   refreshToken?: string;
 
+  // referralUserId
+  @Prop({})
+  referralUserId?: Types.ObjectId;
+
   // 탈퇴여부
   @Prop({ default: false })
   isDeleted?: boolean;
