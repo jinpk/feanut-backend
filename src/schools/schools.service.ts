@@ -67,7 +67,7 @@ export class SchoolsService {
       userId: new mongoose.Types.ObjectId(userId),
       disabled: { $ne: true },
     });
-    prevSchools.map((x) => {
+    prevSchools.forEach((x) => {
       x.disabled = true;
       x.save();
     });

@@ -129,6 +129,7 @@ export class UsersService {
       {
         $match: {
           'profile._id': { $nin: friendship.friends.map((x) => x.profileId) },
+          'profile.name': { $regex: query.keyword || '', $options: 'i' },
         },
       },
       {

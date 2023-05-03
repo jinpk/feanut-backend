@@ -5,6 +5,9 @@ import { PagingReqDto } from 'src/common/dtos';
 import { Gender } from 'src/profiles/enums';
 
 export class GetRecommendationDto extends PagingReqDto {
+  @ApiProperty({ description: '', required: false })
+  keyword?: string;
+
   @ApiProperty({ description: '학교코드', required: false })
   schoolCode?: string;
 
