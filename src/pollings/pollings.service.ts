@@ -127,6 +127,8 @@ export class PollingsService {
     const pollsCount = await this.pollingModel
       .find({
         userId: ownerId,
+        completedAt: { $ne: null },
+        skipped: { $ne: null },
       })
       .count();
 
@@ -758,7 +760,10 @@ export class PollingsService {
 
     const filter: FilterQuery<PollingDocument> = {
       selectedProfileId: profile._id,
-      completedAt: { $gte: dayjs().subtract(3, 'day').toDate()},
+      $or: [
+        { isOpened: true },
+        { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+     ],
       noShowed: { $ne: true },
     };
 
