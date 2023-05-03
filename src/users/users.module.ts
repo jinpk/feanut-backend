@@ -8,6 +8,7 @@ import {
   Friendship,
 } from 'src/friendships/schemas/friendships.schema';
 import { Profile, ProfileSchema } from 'src/profiles/schemas/profile.schema';
+import { UsersPublicController } from './users-public.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { Profile, ProfileSchema } from 'src/profiles/schemas/profile.schema';
     MongooseModule.forFeature([{ name: Profile.name, schema: ProfileSchema }]),
   ],
   providers: [UsersService],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersPublicController],
   exports: [UsersService],
 })
 export class UsersModule {}

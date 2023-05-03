@@ -62,11 +62,23 @@ export class SchoolsService {
     return school[0];
   }
 
+  async disabledLatestUserSchool(userId: string | mongoose.Types.ObjectId) {
+    const prevSchools = await this.userSchoolModel.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      disabled: { $ne: true },
+    });
+    prevSchools.forEach((x) => {
+      x.disabled = true;
+      x.save();
+    });
+  }
+
   async insertUserSchool(
     userId: string | mongoose.Types.ObjectId,
     code: string,
     grade: number,
   ) {
+    // 코드 검증
     if (!(await this.schoolModel.findOne({ code }))) {
       throw new WrappedError(
         SCHOOL_MODULE_NAME,
@@ -76,15 +88,7 @@ export class SchoolsService {
     }
 
     // 이전학교 비활성화 처리
-    const prevSchools = await this.userSchoolModel.find({
-      userId: new mongoose.Types.ObjectId(userId),
-      disabled: { $ne: true },
-    });
-
-    prevSchools.map((x) => {
-      x.disabled = true;
-      x.save();
-    });
+    await this.disabledLatestUserSchool(userId);
 
     // 신규학교 저장
     await new this.userSchoolModel({

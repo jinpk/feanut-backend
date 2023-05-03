@@ -22,6 +22,7 @@ import { UtilsService } from 'src/common/providers';
 import { PagingResDto } from 'src/common/dtos';
 import { Profile, ProfileDocument } from 'src/profiles/schemas/profile.schema';
 import { USER_SCHEMA_NAME } from './users.constant';
+import { WrappedError } from 'src/common/errors';
 
 @Injectable()
 export class UsersService {
@@ -33,6 +34,23 @@ export class UsersService {
     private eventEmitter: EventEmitter2,
     private utilsService: UtilsService,
   ) {}
+
+  async getReferralLengthByPhone(phoneNumber: string) {
+    const user = await this.userModel.findOne({
+      phoneNumber,
+      isDeleted: { $ne: true },
+    });
+
+    if (!user) {
+      throw new WrappedError(USER_SCHEMA_NAME).notFound();
+    }
+
+    return await this.userModel
+      .findOne({
+        referralUserId: user._id,
+      })
+      .count();
+  }
 
   async listRecommendation(
     userId: string | Types.ObjectId,
@@ -111,6 +129,7 @@ export class UsersService {
       {
         $match: {
           'profile._id': { $nin: friendship.friends.map((x) => x.profileId) },
+          'profile.name': { $regex: query.keyword || '', $options: 'i' },
         },
       },
       {
@@ -271,9 +290,13 @@ export class UsersService {
     gender: Gender,
     schoolCode?: string,
     schoolGrade?: number,
+    referralUserId?: string,
   ): Promise<string> {
     const user = await new this.userModel({
       phoneNumber,
+      referralUserId: referralUserId
+        ? new Types.ObjectId(referralUserId)
+        : undefined,
     }).save();
 
     this.eventEmitter.emit(

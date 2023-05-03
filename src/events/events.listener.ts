@@ -92,11 +92,13 @@ export class EventsListener {
       const profile = await this.profilesService.getByUserId(event.userId);
       // 친구목록 삭제
       await this.friendshipsService.removeFriendsAllByProfileId(profile._id);
-      // fcm clear
+      // FCM TOKEN 삭제
       await this.notificationsService.updateNotificationUserConfig(
         event.userId,
         { fcmToken: '' },
       );
+      // 연결 학교 비활성화 처리
+      await this.schoolsService.disabledLatestUserSchool(event.userId);
     } catch (error) {
       this.logger.error(
         `${UserDeletedEvent.name} got error with ${
