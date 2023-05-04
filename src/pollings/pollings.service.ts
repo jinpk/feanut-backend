@@ -756,16 +756,23 @@ export class PollingsService {
     user_id: string,
     query: GetListInboxPollingDto,
   ): Promise<PagingResDto<PollingDto>> {
-    const profile = await this.profilesService.getByUserId(user_id);
+    const profile = await this.profilesService.getProfileOwnerInfoByUserId(user_id);
+    let filter: FilterQuery<PollingDocument> = {}
 
-    const filter: FilterQuery<PollingDocument> = {
-      selectedProfileId: profile._id,
-      $or: [
-        { isOpened: true },
-        { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
-     ],
-      noShowed: { $ne: true },
-    };
+    if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
+      filter = {
+        selectedProfileId: profile._id,
+      };
+    } else {
+      filter = {
+        selectedProfileId: profile._id,
+        $or: [
+          { isOpened: true },
+          { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+       ],
+        noShowed: { $ne: true },
+      };
+    }
 
     const lookups: PipelineStage[] = [
       {
