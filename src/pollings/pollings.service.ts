@@ -128,7 +128,7 @@ export class PollingsService {
       .find({
         userId: ownerId,
         completedAt: { $ne: null },
-        skipped: { $ne: null },
+        skipped: { $eq: null },
       })
       .count();
 
