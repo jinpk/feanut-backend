@@ -758,20 +758,24 @@ export class PollingsService {
   ): Promise<PagingResDto<PollingDto>> {
     const profile = await this.profilesService.getProfileOwnerInfoByUserId(user_id);
     let filter: FilterQuery<PollingDocument> = {}
+    filter = {
+      selectedProfileId: profile._id,
+    };
 
     if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
-      filter = {
-        selectedProfileId: profile._id,
-      };
     } else {
-      filter = {
-        selectedProfileId: profile._id,
-        $or: [
-          { isOpened: true },
-          { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
-       ],
-        noShowed: { $ne: true },
-      };
+      let dDay = new Date('2023-05-08T23:59:59Z')
+      if (dDay < dayjs().toDate()) {
+      } else {
+        filter = {
+          selectedProfileId: profile._id,
+          $or: [
+            { isOpened: true },
+            { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+         ],
+          noShowed: { $ne: true },
+        };
+      }
     }
 
     const lookups: PipelineStage[] = [
