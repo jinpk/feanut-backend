@@ -127,6 +127,8 @@ export class PollingsService {
     const pollsCount = await this.pollingModel
       .find({
         userId: ownerId,
+        completedAt: { $ne: null },
+        skipped: { $eq: null },
       })
       .count();
 
@@ -754,13 +756,27 @@ export class PollingsService {
     user_id: string,
     query: GetListInboxPollingDto,
   ): Promise<PagingResDto<PollingDto>> {
-    const profile = await this.profilesService.getByUserId(user_id);
-
-    const filter: FilterQuery<PollingDocument> = {
+    const profile = await this.profilesService.getProfileOwnerInfoByUserId(user_id);
+    let filter: FilterQuery<PollingDocument> = {}
+    filter = {
       selectedProfileId: profile._id,
-      completedAt: { $gte: dayjs().subtract(3, 'day').toDate()},
-      noShowed: { $ne: true },
     };
+
+    if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
+    } else {
+      let dDay = new Date('2023-05-08T23:59:59Z')
+      if (dDay < dayjs().toDate()) {
+      } else {
+        filter = {
+          selectedProfileId: profile._id,
+          $or: [
+            { isOpened: true },
+            { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+         ],
+          noShowed: { $ne: true },
+        };
+      }
+    }
 
     const lookups: PipelineStage[] = [
       {
