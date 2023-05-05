@@ -18,6 +18,7 @@ import {
   AuthDto,
   SignInDto,
   SignInVerificationDto,
+  SignUpVerificationConfirmDto,
 } from './auth/dtos';
 
 @Controller()
@@ -99,10 +100,19 @@ export class AppController {
   }
 
   /** 회원가입 */
+  @Post('signup/verification/confirmation')
+  @Public()
+  @ApiOperation({
+    summary: '2. 회원가입 인증코드 확인',
+  })
+  async signUpVerificationConfirm(@Body() body: SignUpVerificationConfirmDto) {
+    return await this.authService.signUpVerificationConfirm(body);
+  }
+
   @Post('signup/verification')
   @Public()
   @ApiOperation({
-    summary: '회원가입 인증코드 전송(요청)',
+    summary: '1. 회원가입 인증코드 요청',
     description: `phoneNumber로 인증코드 발송됨.
     \nresponse된 authId와 사용자가 입력한 인증코드를 입력하여 /signup API 호출필요
   `,
@@ -115,9 +125,8 @@ export class AppController {
   @Post('signup')
   @Public()
   @ApiOperation({
-    summary: '회원가입 (완료)',
-    description: `회원가입 정보는 signup/verification에서 저장한 정보로 가입처리 됩니다.
-      \n가입완료시 자동로그인 accessToken발급`,
+    summary: '3. 회원가입 완료',
+    description: `가입완료시 자동로그인 accessToken발급`,
   })
   @ApiCreatedResponse({ type: TokenDto })
   async signUp(@Body() body: SignUpDto) {

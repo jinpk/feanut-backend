@@ -16,6 +16,12 @@ export class AddFriendDto {
   name: string;
 }
 
+export class AddFriendByUserDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  userId: string;
+}
+
 export class AddFriendManyDto {
   @ApiProperty({ title: '추가할 연락처 목록', description: '숫자만' })
   contacts: { name: string; phoneNumber: string }[];

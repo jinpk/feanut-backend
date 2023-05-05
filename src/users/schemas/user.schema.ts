@@ -10,12 +10,16 @@ export class User {
   // pk
   _id?: Types.ObjectId;
 
-  // isDeleted: fals중 unique
+  // isDeleted: false중 unique
   @Prop({})
   phoneNumber: string;
 
   @Prop({})
   refreshToken?: string;
+
+  // referralUserId
+  @Prop({})
+  referralUserId?: Types.ObjectId;
 
   // 탈퇴여부
   @Prop({ default: false })

@@ -6,6 +6,7 @@ import { FriendshipsService } from 'src/friendships/friendships.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PollingVotedEvent } from 'src/pollings/events';
 import { ProfilesService } from 'src/profiles/profiles.service';
+import { SchoolsService } from 'src/schools/schools.service';
 import { UserCreatedEvent, UserDeletedEvent } from 'src/users/events';
 import { UsersService } from 'src/users/users.service';
 
@@ -19,6 +20,7 @@ export class EventsListener {
     private notificationsService: NotificationsService,
     private profilesService: ProfilesService,
     private usersService: UsersService,
+    private schoolsService: SchoolsService,
   ) {}
 
   @OnEvent(UserCreatedEvent.name)
@@ -59,6 +61,15 @@ export class EventsListener {
       // 알림설정 초기화
       await this.notificationsService.initNotificationUserConfig(event.userId);
 
+      // 학생 가입시 학교 정보 등록
+      if (event.schoolCode && event.schoolGrade) {
+        await this.schoolsService.insertUserSchool(
+          event.userId,
+          event.schoolCode,
+          event.schoolGrade,
+        );
+      }
+
       this.logger.log(
         `${UserCreatedEvent.name} succesfully procceed: ${event.userId}`,
       );
@@ -81,11 +92,13 @@ export class EventsListener {
       const profile = await this.profilesService.getByUserId(event.userId);
       // 친구목록 삭제
       await this.friendshipsService.removeFriendsAllByProfileId(profile._id);
-      // fcm clear
+      // FCM TOKEN 삭제
       await this.notificationsService.updateNotificationUserConfig(
         event.userId,
         { fcmToken: '' },
       );
+      // 연결 학교 비활성화 처리
+      await this.schoolsService.disabledLatestUserSchool(event.userId);
     } catch (error) {
       this.logger.error(
         `${UserDeletedEvent.name} got error with ${

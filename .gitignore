@@ -1,6 +1,8 @@
 # compiled output
 /dist
 /node_modules
+**/node_modules
+/functions/crawling/node_modules
 
 *.env
 # Logs

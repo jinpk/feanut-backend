@@ -22,6 +22,7 @@ import { CommonModule } from './common/common.module';
 import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SchoolsModule } from './schools/schools.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PollsModule,
     AdminModule,
     EmojisModule,
+    SchoolsModule,
   ],
   controllers: [AppController],
   providers: [

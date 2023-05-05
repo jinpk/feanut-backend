@@ -48,6 +48,7 @@ import { FeanutCardDto } from './dtos';
 import { POLL_ROUND_EVENT_SCHEMA_NAME } from 'src/polls/polls.constant';
 import { RANDOM_NICKNAMES } from 'src/profiles/profiles.constant';
 import { ConfigService } from '@nestjs/config';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class PollingsService {
@@ -126,6 +127,8 @@ export class PollingsService {
     const pollsCount = await this.pollingModel
       .find({
         userId: ownerId,
+        completedAt: { $ne: null },
+        skipped: { $eq: null },
       })
       .count();
 
@@ -753,11 +756,27 @@ export class PollingsService {
     user_id: string,
     query: GetListInboxPollingDto,
   ): Promise<PagingResDto<PollingDto>> {
-    const profile = await this.profilesService.getByUserId(user_id);
-
-    const filter: FilterQuery<PollingDocument> = {
+    const profile = await this.profilesService.getProfileOwnerInfoByUserId(user_id);
+    let filter: FilterQuery<PollingDocument> = {}
+    filter = {
       selectedProfileId: profile._id,
     };
+
+    if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
+    } else {
+      let dDay = new Date('2023-05-08T23:59:59Z')
+      if (dDay < dayjs().toDate()) {
+      } else {
+        filter = {
+          selectedProfileId: profile._id,
+          $or: [
+            { isOpened: true },
+            { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+         ],
+          noShowed: { $ne: true },
+        };
+      }
+    }
 
     const lookups: PipelineStage[] = [
       {
@@ -788,6 +807,20 @@ export class PollingsService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'polls',
+          localField: 'pollId',
+          foreignField: '_id',
+          as: 'poll',
+        },
+      },
+      {
+        $unwind: {
+          path: '$poll',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     const projection: ProjectionFields<PollingDto> = {
@@ -796,6 +829,9 @@ export class PollingsService {
       pollId: 1,
       isOpened: 1,
       completedAt: 1,
+      emotion: '$poll.emotion',
+      emojiId: '$poll.emojiId',
+      contentText: '$poll.contentText',
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
@@ -1481,6 +1517,29 @@ export class PollingsService {
       ),
     );
     return res;
+  }
+
+  // 수신함 리스트에서 삭제
+  async updatePollingNoShowed(user_id: string, pollingIds: string[]): Promise<number> {
+    //userId 사용하여 get profile
+    const profile = await this.profilesService.getByUserId(user_id);
+
+    const result = await this.pollingModel.updateMany(
+      {
+        _id: { $in: pollingIds},
+        selectedProfileId: profile._id,
+      },
+      {
+        $set: { noShowed: true, updatedAt: now() },
+      },
+    );
+    let count = 0
+
+    if (result) {
+      count = result.matchedCount
+    }
+
+    return count
   }
 
   // 피넛을 소모. 수신투표 열기.
