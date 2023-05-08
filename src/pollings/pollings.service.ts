@@ -760,6 +760,7 @@ export class PollingsService {
     let filter: FilterQuery<PollingDocument> = {}
     filter = {
       selectedProfileId: profile._id,
+      noShowed: { $ne: true },
     };
 
     if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
