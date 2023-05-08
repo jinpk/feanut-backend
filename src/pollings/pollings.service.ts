@@ -765,7 +765,7 @@ export class PollingsService {
     if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
     } else {
       let dDay = new Date('2023-05-08T23:59:59Z')
-      if (dDay < dayjs().toDate()) {
+      if (dDay > dayjs().toDate()) {
       } else {
         filter = {
           selectedProfileId: profile._id,
