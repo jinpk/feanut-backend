@@ -35,6 +35,7 @@ export class SchoolsController {
       req.user.id,
       body.code,
       body.grade,
+      body.room,
     );
   }
 

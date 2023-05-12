@@ -77,6 +77,7 @@ export class SchoolsService {
     userId: string | mongoose.Types.ObjectId,
     code: string,
     grade: number,
+    room: string,
   ) {
     // 코드 검증
     if (!(await this.schoolModel.findOne({ code }))) {
