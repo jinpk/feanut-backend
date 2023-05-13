@@ -1,3 +1,4 @@
+import { SchoolsService } from 'src/schools/schools.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -14,7 +15,7 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
-import { PollingDto, PollingResultDto, InboxPollingDto } from './dtos/polling.dto';
+import { PollingDto, PollingResultDto, InboxPollingDto, ReqNewPollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -63,6 +64,7 @@ export class PollingsService {
     private friendShipsService: FriendshipsService,
     private utilsService: UtilsService,
     private eventEmitter: EventEmitter2,
+    private schoolsService: SchoolsService,
   ) {}
 
   async findFeanutCard(profileId: string): Promise<FeanutCardDto> {
@@ -162,7 +164,7 @@ export class PollingsService {
     return true;
   }
 
-  async createPolling(user_id: string, body): Promise<Polling> {
+  async createPolling(user_id: string, body: ReqNewPollingDto): Promise<Polling> {
     const PollExist = await this.pollModel.findById(body.pollId);
 
     if (!PollExist) {
@@ -172,19 +174,36 @@ export class PollingsService {
       ).notFound();
     }
 
-    // 학교 친구 선택
-    // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    let userround = await this.userroundModel.findById(body.userRoundId);
 
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
+    // 친구 그룹 선택
+    let friendGroup = []
+
+    // 학교 친구 선택
+    if (userround.target == 0) {
+      friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
+    } else {
+      // 친구목록 불러오기/셔플
+      let friendList = await this.friendShipsService.listFriend(user_id);
+
+      if (friendList.data.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '친구추가를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+      friendGroup = friendList.data;
     }
 
-    const temp_arr = friendList.data
+    const temp_arr = friendGroup
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
 
@@ -1629,6 +1648,7 @@ export class PollingsService {
       }
     } else {
       // 학교친구로 투표를 선택한 경우
+
     }
 
     const rounds = await this.roundModel.find({

@@ -66,6 +66,115 @@ export class SchoolsService {
     return school[0];
   }
 
+  async getSchoolFriendList(
+    userId: string | mongoose.Types.ObjectId,
+  ) {
+    const school = await this.userSchoolModel.aggregate<UserSchoolDto>([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          disabled: { $ne: true },
+        },
+      },
+      {
+        $lookup: {
+          from: SCHOOL_SCHEMA_NAME,
+          localField: 'code',
+          foreignField: 'code',
+          as: 'schools',
+        },
+      },
+      {
+        $unwind: {
+          path: '$schools',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          grade: 1,
+          room: 1,
+          createdAt: 1,
+          level: '$schools.level',
+          name: '$schools.name',
+          code: '$schools.code',
+        },
+      },
+    ]);
+
+    let filter: FilterQuery<UserSchoolDocument> = {
+      code: school[0]['code'],
+    };
+
+    if (school[0]['level'] == "초등학교") {
+      filter.grade = school[0]['grade']
+      filter.room = school[0]['room']
+    } else {}
+
+    const lookups: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'userId',
+          foreignField: 'ownerId',
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'files',
+          localField: 'profile.imageFileId',
+          foreignField: '_id',
+          as: 'imagefile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$imagefile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          'profile.__v': 0,
+          'profile.phoneNumber': 0,
+          'profile.createdAt': 0,
+          'profile.updatedAt': 0,
+          'profile.imageFileId': 0,
+          'profile.ownerId': 0,
+          'imagefile._id': 0,
+          'imagefile.__v': 0,
+          'imagefile.ownerId': 0,
+          'imagefile.contentType': 0,
+          'imagefile.purpose': 0,
+          'imagefile.createdAt': 0,
+          'imagefile.updatedAt': 0,
+          'imagefile.isUploaded': 0,
+        }
+      },
+      {
+        $project: {
+          __v: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      },
+    ];
+
+    const cursor = await this.userSchoolModel.aggregate([
+      { $match: filter },
+      ...lookups,
+    ]);
+
+    return cursor;
+  }
+
   async checkUserSchoolDate(userId: string | mongoose.Types.ObjectId) {
     const userSchoolInfo = await this.userSchoolModel.findOne({
       userId: new mongoose.Types.ObjectId(userId),
