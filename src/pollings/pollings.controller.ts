@@ -131,19 +131,19 @@ export class PollingsController {
       return result;
   }
 
-  // @Get('rounds/lock')
-  // @ApiOperation({
-  //   summary: '나의 투표 가능 여부 확인',
-  // })
-  // @ApiOkResponse({
-  //   status: 200,
-  //   type: LockUserRoundDto,
-  // })
-  // async getUserLocked(@Request() req): Promise<LockUserRoundDto> {
-  //   const result = await this.pollingsService.getLockUserRound(req.user.id);
+  @Get('rounds/lock')
+  @ApiOperation({
+    summary: '나의 투표 가능 여부 확인',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: LockUserRoundDto,
+  })
+  async getUserLocked(@Request() req): Promise<LockUserRoundDto> {
+    const result = await this.pollingsService.getLockUserRound(req.user.id);
 
-  //   return result;
-  // }
+    return result;
+  }
 
   @Get(':pollingId')
   @ApiOperation({

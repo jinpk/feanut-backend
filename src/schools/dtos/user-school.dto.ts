@@ -7,8 +7,8 @@ export class UserSchoolDto {
   @ApiProperty({ title: '학년' })
   grade: number;
 
-  @ApiProperty({ title: '반' })
-  room: number;
+  @ApiProperty({ title: '반', default: "1" })
+  room: string;
 
   @ApiProperty({ title: '학교코드' })
   code: string;
