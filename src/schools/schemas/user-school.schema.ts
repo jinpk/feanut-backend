@@ -24,7 +24,7 @@ export class UserSchool {
 
   // 반
   @Prop({})
-  room: string;
+  room?: number;
 
   // 비활성화여부
   @Prop({})

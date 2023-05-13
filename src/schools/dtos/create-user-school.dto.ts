@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, Min, IsString } from 'class-validator';
+import { IsNotEmpty, Min, IsString, IsNumber } from 'class-validator';
 
 export class CreateUserSchoolDto {
   @ApiProperty({ title: '반' })
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  room: string;
+  room: number;
 
   @ApiProperty({ title: '학년' })
   @IsNotEmpty()

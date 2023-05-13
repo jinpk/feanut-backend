@@ -35,6 +35,10 @@ export class Round {
   // round 활성화 끝 시간
   @Prop({})
   endedAt?: Date;
+
+  // 초등학생용 라운드 true 그 외 undefined
+  @Prop({})
+  kids?: boolean;
 }
 
 export const RoundSchema = SchemaFactory.createForClass(Round);

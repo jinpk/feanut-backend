@@ -71,7 +71,7 @@ export class SchoolsService {
     });
 
     if (!userSchoolInfo) {
-      return true
+      return true;
     }
 
     if (userSchoolInfo[0].createdAt > dayjs().subtract(14, 'day').toDate()) {
@@ -81,7 +81,7 @@ export class SchoolsService {
         '최근변경 후 14일이 지나야 합니다.',
       ).reject();
     } else {
-      return true
+      return true;
     }
   }
 
@@ -100,7 +100,7 @@ export class SchoolsService {
     userId: string | mongoose.Types.ObjectId,
     code: string,
     grade: number,
-    room: string,
+    room: number,
   ) {
     // 코드 검증
     if (!(await this.schoolModel.findOne({ code }))) {

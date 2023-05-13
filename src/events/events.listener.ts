@@ -67,6 +67,7 @@ export class EventsListener {
           event.userId,
           event.schoolCode,
           event.schoolGrade,
+          event.schoolClassRoom,
         );
       }
 
