@@ -409,51 +409,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          }
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-                temp.gender = v.profile.gender;
-              } else {
-                temp.name = v.profile.name;
-                temp.gender = v.profile.gender;
-              }
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
-          };
-
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -711,51 +713,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          }
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-                temp.gender = v.profile.gender;
-              } else {
-                temp.name = v.profile.name;
-                temp.gender = v.profile.gender;
-              }
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
-          };
-
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -1132,47 +1136,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-          }
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-    
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
-          }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
-
+      console.log(temp)
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -1419,48 +1429,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
-        gender: null
+        gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          }
-        } else {
-          if (v.profile) {
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
             if (v.friendship) {
               temp.name = v.friendship.friends.name;
-              temp.gender = v.profile.gender;
-            } else {
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
             }
           } else {
-            if (v.friendship) {
-              temp.name = v.friendship.friends.name;
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
             } else {
-              temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
             }
           }
-    
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
-          }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
 
       v.voter.imageFileKey = null;
