@@ -57,6 +57,7 @@ export class SchoolsService {
           grade: 1,
           room: 1,
           createdAt: 1,
+          level: '$schools.level',
           name: '$schools.name',
           code: '$schools.code',
         },

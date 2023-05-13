@@ -1718,15 +1718,30 @@ export class PollingsService {
           '학교친구를 4명 이상 초대해주세요.',
         ).reject();
       }
-    }
+    };
 
-    const rounds = await this.roundModel.find({
-      $or: [
-        { endedAt: null },
-        { endedAt: { $gte: dayjs().toDate()} }
-     ],
-    })
-    .sort({ index: 1});
+    // kids 인지 아닌지 확인 후 라운드 가져오기
+    let rounds = []
+    let schoolInfo = await this.schoolsService.getUserSchool(user_id);
+    if (schoolInfo['level'] == "초등학교") {
+      rounds = await this.roundModel.find({
+        $or: [
+          { endedAt: null },
+          { endedAt: { $gte: dayjs().toDate()} }
+       ],
+       kids: true,
+      })
+      .sort({ index: 1});
+    } else {
+      rounds = await this.roundModel.find({
+        $or: [
+          { endedAt: null },
+          { endedAt: { $gte: dayjs().toDate()} }
+       ],
+       kids: {$ne: true},
+      })
+      .sort({ index: 1});
+    }
 
     // 이벤트 라운드 체크
     let eventRounds = [];
