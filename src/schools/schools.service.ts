@@ -111,7 +111,7 @@ export class SchoolsService {
       ).reject();
     }
 
-    // 학교 변경 날짜 확인
+    // 학교 변경 날짜 체크
     await this.checkUserSchoolDate(userId);
 
     // 이전학교 비활성화 처리

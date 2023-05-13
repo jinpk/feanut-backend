@@ -12,4 +12,7 @@ export class UserSchoolDto {
 
   @ApiProperty({ title: '학교코드' })
   code: string;
+
+  @ApiProperty()
+  updatedAt: Date;
 }
