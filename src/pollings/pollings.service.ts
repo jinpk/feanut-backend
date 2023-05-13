@@ -910,7 +910,7 @@ export class PollingsService {
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
 
-    console.log(data)
+    // open 여부, 내가 저장한 기준으로 친구 이름 표시
     data.forEach((element) => {
       if (!element.isOpened) {
         delete element.name;
