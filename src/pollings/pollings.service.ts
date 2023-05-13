@@ -32,7 +32,6 @@ import {
   POLLING_ERROR_MIN_FRIENDS,
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
-  POLLING_ERROR_EXCEED_REFRESH,
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
   POLLING_ERROR_EXCEED_SKIP,
@@ -443,19 +442,12 @@ export class PollingsService {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
-    // 3번째 친구 새로고침인지 확인
-    // if (!polling.refreshCount) {
-    //   polling.refreshCount = 1;
-    // } else {
-    //   if (polling.refreshCount < 3) {
-    //     polling.refreshCount += 1;
-    //   } else {
-    //     throw new WrappedError(
-    //       POLLING_MODULE_NAME,
-    //       POLLING_ERROR_EXCEED_REFRESH,
-    //     ).reject();
-    //   }
-    // }
+    // 4번째 친구 새로고침인지 확인
+    if (!polling.refreshCount) {
+      polling.refreshCount = 1;
+    } else {
+      polling.refreshCount += 1;
+    }
 
     // 친구목록 불러오기/셔플
     let prevFriend = [];
@@ -760,12 +752,13 @@ export class PollingsService {
     let filter: FilterQuery<PollingDocument> = {}
     filter = {
       selectedProfileId: profile._id,
+      noShowed: { $ne: true },
     };
 
     if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
     } else {
       let dDay = new Date('2023-05-08T23:59:59Z')
-      if (dDay < dayjs().toDate()) {
+      if (dDay > dayjs().toDate()) {
       } else {
         filter = {
           selectedProfileId: profile._id,

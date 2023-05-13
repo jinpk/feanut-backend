@@ -14,7 +14,9 @@ import {
   SCHOOL_MODULE_NAME,
   SCHOOL_SCHEMA_NAME,
   USER_SCHOOL_SCHEMA_NAME,
+  SCHOOL_ERROR_RECENT_DATE,
 } from './schools.constants';
+import * as dayjs from 'dayjs';
 import { WrappedError } from 'src/common/errors';
 
 @Injectable()
@@ -62,6 +64,27 @@ export class SchoolsService {
     return school[0];
   }
 
+  async checkUserSchoolDate(userId: string | mongoose.Types.ObjectId) {
+    const userSchoolInfo = await this.userSchoolModel.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      disabled: { $ne: true },
+    });
+
+    if (!userSchoolInfo) {
+      return true
+    }
+
+    if (userSchoolInfo[0].createdAt > dayjs().subtract(14, 'day').toDate()) {
+      throw new WrappedError(
+        SCHOOL_MODULE_NAME,
+        SCHOOL_ERROR_RECENT_DATE,
+        '최근변경 후 14일이 지나야 합니다.',
+      ).reject();
+    } else {
+      return true
+    }
+  }
+
   async disabledLatestUserSchool(userId: string | mongoose.Types.ObjectId) {
     const prevSchools = await this.userSchoolModel.find({
       userId: new mongoose.Types.ObjectId(userId),
@@ -77,6 +100,7 @@ export class SchoolsService {
     userId: string | mongoose.Types.ObjectId,
     code: string,
     grade: number,
+    room: string,
   ) {
     // 코드 검증
     if (!(await this.schoolModel.findOne({ code }))) {
@@ -87,12 +111,16 @@ export class SchoolsService {
       ).reject();
     }
 
+    // 학교 변경 날짜 체크
+    await this.checkUserSchoolDate(userId);
+
     // 이전학교 비활성화 처리
     await this.disabledLatestUserSchool(userId);
 
     // 신규학교 저장
     await new this.userSchoolModel({
       userId: new mongoose.Types.ObjectId(userId),
+      room,
       grade,
       code,
     }).save();
