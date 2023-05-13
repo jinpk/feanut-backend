@@ -48,7 +48,7 @@ export class FindUserRoundDto {
 
 export class PostUserRoundTargetDto {
   @ApiProperty({
-    default: 0,
+    default: 1,
   })
   target: number;
 }

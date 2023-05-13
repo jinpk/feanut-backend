@@ -14,6 +14,7 @@ import {
   SCHOOL_MODULE_NAME,
   SCHOOL_SCHEMA_NAME,
   USER_SCHOOL_SCHEMA_NAME,
+  SCHOOL_ERROR_NOT_FOUND_MY_SCHOOL,
   SCHOOL_ERROR_RECENT_DATE,
 } from './schools.constants';
 import * as dayjs from 'dayjs';
@@ -102,6 +103,14 @@ export class SchoolsService {
         },
       },
     ]);
+
+    if (!school[0]) {
+      throw new WrappedError(
+        SCHOOL_MODULE_NAME,
+        SCHOOL_ERROR_NOT_FOUND_MY_SCHOOL,
+        '학교 등록 정보를 찾을 수 없습니다.',
+      ).notFound();
+    }
 
     let filter: FilterQuery<UserSchoolDocument> = {
       code: school[0]['code'],
