@@ -834,7 +834,6 @@ export class PollingsService {
                 $expr: {
                   $and: [
                     { $eq: ['$friends.profileId', '$$friend_id'] },
-                    { $eq: ['$userId', '$$user_id'] },
                   ],
                 },
               },
@@ -897,6 +896,7 @@ export class PollingsService {
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
+      friendship: '$friendship.friends',
     };
 
     const cursor = await this.pollingModel.aggregate([
@@ -910,10 +910,20 @@ export class PollingsService {
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
 
+    console.log(data)
     data.forEach((element) => {
       if (!element.isOpened) {
         delete element.name;
         delete element.imageFileKey;
+        if (!element.friendship) {
+          delete element.friendship
+        }
+      } else {
+        if (!element.friendship) {
+        } else {
+          element.name = element.friendship.name;
+        }
+        delete element.friendship
       }
     });
 
