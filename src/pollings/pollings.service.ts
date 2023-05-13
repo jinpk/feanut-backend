@@ -176,18 +176,23 @@ export class PollingsService {
 
     let userround = await this.userroundModel.findById(body.userRoundId);
 
-    // 친구 그룹 선택
-    let friendGroup = []
-
+    let friendIds = [];
     // 학교 친구 선택
     if (userround.target == 0) {
-      friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      let friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
       if (friendGroup.length < 4) {
         throw new WrappedError(
           POLLING_MODULE_NAME,
           POLLING_ERROR_MIN_FRIENDS,
           '학교친구를 4명 이상 초대해주세요.',
         ).reject();
+      }
+      let temp_arr = friendGroup
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4);
+
+      for (const friend of temp_arr) {
+        friendIds.push(friend.profile._id);
       }
     } else {
       // 친구목록 불러오기/셔플
@@ -200,16 +205,14 @@ export class PollingsService {
           '친구추가를 4명 이상 추가해주세요.',
         ).reject();
       }
-      friendGroup = friendList.data;
-    }
 
-    const temp_arr = friendGroup
+      let temp_arr = friendList.data
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
 
-    const friendIds = [];
-    for (const friend of temp_arr) {
-      friendIds.push(friend.profileId);
+      for (const friend of temp_arr) {
+        friendIds.push(friend.profileId);
+      }
     }
 
     let polling = new Polling();
@@ -1836,6 +1839,7 @@ export class PollingsService {
 
   async getLockUserRound(userId: string): Promise<LockUserRoundDto> {
     var res = new LockUserRoundDto();
+    res.remainTime = 0;
 
     var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
     if (this.configService.get('env') === 'production') {

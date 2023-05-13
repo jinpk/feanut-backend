@@ -141,7 +141,7 @@ export class PollingsController {
   })
   async getUserLocked(@Request() req): Promise<LockUserRoundDto> {
     const result = await this.pollingsService.getLockUserRound(req.user.id);
-
+    result.maxDailyCount = MAX_DAILY_COUNT;
     return result;
   }
 
