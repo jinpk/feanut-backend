@@ -414,17 +414,21 @@ export class PollingsService {
       temp.profileId = v.profile._id;
 
       if (v.owner) {
+        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         if (v.owner.isDeleted) {
           if (v.friendship) {
             temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-          };
+          }
         } else {
           if (v.profile) {
             if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
+              if (v.friendship) {
+                temp.name = v.friendship.friends.name;
+                temp.gender = v.profile.gender;
+              } else {
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              }
             } else {
               if (v.friendship) {
                 temp.name = v.friendship.friends.name;
@@ -712,17 +716,21 @@ export class PollingsService {
       temp.profileId = v.profile._id;
 
       if (v.owner) {
+        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         if (v.owner.isDeleted) {
           if (v.friendship) {
             temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
           }
         } else {
           if (v.profile) {
             if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
+              if (v.friendship) {
+                temp.name = v.friendship.friends.name;
+                temp.gender = v.profile.gender;
+              } else {
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              }
             } else {
               if (v.friendship) {
                 temp.name = v.friendship.friends.name;
@@ -731,8 +739,8 @@ export class PollingsService {
               }
             }
           } else {
-          }
-    
+          };
+
           if (v.imagefile) {
             temp.imageFileKey = v.imagefile.key;
           }
@@ -791,24 +799,12 @@ export class PollingsService {
     let filter: FilterQuery<PollingDocument> = {}
     filter = {
       selectedProfileId: profile._id,
+      $or: [
+        { isOpened: true },
+        { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
+      ],
       noShowed: { $ne: true },
     };
-
-    if (profile.user['createdAt'] > dayjs().subtract(3, 'day').toDate()) {
-    } else {
-      let dDay = new Date('2023-05-08T23:59:59Z')
-      if (dDay > dayjs().toDate()) {
-      } else {
-        filter = {
-          selectedProfileId: profile._id,
-          $or: [
-            { isOpened: true },
-            { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
-         ],
-          noShowed: { $ne: true },
-        };
-      }
-    }
 
     const lookups: PipelineStage[] = [
       {
@@ -822,6 +818,40 @@ export class PollingsService {
       {
         $unwind: {
           path: '$profiles',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profiles._id', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                    { $eq: ['$userId', '$$user_id'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -1384,17 +1414,26 @@ export class PollingsService {
       temp.profileId = v.profile._id;
 
       if (v.owner) {
+        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         if (v.owner.isDeleted) {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          if (v.friendship) {
+            temp.name = v.friendship.friends.name;
+          }
         } else {
           if (v.profile) {
-            if (v.profile.gender){
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
+              temp.gender = v.profile.gender;
+            } else {
               temp.name = v.profile.name;
               temp.gender = v.profile.gender;
+            }
+          } else {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             } else {
               temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
             }
-          } else {
           }
     
           if (v.imagefile) {
@@ -1402,7 +1441,11 @@ export class PollingsService {
           }
         }
       } else {
-        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+        if (v.friendship) {
+          temp.name = v.friendship.friends.name;
+        } else {
+          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+        }
       }
 
       mergedList.push(temp);
@@ -1667,7 +1710,14 @@ export class PollingsService {
       }
     } else {
       // 학교친구로 투표를 선택한 경우
-
+      let friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
     }
 
     const rounds = await this.roundModel.find({
