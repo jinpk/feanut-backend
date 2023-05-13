@@ -25,7 +25,7 @@ import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
-import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
+import { UserRoundDto, FindUserRoundDto, LockUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
 import { OPEN_POLLING } from 'src/coins/coins.constant';
 import { UseType } from 'src/coins/enums';
@@ -1733,16 +1733,7 @@ export class PollingsService {
     // kids 인지 아닌지 확인 후 라운드 가져오기
     let rounds = []
     let schoolInfo = await this.schoolsService.getUserSchool(user_id);
-    if (schoolInfo['level'] == "초등학교") {
-      rounds = await this.roundModel.find({
-        $or: [
-          { endedAt: null },
-          { endedAt: { $gte: dayjs().toDate()} }
-       ],
-       kids: true,
-      })
-      .sort({ index: 1});
-    } else {
+    if (!schoolInfo) {
       rounds = await this.roundModel.find({
         $or: [
           { endedAt: null },
@@ -1751,6 +1742,26 @@ export class PollingsService {
        kids: {$ne: true},
       })
       .sort({ index: 1});
+    } else {
+      if (schoolInfo['level'] == "초등학교") {
+        rounds = await this.roundModel.find({
+          $or: [
+            { endedAt: null },
+            { endedAt: { $gte: dayjs().toDate()} }
+         ],
+         kids: true,
+        })
+        .sort({ index: 1});
+      } else {
+        rounds = await this.roundModel.find({
+          $or: [
+            { endedAt: null },
+            { endedAt: { $gte: dayjs().toDate()} }
+         ],
+         kids: {$ne: true},
+        })
+        .sort({ index: 1});
+      }
     }
 
     // 이벤트 라운드 체크
@@ -1822,6 +1833,105 @@ export class PollingsService {
 
     return this.userRoundToDto(result);
   }
+
+  // async getLockUserRound(userId: string): Promise<LockUserRoundDto> {
+  //   var res = new LockUserRoundDto();
+
+  //   var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
+  //   if (this.configService.get('env') === 'production') {
+  //   } else {
+  //     var waitTime = 1 * 30 * 1000;
+  //   }
+
+  //   const userrounds = await this.userroundModel.aggregate([
+  //     {
+  //       $match: { userId: new Types.ObjectId(user_id) },
+  //     },
+  //     {
+  //       $sort: { createdAt: -1 },
+  //     },
+  //     {
+  //       $limit: 4,
+  //     },
+  //   ]);
+
+  //   if (userrounds.length > 0) {
+  //     const start = new Date();
+  //     start.setHours(0, 0, 0, 0);
+  //     const end = new Date();
+  //     end.setHours(23, 59, 59, 999);
+
+  //     userrounds[0].pollingIds.forEach((element) => {
+  //       if (element.completedAt) {
+  //         element.isVoted = true;
+  //       } else {
+  //         element.isVoted = false;
+  //       }
+  //       delete element.completedAt;
+  //     });
+
+  //     var todayRounds = [];
+  //     userrounds.forEach((element) => {
+  //       if (element.completedAt == null) {
+  //         todayRounds.push(element);
+  //       }
+  //       if ((element.completedAt >= start) && (element.completedAt <= end)) {
+  //         todayRounds.push(element);
+  //       }
+  //     });
+
+  //     res.todayCount = todayRounds.length;
+
+  //     if (res.todayCount == 0) {
+  //       if (!userrounds[0].completedAt) {
+  //         res.data = this.userRoundToDto(userrounds[0]);
+  //       } else {
+  //         const result = await this.createUserRound(user_id, target);
+  //         res.todayCount += 1;
+  //         res.data = result;
+  //       }
+  //     } else if (res.todayCount < 3) {
+  //       let timecheck = 0;
+  //       if (todayRounds[0].completedAt) {
+  //         timecheck =
+  //           todayRounds[0].completedAt.getTime() +
+  //           waitTime -
+  //           now().getTime();
+
+  //         res.remainTime = timecheck;
+  //       }
+  //       if (!userrounds[0].completedAt) {
+  //         res.data = this.userRoundToDto(userrounds[0]);
+  //       } else {
+  //         if (timecheck < 0) {
+  //           res.recentCompletedAt = userrounds[0].completedAt;
+  //           const result = await this.createUserRound(user_id, target);
+  //           res.todayCount += 1;
+  //           res.data = result;
+  //         } else {
+  //           res.data = this.userRoundToDto(userrounds[0]);
+  //         }
+  //       }
+  //     } else if (res.todayCount == 3) {
+  //       let timecheck = 0;
+  //       timecheck = end.getTime() - now().getTime();
+  //       res.remainTime = timecheck;
+  //       if (!userrounds[0].completedAt) {
+  //         res.data = this.userRoundToDto(userrounds[0]);
+  //       } else {
+  //         if (timecheck < 0) {
+  //         } else {
+  //           res.complete = false;
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     res.complete = false;
+  //     res.todayCount = 1;
+  //   }
+
+  //   return res;
+  // }
 
   async findUserRound(user_id: string, target: number): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();

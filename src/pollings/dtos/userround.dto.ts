@@ -46,6 +46,20 @@ export class FindUserRoundDto {
   data: UserRoundDto;
 }
 
+export class LockUserRoundDto {
+  @ApiProperty({})
+  complete: boolean;
+
+  @ApiProperty({})
+  todayCount: number;
+
+  @ApiProperty({default: 3})
+  maxDailyCount: number;
+
+  @ApiProperty({})
+  remainTime: number;
+}
+
 export class PostUserRoundTargetDto {
   @ApiProperty({
     default: 1,
