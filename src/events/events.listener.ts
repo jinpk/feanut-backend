@@ -75,6 +75,7 @@ export class EventsListener {
         `${UserCreatedEvent.name} succesfully procceed: ${event.userId}`,
       );
     } catch (error) {
+      console.error(error)
       this.logger.error(
         `${UserCreatedEvent.name} got error with ${
           event.userId

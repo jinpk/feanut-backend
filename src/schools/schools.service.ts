@@ -55,6 +55,8 @@ export class SchoolsService {
       {
         $project: {
           grade: 1,
+          room: 1,
+          createdAt: 1,
           name: '$schools.name',
           code: '$schools.code',
         },
@@ -65,7 +67,7 @@ export class SchoolsService {
   }
 
   async checkUserSchoolDate(userId: string | mongoose.Types.ObjectId) {
-    const userSchoolInfo = await this.userSchoolModel.find({
+    const userSchoolInfo = await this.userSchoolModel.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       disabled: { $ne: true },
     });
@@ -74,7 +76,7 @@ export class SchoolsService {
       return true;
     }
 
-    if (userSchoolInfo[0].createdAt > dayjs().subtract(14, 'day').toDate()) {
+    if (userSchoolInfo.createdAt > dayjs().subtract(14, 'day').toDate()) {
       throw new WrappedError(
         SCHOOL_MODULE_NAME,
         SCHOOL_ERROR_RECENT_DATE,

@@ -290,6 +290,7 @@ export class UsersService {
     gender: Gender,
     schoolCode?: string,
     schoolGrade?: number,
+    schoolRoom?: number,
     referralUserId?: string,
   ): Promise<string> {
     const user = await new this.userModel({
@@ -308,6 +309,7 @@ export class UsersService {
         gender,
         schoolCode,
         schoolGrade,
+        schoolRoom,
       ),
     );
 
