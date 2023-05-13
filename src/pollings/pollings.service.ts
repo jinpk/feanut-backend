@@ -172,6 +172,7 @@ export class PollingsService {
       ).notFound();
     }
 
+    // 학교 친구 선택
     // 친구목록 불러오기/셔플
     const friendList = await this.friendShipsService.listFriend(user_id);
 
@@ -1608,23 +1609,35 @@ export class PollingsService {
     }
   }
 
-  // userRound
-  async createUserRound(user_id: string): Promise<UserRoundDto> {
+  // userRound methods
+  async createUserRound(user_id: string, target: number): Promise<UserRoundDto> {
     const userrounds = await this.userroundModel
       .find({
         userId: new Types.ObjectId(user_id),
       })
       .sort({ createdAt: -1 });
-
-    const friendList = await this.friendShipsService.listFriend(user_id);
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        null,
-      ).reject();
+    
+    // 내 친구로 투표를 선택한 경우
+    if (target == 1) {
+      let friendCount = await this.friendShipsService.getFriendsCount(user_id);
+      if (friendCount < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '활성화 된 친구를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+    } else {
+      // 학교친구로 투표를 선택한 경우
     }
-    const rounds = await this.roundModel.find().sort({ index: 1});
+
+    const rounds = await this.roundModel.find({
+      $or: [
+        { endedAt: null },
+        { endedAt: { $gte: dayjs().toDate()} }
+     ],
+    })
+    .sort({ index: 1});
 
     // 이벤트 라운드 체크
     let eventRounds = [];
@@ -1688,6 +1701,7 @@ export class PollingsService {
       roundId: nextRound._id,
       pollIds: shuffledPollIds,
       pollingIds: [],
+      target: target,
     };
 
     const result = await new this.userroundModel(userround).save();
@@ -1695,23 +1709,13 @@ export class PollingsService {
     return this.userRoundToDto(result);
   }
 
-  async findUserRound(user_id: string): Promise<FindUserRoundDto> {
+  async findUserRound(user_id: string, target: number): Promise<FindUserRoundDto> {
     var res = new FindUserRoundDto();
 
     var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
     if (this.configService.get('env') === 'production') {
     } else {
       var waitTime = 1 * 30 * 1000;
-    }
-    // 친구 인원 수 체크
-    const friendList = await this.friendShipsService.getFriendsCount(user_id);
-
-    if (friendList < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
     }
 
     const userrounds = await this.userroundModel.aggregate([
@@ -1778,7 +1782,7 @@ export class PollingsService {
         if (!userrounds[0].completedAt) {
           res.data = this.userRoundToDto(userrounds[0]);
         } else {
-          const result = await this.createUserRound(user_id);
+          const result = await this.createUserRound(user_id, target);
           res.todayCount += 1;
           res.data = result;
         }
@@ -1797,7 +1801,7 @@ export class PollingsService {
         } else {
           if (timecheck < 0) {
             res.recentCompletedAt = userrounds[0].completedAt;
-            const result = await this.createUserRound(user_id);
+            const result = await this.createUserRound(user_id, target);
             res.todayCount += 1;
             res.data = result;
           } else {
@@ -1819,7 +1823,7 @@ export class PollingsService {
         }
       }
     } else {
-      const result = await this.createUserRound(user_id);
+      const result = await this.createUserRound(user_id, target);
       res.data = result;
       res.todayCount = 1;
     }

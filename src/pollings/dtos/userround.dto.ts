@@ -46,6 +46,13 @@ export class FindUserRoundDto {
   data: UserRoundDto;
 }
 
+export class PostUserRoundTargetDto {
+  @ApiProperty({
+    default: 0,
+  })
+  target: number;
+}
+
 export class PayUserRoundDto extends OmitType(UseCoinDto, [
   'userId',
 ] as const) {}
