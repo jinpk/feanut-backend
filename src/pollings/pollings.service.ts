@@ -462,7 +462,9 @@ export class PollingsService {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
-    // 4번째 친구 새로고침인지 확인
+    const userround = await this.userroundModel.findById(polling.userRoundId);
+
+    // 친구 새로고침 count
     if (!polling.refreshCount) {
       polling.refreshCount = 1;
     } else {
@@ -475,24 +477,41 @@ export class PollingsService {
       prevFriend.push(arr);
     }
 
+    // 친구 그룹 선택
     let friendTempArr: any[] = [];
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    let friendGroup = []
 
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
+    // 학교 친구 선택
+    if (userround.target == 0) {
+      friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
+    } else {
+      // 친구목록 불러오기/셔플
+      let friendList = await this.friendShipsService.listFriend(user_id);
+
+      if (friendList.data.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '친구추가를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+      friendGroup = friendList.data;
     }
 
     // 친구 수 12명 이하이면 slice없이 셔플.
-    if (friendList.data.length <= 12) {
-      friendTempArr = friendList.data
+    if (friendGroup.length <= 12) {
+      friendTempArr = friendGroup
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
     } else {
-      friendTempArr = friendList.data
+      friendTempArr = friendGroup
         .filter((friend) => !prevFriend.includes(friend.profileId))
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
