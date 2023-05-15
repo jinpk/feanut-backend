@@ -56,8 +56,11 @@ export class LockUserRoundDto {
   @ApiProperty({default: 3})
   maxDailyCount: number;
 
-  @ApiProperty({})
+  @ApiProperty({default: 0})
   remainTime: number;
+  
+  @ApiProperty({default: null})
+  userRoundId: string;
 }
 
 export class PostUserRoundTargetDto {

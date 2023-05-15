@@ -1854,7 +1854,6 @@ export class PollingsService {
 
   async getLockUserRound(userId: string): Promise<LockUserRoundDto> {
     var res = new LockUserRoundDto();
-    res.remainTime = 0;
 
     var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
     if (this.configService.get('env') === 'production') {
@@ -1904,9 +1903,9 @@ export class PollingsService {
       if (res.todayCount == 0) {
         if (!userrounds[0].completedAt) {
           res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
         } else {
           res.complete = true;
-          res.todayCount += 1;
         }
       } else if (res.todayCount < 3) {
         let timecheck = 0;
@@ -1920,12 +1919,13 @@ export class PollingsService {
         }
         if (!userrounds[0].completedAt) {
           res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
         } else {
           if (timecheck < 0) {
             res.complete = true;
-            res.todayCount += 1;
           } else {
             res.complete = false;
+            res.userRoundId = userrounds[0]._id.toString();
           }
         }
       } else if (res.todayCount == 3) {
@@ -1934,16 +1934,17 @@ export class PollingsService {
         res.remainTime = timecheck;
         if (!userrounds[0].completedAt) {
           res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
         } else {
           if (timecheck < 0) {
           } else {
             res.complete = false;
+            res.userRoundId = userrounds[0]._id.toString();
           }
         }
       }
     } else {
-      res.complete = false;
-      res.todayCount = 1;
+      res.complete = true;
     }
 
     return res;
