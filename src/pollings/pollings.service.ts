@@ -881,8 +881,6 @@ export class PollingsService {
       this.utilsService.getCommonMongooseFacet(query),
     ]);
 
-    console.log(cursor[0])
-
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
 
@@ -1102,7 +1100,6 @@ export class PollingsService {
     let mergedList = [];
     const cursors = cursor.slice(-4);
 
-    console.log(cursor)
     for (const v of cursors) {
       let temp = {
         profileId: null,
@@ -1157,8 +1154,6 @@ export class PollingsService {
     }
 
     cursor.at(-1).friendIds = mergedList;
-
-    console.log("@@")
     return cursor.at(-1);
   }
 
@@ -1946,7 +1941,6 @@ export class PollingsService {
           'pollingIds.userRoundId': 0,
           'pollingIds.friendIds': 0,
           'pollingIds.selectedProfileId': 0,
-          'pollingIds.skipped': 0,
           'pollingIds.isOpened': 0,
           'pollingIds.useCoinId': 0,
           'pollingIds.createdAt': 0,
