@@ -117,6 +117,7 @@ export class PollingsController {
   @Post('rounds')
   @ApiOperation({
     summary: '내 투표 라운드 조회 & 생성',
+    description: 'target=0 학교친구, target=1 일반친구',
   })
   @ApiOkResponse({
     status: 200,

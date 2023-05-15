@@ -114,6 +114,7 @@ export class SchoolsService {
 
     let filter: FilterQuery<UserSchoolDocument> = {
       code: school[0]['code'],
+      disabled: { $ne: true },
     };
 
     if (school[0]['level'] == "초등학교") {
