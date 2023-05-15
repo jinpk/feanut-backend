@@ -1531,14 +1531,6 @@ export class PollingsService {
     };
 
     if (body.skipped) {
-      let skipCount = await this.checkUserroundSkip(user_id, polling_id);
-      if (skipCount >= 3) {
-        throw new WrappedError(
-          POLLING_MODULE_NAME,
-          POLLING_ERROR_EXCEED_SKIP,
-          '건너뛰기 횟수 3회 초과 입니다.',
-        ).reject();
-      }
       update.skipped = true;
     } else {
       update.selectedProfileId = new Types.ObjectId(body.selectedProfileId);
