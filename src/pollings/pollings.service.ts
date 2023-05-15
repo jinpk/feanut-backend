@@ -830,39 +830,6 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
-          let: { friend_id: '$profiles._id', user_id: '$userId' },
-          pipeline: [
-            {
-              $unwind: '$friends',
-            },
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$friends.profileId', '$$friend_id'] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'friendship',
-        }
-      },
-      {
-        $unwind: {
-          path: '$friendship',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: '$friendship',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
           from: 'files',
           localField: 'profiles.imageFileId',
           foreignField: '_id',
@@ -1172,7 +1139,7 @@ export class PollingsService {
           }
         }
       }
-      console.log(temp)
+
       if (temp.name == "") {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -1187,7 +1154,6 @@ export class PollingsService {
     }
 
     cursor.at(-1).friendIds = mergedList;
-
     return cursor.at(-1);
   }
 
@@ -1975,7 +1941,6 @@ export class PollingsService {
           'pollingIds.userRoundId': 0,
           'pollingIds.friendIds': 0,
           'pollingIds.selectedProfileId': 0,
-          'pollingIds.skipped': 0,
           'pollingIds.isOpened': 0,
           'pollingIds.useCoinId': 0,
           'pollingIds.createdAt': 0,
