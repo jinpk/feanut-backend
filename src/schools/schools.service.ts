@@ -183,7 +183,10 @@ export class SchoolsService {
       ...lookups,
     ]);
 
-    return cursor;
+    // profile 이 없는 id는 배열에서 삭제
+    let filtered = cursor.filter((element) => (element.profile));
+
+    return filtered;
   }
 
   async checkUserSchoolDate(userId: string | mongoose.Types.ObjectId) {
