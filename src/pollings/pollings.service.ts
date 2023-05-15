@@ -187,10 +187,12 @@ export class PollingsService {
           '학교친구를 4명 이상 초대해주세요.',
         ).reject();
       }
+
+      console.log(friendGroup)
       let temp_arr = friendGroup
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
-
+      
       for (const friend of temp_arr) {
         friendIds.push(friend.profile._id);
       }
