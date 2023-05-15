@@ -136,6 +136,52 @@ export class ProfilesService {
     return profiles;
   }
 
+  async getProfileOwnerInfoByUserId(
+    userId: string,
+  ): Promise<{ _id: Types.ObjectId; user: Object }> {
+    const profiles = await this.profileModel.aggregate<{
+      _id: Types.ObjectId;
+      user: Object;
+    }>([
+      {
+        $match: {
+          ownerId: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: USER_SCHEMA_NAME,
+          localField: 'ownerId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true,
+          },
+        },
+      },
+      { $project: { __v: 0, createdAt: 0, updatedAt: 0 } },
+    ]);
+
+    if ((profiles.length == 0) || (!profiles[0]['user'])) {
+      throw new WrappedError(
+        PROFILE_MODULE_NAME,
+        PROFILES_ERROR_NOT_FOUND,
+      ).notFound();
+    }
+  
+    return profiles[0]
+  }
+
   // 아직 소유권없는 프로필 조회
   async getOwnerLessProfileByPhoneNumber(
     phoneNumber: string,

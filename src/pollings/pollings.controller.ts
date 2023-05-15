@@ -23,7 +23,11 @@ import {
   PollingResultDto,
   InboxPollingDto,
 } from './dtos/polling.dto';
-import { FindUserRoundDto } from './dtos/userround.dto';
+import {
+  FindUserRoundDto,
+  PostUserRoundTargetDto,
+  LockUserRoundDto
+} from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListInboxPollingDto } from './dtos/get-polling.dto';
@@ -118,9 +122,25 @@ export class PollingsController {
     status: 200,
     type: FindUserRoundDto,
   })
-  async getUserRound(@Request() req) {
-    const result = await this.pollingsService.findUserRound(req.user.id);
+  async getUserRound(
+    @Body() body: PostUserRoundTargetDto,
+    @Request() req) {
+      const result = await this.pollingsService.findUserRound(req.user.id, body.target);
 
+      result.maxDailyCount = MAX_DAILY_COUNT;
+      return result;
+  }
+
+  @Get('rounds/lock')
+  @ApiOperation({
+    summary: '나의 투표 가능 여부 확인',
+  })
+  @ApiOkResponse({
+    status: 200,
+    type: LockUserRoundDto,
+  })
+  async getUserLocked(@Request() req): Promise<LockUserRoundDto> {
+    const result = await this.pollingsService.getLockUserRound(req.user.id);
     result.maxDailyCount = MAX_DAILY_COUNT;
     return result;
   }

@@ -1,3 +1,4 @@
+import { SchoolsService } from 'src/schools/schools.service';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -14,7 +15,7 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { Round, RoundDocument } from '../polls/schemas/round.schema';
 import { Polling, PollingDocument } from './schemas/polling.schema';
 import { UserRound, UserRoundDocument } from './schemas/user-round.schema';
-import { PollingDto, PollingResultDto, InboxPollingDto } from './dtos/polling.dto';
+import { PollingDto, PollingResultDto, InboxPollingDto, ReqNewPollingDto } from './dtos/polling.dto';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import {
   GetListPollingDto,
@@ -24,7 +25,7 @@ import { UseCoinDto } from '../coins/dtos/coin.dto';
 import { CoinsService } from 'src/coins/conis.service';
 import { FriendshipsService } from 'src/friendships/friendships.service';
 import { UtilsService } from 'src/common/providers';
-import { UserRoundDto, FindUserRoundDto } from './dtos/userround.dto';
+import { UserRoundDto, FindUserRoundDto, LockUserRoundDto } from './dtos/userround.dto';
 import { WrappedError } from 'src/common/errors';
 import { OPEN_POLLING } from 'src/coins/coins.constant';
 import { UseType } from 'src/coins/enums';
@@ -32,7 +33,6 @@ import {
   POLLING_ERROR_MIN_FRIENDS,
   POLLING_MODULE_NAME,
   POLLING_ERROR_NOT_FOUND_POLLING,
-  POLLING_ERROR_EXCEED_REFRESH,
   POLLING_ERROR_LACK_COIN_AMOUNT,
   POLLING_ERROR_ALREADY_DONE,
   POLLING_ERROR_EXCEED_SKIP,
@@ -64,6 +64,7 @@ export class PollingsService {
     private friendShipsService: FriendshipsService,
     private utilsService: UtilsService,
     private eventEmitter: EventEmitter2,
+    private schoolsService: SchoolsService,
   ) {}
 
   async findFeanutCard(profileId: string): Promise<FeanutCardDto> {
@@ -163,7 +164,7 @@ export class PollingsService {
     return true;
   }
 
-  async createPolling(user_id: string, body): Promise<Polling> {
+  async createPolling(user_id: string, body: ReqNewPollingDto): Promise<Polling> {
     const PollExist = await this.pollModel.findById(body.pollId);
 
     if (!PollExist) {
@@ -173,24 +174,45 @@ export class PollingsService {
       ).notFound();
     }
 
-    // 친구목록 불러오기/셔플
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    let userround = await this.userroundModel.findById(body.userRoundId);
 
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
-    }
-
-    const temp_arr = friendList.data
+    let friendIds = [];
+    // 학교 친구 선택
+    if (userround.target == 0) {
+      let friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
+      let temp_arr = friendGroup
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
 
-    const friendIds = [];
-    for (const friend of temp_arr) {
-      friendIds.push(friend.profileId);
+      for (const friend of temp_arr) {
+        friendIds.push(friend.profile._id);
+      }
+    } else {
+      // 친구목록 불러오기/셔플
+      let friendList = await this.friendShipsService.listFriend(user_id);
+
+      if (friendList.data.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '친구추가를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+
+      let temp_arr = friendList.data
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4);
+
+      for (const friend of temp_arr) {
+        friendIds.push(friend.profileId);
+      }
     }
 
     let polling = new Polling();
@@ -387,47 +409,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-          };
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
-          };
-
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -443,19 +471,14 @@ export class PollingsService {
     // polling 가져오기.
     const polling = await this.pollingModel.findById(polling_id);
 
-    // 3번째 친구 새로고침인지 확인
-    // if (!polling.refreshCount) {
-    //   polling.refreshCount = 1;
-    // } else {
-    //   if (polling.refreshCount < 3) {
-    //     polling.refreshCount += 1;
-    //   } else {
-    //     throw new WrappedError(
-    //       POLLING_MODULE_NAME,
-    //       POLLING_ERROR_EXCEED_REFRESH,
-    //     ).reject();
-    //   }
-    // }
+    const userround = await this.userroundModel.findById(polling.userRoundId);
+
+    // 친구 새로고침 count
+    if (!polling.refreshCount) {
+      polling.refreshCount = 1;
+    } else {
+      polling.refreshCount += 1;
+    }
 
     // 친구목록 불러오기/셔플
     let prevFriend = [];
@@ -463,24 +486,41 @@ export class PollingsService {
       prevFriend.push(arr);
     }
 
+    // 친구 그룹 선택
     let friendTempArr: any[] = [];
-    const friendList = await this.friendShipsService.listFriend(user_id);
+    let friendGroup = []
 
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
+    // 학교 친구 선택
+    if (userround.target == 0) {
+      friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
+    } else {
+      // 친구목록 불러오기/셔플
+      let friendList = await this.friendShipsService.listFriend(user_id);
+
+      if (friendList.data.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '친구추가를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+      friendGroup = friendList.data;
     }
 
     // 친구 수 12명 이하이면 slice없이 셔플.
-    if (friendList.data.length <= 12) {
-      friendTempArr = friendList.data
+    if (friendGroup.length <= 12) {
+      friendTempArr = friendGroup
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
     } else {
-      friendTempArr = friendList.data
+      friendTempArr = friendGroup
         .filter((friend) => !prevFriend.includes(friend.profileId))
         .sort(() => Math.random() - 0.5)
         .slice(0, 4);
@@ -673,47 +713,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-          }
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-    
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
-          }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -756,14 +802,14 @@ export class PollingsService {
     user_id: string,
     query: GetListInboxPollingDto,
   ): Promise<PagingResDto<PollingDto>> {
-    const profile = await this.profilesService.getByUserId(user_id);
-
-    const filter: FilterQuery<PollingDocument> = {
+    const profile = await this.profilesService.getProfileOwnerInfoByUserId(user_id);
+    let filter: FilterQuery<PollingDocument> = {}
+    filter = {
       selectedProfileId: profile._id,
       $or: [
         { isOpened: true },
         { completedAt: { $gte: dayjs().subtract(3, 'day').toDate()} }
-     ],
+      ],
       noShowed: { $ne: true },
     };
 
@@ -779,6 +825,39 @@ export class PollingsService {
       {
         $unwind: {
           path: '$profiles',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'friendships',
+          let: { friend_id: '$profiles._id', user_id: '$userId' },
+          pipeline: [
+            {
+              $unwind: '$friends',
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$friends.profileId', '$$friend_id'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'friendship',
+        }
+      },
+      {
+        $unwind: {
+          path: '$friendship',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$friendship',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -824,6 +903,7 @@ export class PollingsService {
       name: '$profiles.name',
       gender: '$profiles.gender',
       imageFileKey: '$files.key',
+      friendship: '$friendship.friends',
     };
 
     const cursor = await this.pollingModel.aggregate([
@@ -837,10 +917,20 @@ export class PollingsService {
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
 
+    // open 여부, 내가 저장한 기준으로 친구 이름 표시
     data.forEach((element) => {
       if (!element.isOpened) {
         delete element.name;
         delete element.imageFileKey;
+        if (!element.friendship) {
+          delete element.friendship
+        }
+      } else {
+        if (!element.friendship) {
+        } else {
+          element.name = element.friendship.name;
+        }
+        delete element.friendship
       }
     });
 
@@ -1046,47 +1136,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
         gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        if (v.owner.isDeleted) {
-          if (v.friendship) {
-            temp.name = v.friendship.friends.name;
-          } else {
-            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-          }
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
-            } else {
-              if (v.friendship) {
-                temp.name = v.friendship.friends.name;
-              } else {
-                temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-              }
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
-    
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
-          }
-        }
-      } else {
-        if (v.friendship) {
-          temp.name = v.friendship.friends.name;
-        } else {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
         }
       }
-
+      console.log(temp)
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
     }
 
@@ -1333,35 +1429,53 @@ export class PollingsService {
     for (const v of cursors) {
       let temp = {
         profileId: null,
-        name: null,
+        name: RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0],
         imageFileKey: null,
-        gender: null
+        gender: null,
       };
 
       temp.profileId = v.profile._id;
-
-      if (v.owner) {
-        if (v.owner.isDeleted) {
-          temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
-        } else {
-          if (v.profile) {
-            if (v.profile.gender){
-              temp.name = v.profile.name;
-              temp.gender = v.profile.gender;
-            } else {
-              temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+      
+      if (v.friendship) {
+        temp.name = v.friendship.friends.name;
+      } else {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            if (v.friendship) {
+              temp.name = v.friendship.friends.name;
             }
           } else {
-          }
-    
-          if (v.imagefile) {
-            temp.imageFileKey = v.imagefile.key;
+            if (v.profile) {
+              if (v.profile.gender){
+                temp.name = v.profile.name;
+                temp.gender = v.profile.gender;
+              } else {
+                if (v.friendship) {
+                  temp.name = v.friendship.friends.name;
+                } else {
+                  temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+                }
+              }
+            } else {
+            }
+      
+            if (v.imagefile) {
+              temp.imageFileKey = v.imagefile.key;
+            }
           }
         }
-      } else {
-        temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
       }
 
+      if (temp.name == "") {
+        if (v.owner) {
+          if (v.owner.isDeleted) {
+            temp.name = RANDOM_NICKNAMES.sort(() => Math.random() - 0.5)[0];
+          } else {
+            temp.name = v.profile.name;
+          }
+        }
+      }
+      
       mergedList.push(temp);
 
       v.voter.imageFileKey = null;
@@ -1417,14 +1531,6 @@ export class PollingsService {
     };
 
     if (body.skipped) {
-      let skipCount = await this.checkUserroundSkip(user_id, polling_id);
-      if (skipCount >= 3) {
-        throw new WrappedError(
-          POLLING_MODULE_NAME,
-          POLLING_ERROR_EXCEED_SKIP,
-          '건너뛰기 횟수 3회 초과 입니다.',
-        ).reject();
-      }
       update.skipped = true;
     } else {
       update.selectedProfileId = new Types.ObjectId(body.selectedProfileId);
@@ -1604,23 +1710,69 @@ export class PollingsService {
     }
   }
 
-  // userRound
-  async createUserRound(user_id: string): Promise<UserRoundDto> {
+  // userRound methods
+  async createUserRound(user_id: string, target: number): Promise<UserRoundDto> {
     const userrounds = await this.userroundModel
       .find({
         userId: new Types.ObjectId(user_id),
       })
       .sort({ createdAt: -1 });
+    
+    // 내 친구로 투표를 선택한 경우
+    if (target == 1) {
+      let friendCount = await this.friendShipsService.getFriendsCount(user_id);
+      if (friendCount < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '활성화 된 친구를 4명 이상 추가해주세요.',
+        ).reject();
+      }
+    } else {
+      // 학교친구로 투표를 선택한 경우
+      let friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+      if (friendGroup.length < 4) {
+        throw new WrappedError(
+          POLLING_MODULE_NAME,
+          POLLING_ERROR_MIN_FRIENDS,
+          '학교친구를 4명 이상 초대해주세요.',
+        ).reject();
+      }
+    };
 
-    const friendList = await this.friendShipsService.listFriend(user_id);
-    if (friendList.data.length < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        null,
-      ).reject();
+    // kids 인지 아닌지 확인 후 라운드 가져오기
+    let rounds = []
+    let schoolInfo = await this.schoolsService.getUserSchool(user_id);
+    if (!schoolInfo) {
+      rounds = await this.roundModel.find({
+        $or: [
+          { endedAt: null },
+          { endedAt: { $gte: dayjs().toDate()} }
+       ],
+       kids: {$ne: true},
+      })
+      .sort({ index: 1});
+    } else {
+      if (schoolInfo['level'] == "초등학교") {
+        rounds = await this.roundModel.find({
+          $or: [
+            { endedAt: null },
+            { endedAt: { $gte: dayjs().toDate()} }
+         ],
+         kids: true,
+        })
+        .sort({ index: 1});
+      } else {
+        rounds = await this.roundModel.find({
+          $or: [
+            { endedAt: null },
+            { endedAt: { $gte: dayjs().toDate()} }
+         ],
+         kids: {$ne: true},
+        })
+        .sort({ index: 1});
+      }
     }
-    const rounds = await this.roundModel.find().sort({ index: 1});
 
     // 이벤트 라운드 체크
     let eventRounds = [];
@@ -1684,6 +1836,7 @@ export class PollingsService {
       roundId: nextRound._id,
       pollIds: shuffledPollIds,
       pollingIds: [],
+      target: target,
     };
 
     const result = await new this.userroundModel(userround).save();
@@ -1691,23 +1844,111 @@ export class PollingsService {
     return this.userRoundToDto(result);
   }
 
-  async findUserRound(user_id: string): Promise<FindUserRoundDto> {
-    var res = new FindUserRoundDto();
+  async getLockUserRound(userId: string): Promise<LockUserRoundDto> {
+    var res = new LockUserRoundDto();
 
     var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
     if (this.configService.get('env') === 'production') {
     } else {
       var waitTime = 1 * 30 * 1000;
     }
-    // 친구 인원 수 체크
-    const friendList = await this.friendShipsService.getFriendsCount(user_id);
 
-    if (friendList < 4) {
-      throw new WrappedError(
-        POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
+    const userrounds = await this.userroundModel.aggregate([
+      {
+        $match: { userId: new Types.ObjectId(userId) },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $limit: 4,
+      },
+    ]);
+
+    if (userrounds.length > 0) {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+
+      userrounds[0].pollingIds.forEach((element) => {
+        if (element.completedAt) {
+          element.isVoted = true;
+        } else {
+          element.isVoted = false;
+        }
+        delete element.completedAt;
+      });
+
+      var todayRounds = [];
+      userrounds.forEach((element) => {
+        if (element.completedAt == null) {
+          todayRounds.push(element);
+        }
+        if ((element.completedAt >= start) && (element.completedAt <= end)) {
+          todayRounds.push(element);
+        }
+      });
+
+      res.todayCount = todayRounds.length;
+
+      if (res.todayCount == 0) {
+        if (!userrounds[0].completedAt) {
+          res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
+        } else {
+          res.complete = true;
+        }
+      } else if (res.todayCount < 3) {
+        let timecheck = 0;
+        if (todayRounds[0].completedAt) {
+          timecheck =
+            todayRounds[0].completedAt.getTime() +
+            waitTime -
+            now().getTime();
+
+          res.remainTime = timecheck;
+        }
+        if (!userrounds[0].completedAt) {
+          res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
+        } else {
+          if (timecheck < 0) {
+            res.complete = true;
+          } else {
+            res.complete = false;
+            res.userRoundId = userrounds[0]._id.toString();
+          }
+        }
+      } else if (res.todayCount == 3) {
+        let timecheck = 0;
+        timecheck = end.getTime() - now().getTime();
+        res.remainTime = timecheck;
+        if (!userrounds[0].completedAt) {
+          res.complete = false;
+          res.userRoundId = userrounds[0]._id.toString();
+        } else {
+          if (timecheck < 0) {
+          } else {
+            res.complete = false;
+            res.userRoundId = userrounds[0]._id.toString();
+          }
+        }
+      }
+    } else {
+      res.complete = true;
+    }
+
+    return res;
+  }
+
+  async findUserRound(user_id: string, target: number): Promise<FindUserRoundDto> {
+    var res = new FindUserRoundDto();
+
+    var waitTime = 30 * 60 * 1000;  // 30분 30 * 60 * 1000
+    if (this.configService.get('env') === 'production') {
+    } else {
+      var waitTime = 1 * 30 * 1000;
     }
 
     const userrounds = await this.userroundModel.aggregate([
@@ -1774,7 +2015,7 @@ export class PollingsService {
         if (!userrounds[0].completedAt) {
           res.data = this.userRoundToDto(userrounds[0]);
         } else {
-          const result = await this.createUserRound(user_id);
+          const result = await this.createUserRound(user_id, target);
           res.todayCount += 1;
           res.data = result;
         }
@@ -1793,7 +2034,7 @@ export class PollingsService {
         } else {
           if (timecheck < 0) {
             res.recentCompletedAt = userrounds[0].completedAt;
-            const result = await this.createUserRound(user_id);
+            const result = await this.createUserRound(user_id, target);
             res.todayCount += 1;
             res.data = result;
           } else {
@@ -1815,7 +2056,7 @@ export class PollingsService {
         }
       }
     } else {
-      const result = await this.createUserRound(user_id);
+      const result = await this.createUserRound(user_id, target);
       res.data = result;
       res.todayCount = 1;
     }

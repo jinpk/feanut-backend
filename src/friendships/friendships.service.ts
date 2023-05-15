@@ -40,6 +40,7 @@ export class FriendshipsService {
 
   /** 친구추가 방법 변경 for Legacy */
   // 친구목록 legacy 사용자 초기화
+  // 가입된 회원 제외하고
   async clearFriendsForLegacy(userId: string | Types.ObjectId) {
     const friendship = await this.friendShipModel.findOne({
       userId: new Types.ObjectId(userId),
@@ -67,6 +68,7 @@ export class FriendshipsService {
     // 3. save cleared legacy
     await friendship.save();
   }
+
   // 연락처 강제 동기화로 친구추가한 friendship 조회
   async isLegacyFriendShipByUserId(
     userId: string | Types.ObjectId,

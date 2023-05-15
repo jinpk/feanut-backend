@@ -20,6 +20,10 @@ export class UserRound {
   @Prop({})
   pollIds: string[];
 
+  // userRound target
+  @Prop({})
+  target: number;
+
   // pollingIds
   @Prop({})
   pollingIds: Types.ObjectId[];

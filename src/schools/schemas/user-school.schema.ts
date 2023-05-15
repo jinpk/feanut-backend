@@ -22,6 +22,10 @@ export class UserSchool {
   @Prop({})
   grade: number;
 
+  // 반
+  @Prop({})
+  room?: string;
+
   // 비활성화여부
   @Prop({})
   disabled?: boolean;

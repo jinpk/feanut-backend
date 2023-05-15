@@ -4,3 +4,4 @@ export const USER_SCHOOL_SCHEMA_NAME = 'user_schools';
 
 
 export const SCHOOL_ERROR_NOT_FOUND_MY_SCHOOL = 1
+export const SCHOOL_ERROR_RECENT_DATE = 2
