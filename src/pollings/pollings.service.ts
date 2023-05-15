@@ -830,39 +830,6 @@ export class PollingsService {
       },
       {
         $lookup: {
-          from: 'friendships',
-          let: { friend_id: '$profiles._id', user_id: '$userId' },
-          pipeline: [
-            {
-              $unwind: '$friends',
-            },
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$friends.profileId', '$$friend_id'] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'friendship',
-        }
-      },
-      {
-        $unwind: {
-          path: '$friendship',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: '$friendship',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
           from: 'files',
           localField: 'profiles.imageFileId',
           foreignField: '_id',
@@ -913,6 +880,8 @@ export class PollingsService {
       { $project: projection },
       this.utilsService.getCommonMongooseFacet(query),
     ]);
+
+    console.log(cursor[0])
 
     const metdata = cursor[0].metadata;
     const data = cursor[0].data;
@@ -1133,6 +1102,7 @@ export class PollingsService {
     let mergedList = [];
     const cursors = cursor.slice(-4);
 
+    console.log(cursor)
     for (const v of cursors) {
       let temp = {
         profileId: null,
@@ -1172,7 +1142,7 @@ export class PollingsService {
           }
         }
       }
-      console.log(temp)
+
       if (temp.name == "") {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -1188,6 +1158,7 @@ export class PollingsService {
 
     cursor.at(-1).friendIds = mergedList;
 
+    console.log("@@")
     return cursor.at(-1);
   }
 
