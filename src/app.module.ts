@@ -23,6 +23,7 @@ import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchoolsModule } from './schools/schools.module';
+import { StaticsModule } from './statics/statics.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { SchoolsModule } from './schools/schools.module';
     AdminModule,
     EmojisModule,
     SchoolsModule,
+    StaticsModule,
   ],
   controllers: [AppController],
   providers: [
