@@ -126,6 +126,27 @@ export class SchoolsService {
     const lookups: PipelineStage[] = [
       {
         $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true
+          }
+        },
+      },
+      {
+        $lookup: {
           from: 'profiles',
           localField: 'userId',
           foreignField: 'ownerId',
