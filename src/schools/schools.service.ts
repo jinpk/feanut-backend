@@ -115,6 +115,7 @@ export class SchoolsService {
     let filter: FilterQuery<UserSchoolDocument> = {
       code: school[0]['code'],
       disabled: { $ne: true },
+      userId: { $ne: new mongoose.Types.ObjectId(userId) },
     };
 
     if (school[0]['level'] == "초등학교") {
