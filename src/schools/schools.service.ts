@@ -114,6 +114,8 @@ export class SchoolsService {
 
     let filter: FilterQuery<UserSchoolDocument> = {
       code: school[0]['code'],
+      disabled: { $ne: true },
+      userId: { $ne: new mongoose.Types.ObjectId(userId) },
     };
 
     if (school[0]['level'] == "초등학교") {
@@ -176,13 +178,15 @@ export class SchoolsService {
         },
       },
     ];
-
     const cursor = await this.userSchoolModel.aggregate([
       { $match: filter },
       ...lookups,
     ]);
 
-    return cursor;
+    // profile 이 없는 id는 배열에서 삭제
+    let filtered = cursor.filter((element) => (element.profile));
+
+    return filtered;
   }
 
   async checkUserSchoolDate(userId: string | mongoose.Types.ObjectId) {
