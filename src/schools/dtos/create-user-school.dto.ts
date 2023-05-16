@@ -5,12 +5,12 @@ export class CreateUserSchoolDto {
   @ApiProperty({ title: '반' })
   @IsNumber()
   @IsNotEmpty()
-  room: number;
+  room?: number;
 
   @ApiProperty({ title: '학년' })
   @IsNotEmpty()
   @Min(1)
-  grade: number;
+  grade?: number;
 
   @ApiProperty({ title: '학교코드' })
   @IsNotEmpty()
