@@ -188,7 +188,6 @@ export class PollingsService {
         ).reject();
       }
 
-      console.log(friendGroup)
       let temp_arr = friendGroup
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -440,12 +439,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -744,12 +743,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -1134,12 +1133,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -1426,12 +1425,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
