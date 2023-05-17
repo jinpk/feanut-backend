@@ -426,6 +426,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -752,6 +758,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -1203,6 +1215,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -1497,11 +1515,21 @@ export class PollingsService {
         imageFileKey: null,
         gender: null,
       };
-
-      temp.profileId = v.profile._id;
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
