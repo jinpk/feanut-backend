@@ -970,7 +970,6 @@ export class PollingsService {
       }
     ]);
 
-    console.log(pollingCursor)
     // 투표 가능 인원 체크
     if (!pollingCursor) {
       throw new WrappedError(
