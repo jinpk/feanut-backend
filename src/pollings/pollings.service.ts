@@ -935,16 +935,70 @@ export class PollingsService {
   }
 
   async findPollingById(polling_id, user_id: string) {
-    // 친구 인원 수 체크
-    const friendList = await this.friendShipsService.getFriendsCount(user_id);
+    // polling 가져오기.
+    const pollingCursor = await this.pollingModel.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(polling_id),
+          userId: new Types.ObjectId(user_id)
+        },
+      },
+      {
+        $lookup: {
+          from: 'polling_user_rounds',
+          localField: 'userRoundId',
+          foreignField: '_id',
+          as: 'userround'
+        }
+      },
+      {
+        $unwind: {
+          path: '$userround',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+         '__v': 0,
+         'level': 0,
+         'vocabCount': 0,
+         'questionCount': 0,
+         'timeLine': 0,
+         'createdAt': 0,
+         'updatedAt': 0,
+        }
+      }
+    ]);
 
-    if (friendList < 4) {
+    // 투표 가능 인원 체크
+    if (!pollingCursor) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
-        POLLING_ERROR_MIN_FRIENDS,
-        '활성화 된 친구를 4명 이상 추가해주세요.',
-      ).reject();
-    }
+        POLLING_ERROR_NOT_FOUND_POLLING,
+      ).notFound();
+    } else {
+      if (pollingCursor[0].userround.target == 0) {
+        let friendGroup = await this.schoolsService.getSchoolFriendList(user_id);
+        if (friendGroup.length < 4) {
+          throw new WrappedError(
+            POLLING_MODULE_NAME,
+            POLLING_ERROR_MIN_FRIENDS,
+            '학교친구를 4명 이상 초대해주세요.',
+          ).reject();
+        }
+      } else {
+        // 친구 인원 수 체크
+        const friendList = await this.friendShipsService.getFriendsCount(user_id);
+
+        if (friendList < 4) {
+          throw new WrappedError(
+            POLLING_MODULE_NAME,
+            POLLING_ERROR_MIN_FRIENDS,
+            '활성화 된 친구를 4명 이상 추가해주세요.',
+          ).reject();
+        };
+      };
+    };
 
     const filter: FilterQuery<PollingDocument> = {
       _id: new Types.ObjectId(polling_id),
