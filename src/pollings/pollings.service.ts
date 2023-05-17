@@ -737,9 +737,6 @@ export class PollingsService {
       ).notFound();
     }
 
-    console.log("@@@@@@@@@")
-    console.log(cursor)
-
     let mergedList = [];
     const cursors = cursor.slice(-4);
 
