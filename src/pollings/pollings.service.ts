@@ -272,6 +272,13 @@ export class PollingsService {
         },
       },
       {
+        $match: {
+          'profile': {
+            $ne: null
+          }
+        },
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'profile.ownerId',
@@ -573,6 +580,19 @@ export class PollingsService {
         $unwind: {
           path: '$profile',
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'profile': {
+            $ne: null
+          }
         },
       },
       {
@@ -966,6 +986,13 @@ export class PollingsService {
         },
       },
       {
+        $match: {
+          'profile': {
+            $ne: null
+          }
+        },
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'profile.ownerId',
@@ -1198,6 +1225,13 @@ export class PollingsService {
         $unwind: {
           path: '$profile',
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'profile': {
+            $ne: null
+          }
         },
       },
       {
