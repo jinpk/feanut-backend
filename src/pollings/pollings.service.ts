@@ -188,7 +188,6 @@ export class PollingsService {
         ).reject();
       }
 
-      console.log(friendGroup)
       let temp_arr = friendGroup
       .sort(() => Math.random() - 0.5)
       .slice(0, 4);
@@ -270,6 +269,13 @@ export class PollingsService {
         $unwind: {
           path: '$profile',
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'profile': {
+            $ne: null
+          }
         },
       },
       {
@@ -440,12 +446,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -577,6 +583,19 @@ export class PollingsService {
         },
       },
       {
+        $unwind: {
+          path: '$profile',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'profile': {
+            $ne: null
+          }
+        },
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'profile.ownerId',
@@ -744,12 +763,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -967,6 +986,13 @@ export class PollingsService {
         },
       },
       {
+        $match: {
+          'profile': {
+            $ne: null
+          }
+        },
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'profile.ownerId',
@@ -1134,12 +1160,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {
@@ -1199,6 +1225,13 @@ export class PollingsService {
         $unwind: {
           path: '$profile',
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'profile': {
+            $ne: null
+          }
         },
       },
       {
@@ -1426,12 +1459,12 @@ export class PollingsService {
               }
             } else {
             }
-      
-            if (v.imagefile) {
-              temp.imageFileKey = v.imagefile.key;
-            }
           }
         }
+      }
+
+      if (v.imagefile) {
+        temp.imageFileKey = v.imagefile.key;
       }
 
       if (temp.name == "") {

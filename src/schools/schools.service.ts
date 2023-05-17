@@ -68,9 +68,7 @@ export class SchoolsService {
     return school[0];
   }
 
-  async getSchoolFriendList(
-    userId: string | mongoose.Types.ObjectId,
-  ) {
+  async getSchoolFriendList(userId: string | mongoose.Types.ObjectId) {
     const school = await this.userSchoolModel.aggregate<UserSchoolDto>([
       {
         $match: {
@@ -115,14 +113,37 @@ export class SchoolsService {
     let filter: FilterQuery<UserSchoolDocument> = {
       code: school[0]['code'],
       disabled: { $ne: true },
+      userId: { $ne: new mongoose.Types.ObjectId(userId) },
     };
 
-    if (school[0]['level'] == "초등학교") {
-      filter.grade = school[0]['grade']
-      filter.room = school[0]['room']
-    } else {}
+    if (school[0]['level'] == '초등학교') {
+      filter.grade = school[0]['grade'];
+      filter.room = school[0]['room'];
+    } else {
+    }
 
     const lookups: PipelineStage[] = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          'user.isDeleted': {
+            $ne: true
+          }
+        },
+      },
       {
         $lookup: {
           from: 'profiles',
@@ -167,7 +188,7 @@ export class SchoolsService {
           'imagefile.createdAt': 0,
           'imagefile.updatedAt': 0,
           'imagefile.isUploaded': 0,
-        }
+        },
       },
       {
         $project: {
@@ -177,14 +198,13 @@ export class SchoolsService {
         },
       },
     ];
-
     const cursor = await this.userSchoolModel.aggregate([
       { $match: filter },
       ...lookups,
     ]);
 
     // profile 이 없는 id는 배열에서 삭제
-    let filtered = cursor.filter((element) => (element.profile));
+    let filtered = cursor.filter((element) => element.profile);
 
     return filtered;
   }
@@ -224,8 +244,8 @@ export class SchoolsService {
   async insertUserSchool(
     userId: string | mongoose.Types.ObjectId,
     code: string,
-    grade: number,
-    room: number,
+    grade?: number,
+    room?: number,
   ) {
     // 코드 검증
     if (!(await this.schoolModel.findOne({ code }))) {
@@ -245,8 +265,8 @@ export class SchoolsService {
     // 신규학교 저장
     await new this.userSchoolModel({
       userId: new mongoose.Types.ObjectId(userId),
-      room,
-      grade,
+      room: room || undefined,
+      grade: grade || undefined,
       code,
     }).save();
   }
@@ -277,6 +297,7 @@ export class SchoolsService {
       name: 1,
       sido: 1,
       sigungu: 1,
+      level: 1,
       address: 1,
       code: 1,
       joinedCount: { $size: '$us' },

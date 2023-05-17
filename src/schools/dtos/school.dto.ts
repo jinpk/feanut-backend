@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SchoolLevels } from '../enums';
 
 export class SchoolDto {
   @ApiProperty({ title: '학교명' })
@@ -18,4 +19,7 @@ export class SchoolDto {
 
   @ApiProperty({ title: '가입수' })
   joinedCount: number;
+
+  @ApiProperty({ title: '학교 레벨', enum: SchoolLevels })
+  level: SchoolLevels;
 }
