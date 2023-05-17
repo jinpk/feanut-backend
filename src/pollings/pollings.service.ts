@@ -426,6 +426,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -489,14 +495,15 @@ export class PollingsService {
     }
 
     // 친구목록 불러오기/셔플
+    // 친구 그룹 선택
+    let friendTempArr: any[] = [];
+    let friendGroup = []
+    let newIds = [];
+
     let prevFriend = [];
     for (const arr of polling.friendIds) {
       prevFriend.push(arr);
     }
-
-    // 친구 그룹 선택
-    let friendTempArr: any[] = [];
-    let friendGroup = []
 
     // 학교 친구 선택
     if (userround.target == 0) {
@@ -507,6 +514,21 @@ export class PollingsService {
           POLLING_ERROR_MIN_FRIENDS,
           '학교친구를 4명 이상 초대해주세요.',
         ).reject();
+      }
+      // 친구 수 12명 이하이면 slice없이 셔플.
+      if (friendGroup.length <= 12) {
+        friendTempArr = friendGroup
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 4);
+      } else {
+        friendTempArr = friendGroup
+          .filter((friend) => !prevFriend.includes(friend.profile._id))
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 4);
+      }
+
+      for (const friend of friendTempArr) {
+        newIds.push(new Types.ObjectId(friend.profile._id));
       }
     } else {
       // 친구목록 불러오기/셔플
@@ -520,25 +542,24 @@ export class PollingsService {
         ).reject();
       }
       friendGroup = friendList.data;
+
+      // 친구 수 12명 이하이면 slice없이 셔플.
+      if (friendGroup.length <= 12) {
+        friendTempArr = friendGroup
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 4);
+      } else {
+        friendTempArr = friendGroup
+          .filter((friend) => !prevFriend.includes(friend.profileId))
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 4);
+      }
+
+      for (const friend of friendTempArr) {
+        newIds.push(new Types.ObjectId(friend.profileId));
+      }
     }
 
-    // 친구 수 12명 이하이면 slice없이 셔플.
-    if (friendGroup.length <= 12) {
-      friendTempArr = friendGroup
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
-    } else {
-      friendTempArr = friendGroup
-        .filter((friend) => !prevFriend.includes(friend.profileId))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
-    }
-
-    // polling friendlist 갱신
-    const newIds = [];
-    for (const friend of friendTempArr) {
-      newIds.push(new Types.ObjectId(friend.profileId));
-    }
     polling.friendIds.push(newIds);
 
     await polling.save();
@@ -574,12 +595,6 @@ export class PollingsService {
             },
           ],
           as: 'profile',
-        },
-      },
-      {
-        $unwind: {
-          path: '$profile',
-          preserveNullAndEmptyArrays: true,
         },
       },
       {
@@ -743,6 +758,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -971,7 +992,7 @@ export class PollingsService {
     ]);
 
     // 투표 가능 인원 체크
-    if (!pollingCursor) {
+    if (!pollingCursor[0]) {
       throw new WrappedError(
         POLLING_MODULE_NAME,
         POLLING_ERROR_NOT_FOUND_POLLING,
@@ -1194,6 +1215,12 @@ export class PollingsService {
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
@@ -1488,11 +1515,21 @@ export class PollingsService {
         imageFileKey: null,
         gender: null,
       };
-
-      temp.profileId = v.profile._id;
       
       if (v.friendship) {
         temp.name = v.friendship.friends.name;
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
+        if (v.profile) {
+          temp.profileId = v.profile._id;
+          if (v.profile.gender){
+            temp.gender = v.profile.gender;
+          }
+        }
       } else {
         if (v.owner) {
           if (v.owner.isDeleted) {
