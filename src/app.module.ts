@@ -20,10 +20,8 @@ import { AdminModule } from './admin/admin.module';
 import { EmojisModule } from './emojis/emojis.module';
 import { CommonModule } from './common/common.module';
 import { EventsModule } from './events/events.module';
-import { LoggerMiddleware } from './logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchoolsModule } from './schools/schools.module';
-import { StaticsModule } from './statics/statics.module';
 
 @Module({
   imports: [
@@ -53,7 +51,6 @@ import { StaticsModule } from './statics/statics.module';
     AdminModule,
     EmojisModule,
     SchoolsModule,
-    StaticsModule,
   ],
   controllers: [AppController],
   providers: [
