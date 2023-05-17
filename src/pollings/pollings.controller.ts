@@ -262,7 +262,7 @@ export class PollingsController {
   @Post(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
-    description: 'refreshCount < 2이면 pass.',
+    description: 'refreshCount >= 4이면 건너뛰기 활성화',
   })
   @ApiResponse({
     status: 200,
@@ -276,6 +276,7 @@ export class PollingsController {
     if (exist.userId != req.user.id) {
       throw new WrappedError('권한이 없습니다');
     }
+
     const result = await this.pollingsService.updateRefreshedPollingById(
       req.user.id,
       pollingId,
