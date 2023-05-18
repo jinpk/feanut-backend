@@ -9,7 +9,6 @@ export class UserCreatedEvent {
     private _gender: Gender,
     private _schoolCode?: string,
     private _schoolGrade?: number,
-    private _schoolClassRoom?: number,
   ) {}
 
   get userId() {
@@ -30,8 +29,5 @@ export class UserCreatedEvent {
   }
   get schoolGrade() {
     return this._schoolGrade;
-  }
-  get schoolClassRoom() {
-    return this._schoolClassRoom;
   }
 }

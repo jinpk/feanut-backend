@@ -27,10 +27,6 @@ export class Poll {
   @Prop({})
   contentText: string;
 
-  // 초등학생용 질문만 true 그 외 undefined
-  @Prop({})
-  kids?: boolean;
-
   // openedCount
   @Prop({ default: 0 })
   isOpenedCount: number;

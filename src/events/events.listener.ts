@@ -62,12 +62,11 @@ export class EventsListener {
       await this.notificationsService.initNotificationUserConfig(event.userId);
 
       // 학생 가입시 학교 정보 등록
-      if (event.schoolCode) {
+      if (event.schoolCode && event.schoolGrade) {
         await this.schoolsService.insertUserSchool(
           event.userId,
           event.schoolCode,
           event.schoolGrade,
-          event.schoolClassRoom,
         );
       }
 
@@ -75,7 +74,6 @@ export class EventsListener {
         `${UserCreatedEvent.name} succesfully procceed: ${event.userId}`,
       );
     } catch (error) {
-      console.error(error);
       this.logger.error(
         `${UserCreatedEvent.name} got error with ${
           event.userId

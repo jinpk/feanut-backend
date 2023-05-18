@@ -23,11 +23,7 @@ import {
   PollingResultDto,
   InboxPollingDto,
 } from './dtos/polling.dto';
-import {
-  FindUserRoundDto,
-  PostUserRoundTargetDto,
-  LockUserRoundDto
-} from './dtos/userround.dto';
+import { FindUserRoundDto } from './dtos/userround.dto';
 import { Polling } from './schemas/polling.schema';
 import { UpdatePollingDto } from './dtos/update-polling.dto';
 import { GetListInboxPollingDto } from './dtos/get-polling.dto';
@@ -117,31 +113,14 @@ export class PollingsController {
   @Post('rounds')
   @ApiOperation({
     summary: '내 투표 라운드 조회 & 생성',
-    description: 'target=0 학교친구, target=1 일반친구',
   })
   @ApiOkResponse({
     status: 200,
     type: FindUserRoundDto,
   })
-  async getUserRound(
-    @Body() body: PostUserRoundTargetDto,
-    @Request() req) {
-      const result = await this.pollingsService.findUserRound(req.user.id, body.target);
+  async getUserRound(@Request() req) {
+    const result = await this.pollingsService.findUserRound(req.user.id);
 
-      result.maxDailyCount = MAX_DAILY_COUNT;
-      return result;
-  }
-
-  @Get('rounds/lock')
-  @ApiOperation({
-    summary: '나의 투표 가능 여부 확인',
-  })
-  @ApiOkResponse({
-    status: 200,
-    type: LockUserRoundDto,
-  })
-  async getUserLocked(@Request() req): Promise<LockUserRoundDto> {
-    const result = await this.pollingsService.getLockUserRound(req.user.id);
     result.maxDailyCount = MAX_DAILY_COUNT;
     return result;
   }
@@ -262,7 +241,7 @@ export class PollingsController {
   @Post(':pollingId/refresh')
   @ApiOperation({
     summary: 'polling 친구 새로고침',
-    description: 'refreshCount >= 4이면 건너뛰기 활성화',
+    description: 'refreshCount < 2이면 pass.',
   })
   @ApiResponse({
     status: 200,
@@ -276,7 +255,6 @@ export class PollingsController {
     if (exist.userId != req.user.id) {
       throw new WrappedError('권한이 없습니다');
     }
-
     const result = await this.pollingsService.updateRefreshedPollingById(
       req.user.id,
       pollingId,

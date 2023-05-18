@@ -35,7 +35,6 @@ export class SchoolsController {
       req.user.id,
       body.code,
       body.grade,
-      body.room,
     );
   }
 
@@ -67,14 +66,4 @@ export class SchoolsController {
   async listSchool(@Query() query: ListSchoolDto) {
     return await this.schoolsService.listSchool(query);
   }
-
-  // @Get('test')
-  // @ApiOperation({
-  //   summary: '',
-  // })
-  // @Public()
-  // @ApiOkResponsePaginated(SchoolDto)
-  // async test(@Query() query: ListSchoolDto) {
-  //   return await this.schoolsService.getSchoolFriendList('64356704fc3a2a34dc64a6c8');
-  // }
 }

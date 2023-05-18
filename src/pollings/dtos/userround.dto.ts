@@ -46,30 +46,6 @@ export class FindUserRoundDto {
   data: UserRoundDto;
 }
 
-export class LockUserRoundDto {
-  @ApiProperty({})
-  complete: boolean;
-
-  @ApiProperty({})
-  todayCount: number;
-
-  @ApiProperty({default: 3})
-  maxDailyCount: number;
-
-  @ApiProperty({default: 0})
-  remainTime: number;
-  
-  @ApiProperty({default: null})
-  userRoundId: string;
-}
-
-export class PostUserRoundTargetDto {
-  @ApiProperty({
-    default: 1,
-  })
-  target: number;
-}
-
 export class PayUserRoundDto extends OmitType(UseCoinDto, [
   'userId',
 ] as const) {}

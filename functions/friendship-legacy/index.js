@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import * as readline from 'readline/promises';
 
+const friendShip = mongoose.model('friendships', {});
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,

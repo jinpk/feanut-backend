@@ -20,11 +20,7 @@ export class UserSchool {
 
   // 학년
   @Prop({})
-  grade?: number;
-
-  // 반
-  @Prop({})
-  room?: string;
+  grade: number;
 
   // 비활성화여부
   @Prop({})
