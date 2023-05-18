@@ -83,7 +83,7 @@ export class CoinsController {
 
   @Post('purchase')
   @ApiOperation({
-    summary: '피넛코인 구매 (iOS, Android IAP)',
+    summary: '버터 구매 (iOS, Android IAP)',
   })
   @ApiResponse({
     status: 200,
@@ -102,7 +102,7 @@ export class CoinsPublicController {
   @Post('purchase/update/:provider')
   @Public()
   @ApiOperation({
-    summary: '피넛코인 인앱 결제 Update Listener',
+    summary: '버터 인앱 결제 Update Listener',
   })
   async purchaseUpdate(
     @Body() body: any,

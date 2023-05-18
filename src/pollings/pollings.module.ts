@@ -1,3 +1,4 @@
+import { SchoolsModule } from './../schools/schools.module';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Polling, PollingSchema } from './schemas/polling.schema';
@@ -21,6 +22,7 @@ import { FriendshipsModule } from 'src/friendships/friendships.module';
     ProfilesModule,
     CoinsModule,
     FriendshipsModule,
+    SchoolsModule,
   ],
   controllers: [PollingsController],
   providers: [PollingsService],

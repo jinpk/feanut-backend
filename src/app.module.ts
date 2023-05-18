@@ -20,9 +20,9 @@ import { AdminModule } from './admin/admin.module';
 import { EmojisModule } from './emojis/emojis.module';
 import { CommonModule } from './common/common.module';
 import { EventsModule } from './events/events.module';
-import { LoggerMiddleware } from './logger.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchoolsModule } from './schools/schools.module';
+import { ProfilesModule } from './profiles/profiles.module';
 
 @Module({
   imports: [
@@ -43,6 +43,7 @@ import { SchoolsModule } from './schools/schools.module';
     EventsModule,
     CommonModule,
     UsersModule,
+    ProfilesModule,
     AuthModule,
     CoinsModule,
     FriendshipsModule,
@@ -50,6 +51,7 @@ import { SchoolsModule } from './schools/schools.module';
     PollingsModule,
     PollsModule,
     AdminModule,
+    NotificationsModule,
     EmojisModule,
     SchoolsModule,
   ],
