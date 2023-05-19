@@ -18,11 +18,6 @@ export class PromotionSchool {
   @Prop({ unique: true })
   code: string;
 
-  // 학교링크
-  // Firebase Dynamic Link
-  @Prop({ unique: true })
-  link: string;
-
   // 시작일
   @Prop({ type: Date })
   startedAt: Date;
