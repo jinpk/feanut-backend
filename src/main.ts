@@ -33,6 +33,7 @@ async function bootstrap() {
       .addTag('Coin', '코인 API')
       .addTag('School', '학교 API')
       .addTag('File', '파일 API')
+      .addTag('Promotion Schools', '프로모션 학교 API')
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);

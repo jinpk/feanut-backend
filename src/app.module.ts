@@ -23,6 +23,7 @@ import { EventsModule } from './events/events.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchoolsModule } from './schools/schools.module';
 import { ProfilesModule } from './profiles/profiles.module';
+import { PromotionSchoolsModule } from './promotions/schools/schools.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ProfilesModule } from './profiles/profiles.module';
     NotificationsModule,
     EmojisModule,
     SchoolsModule,
+    PromotionSchoolsModule,
   ],
   controllers: [AppController],
   providers: [
