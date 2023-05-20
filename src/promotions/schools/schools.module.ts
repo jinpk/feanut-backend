@@ -7,13 +7,13 @@ import {
   PromotionSchoolSchema,
 } from './schemas/school.schema';
 import {
-  PromotionSchoolStudent,
-  PromotionSchoolStudentSchema,
-} from './schemas/student.schema';
-import {
   PromotionSchoolVote,
   PromotionSchoolVoteSchema,
 } from './schemas/vote.schema';
+import {
+  PromotionSchoolCampaign,
+  PromotionSchoolCampaignSchema,
+} from './schemas/campaign.schema';
 
 @Module({
   imports: [
@@ -22,8 +22,8 @@ import {
     ]),
     MongooseModule.forFeature([
       {
-        name: PromotionSchoolStudent.name,
-        schema: PromotionSchoolStudentSchema,
+        name: PromotionSchoolCampaign.name,
+        schema: PromotionSchoolCampaignSchema,
       },
     ]),
     MongooseModule.forFeature([
